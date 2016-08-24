@@ -1,0 +1,52 @@
+{
+  "name": "mindy/framework",
+  "homepage": "https://github.com/MindyPHP/Mindy_Framework",
+  "license": "BSD",
+  "autoload": {
+    "files": [
+      "src/constants.php",
+      "src/global_functions.php",
+      "src/functions.php"
+    ],
+    "psr-4": {
+      "Mindy\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "files": [
+      "src/constants.php",
+      "src/global_functions.php",
+      "src/functions.php"
+    ],
+    "psr-4": {
+      "Mindy\\Tests\\": "test/"
+    }
+  },
+  "require": {
+    "php": ">=7.0",
+    "psr/http-message": "1.*",
+    "psr/log": "^1.0",
+    "guzzlehttp/psr7": "1.*",
+    "relay/relay": "1.*",
+    "oscarotero/psr7-middlewares": "3.*",
+    "swiftmailer/swiftmailer": "@stable",
+    "psr/cache": "^1.0",
+    "symfony/finder": "^3.1",
+    "monolog/monolog": "^1.21"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "*",
+    "phpunit/php-code-coverage": "*"
+  },
+  "authors": [
+    {
+      "name": "Maxim Falaleev",
+      "email": "max@studio107.ru",
+      "homepage": "http://studio107.ru",
+      "role": "Developer"
+    }
+  ],
+  "support": {
+    "issues": "https://github.com/MindyPHP/Mindy/issues?state=open"
+  }
+}

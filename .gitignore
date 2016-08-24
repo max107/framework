@@ -1,0 +1,9 @@
+.idea
+*.iml
+composer.lock
+vendor
+coverage
+*.swp
+.DS_Store
+
+test/Base/state.bin
