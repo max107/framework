@@ -61,4 +61,28 @@ class Alias
     {
         self::$_aliases[$alias] = rtrim($path, '\\/');
     }
+
+    /**
+     * @param string $alias
+     */
+    public static function remove(string $alias)
+    {
+        unset(self::$_aliases[$alias]);
+    }
+
+    /**
+     * Remove all aliases
+     */
+    public static function clear()
+    {
+        self::$_aliases = [];
+    }
+
+    /**
+     * @param $aliases
+     */
+    public static function replace($aliases)
+    {
+        self::$_aliases = $aliases;
+    }
 }
