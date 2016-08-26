@@ -3,7 +3,7 @@
 namespace Mindy\Security;
 
 use Exception;
-use Mindy\Application;
+use Mindy\Base\Mindy;
 use Mindy\Helper\Security as SecurityHelper;
 use Mindy\Helper\Traits\Accessors;
 use Mindy\Helper\Traits\Configurator;
@@ -67,7 +67,7 @@ class Security
         if ($this->_validationKey !== null) {
             return $this->_validationKey;
         } else {
-            if (($key = Application::app()->getGlobalState(self::STATE_VALIDATION_KEY)) !== null) {
+            if (($key = Mindy::app()->getGlobalState(self::STATE_VALIDATION_KEY)) !== null) {
                 $this->setValidationKey($key);
             } else {
                 if (($key = $this->generateRandomString(32, true)) === false) {
@@ -76,7 +76,7 @@ class Security
                     }
                 }
                 $this->setValidationKey($key);
-                Application::app()->setGlobalState(self::STATE_VALIDATION_KEY, $key);
+                Mindy::app()->setGlobalState(self::STATE_VALIDATION_KEY, $key);
             }
             return $this->_validationKey;
         }
@@ -105,7 +105,7 @@ class Security
         if ($this->_encryptionKey !== null) {
             return $this->_encryptionKey;
         } else {
-            if (($key = Application::app()->getGlobalState(self::STATE_ENCRYPTION_KEY)) !== null) {
+            if (($key = Mindy::app()->getGlobalState(self::STATE_ENCRYPTION_KEY)) !== null) {
                 $this->setEncryptionKey($key);
             } else {
                 if (($key = $this->generateRandomString(32, true)) === false) {
@@ -114,7 +114,7 @@ class Security
                     }
                 }
                 $this->setEncryptionKey($key);
-                Application::app()->setGlobalState(self::STATE_ENCRYPTION_KEY, $key);
+                Mindy::app()->setGlobalState(self::STATE_ENCRYPTION_KEY, $key);
             }
             return $this->_encryptionKey;
         }

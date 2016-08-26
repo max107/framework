@@ -37,6 +37,10 @@ class PatternsTest extends \PHPUnit_Framework_TestCase
                 '/' => [
                     'name' => 'index',
                     'callback' => $callback
+                ],
+                '/view/{id:i}' => [
+                    'name' => 'view',
+                    'callback' => $callback
                 ]
             ], 'blog'),
             '' => new Patterns([
@@ -55,6 +59,9 @@ class PatternsTest extends \PHPUnit_Framework_TestCase
         $c = $patterns->getRouteCollector();
 
         $this->assertEquals('/blog/', $c->reverse('blog:index'));
+        $this->assertEquals('/blog/view/1', $c->reverse('blog:view', 1));
+        $this->assertEquals('/blog/view/1', $c->reverse('blog:view', [1]));
+        $this->assertEquals('/blog/view/1', $c->reverse('blog:view', ['id' => 1]));
         $this->assertEquals('/forum', $c->reverse('forum:index'));
         $this->assertEquals('/page/', $c->reverse('page:index'));
 

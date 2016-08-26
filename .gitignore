@@ -6,4 +6,5 @@ coverage
 *.swp
 .DS_Store
 
+WWW/runtime/*
 test/Base/state.bin

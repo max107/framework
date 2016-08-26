@@ -48,12 +48,9 @@ class BaseController
         $this->getRequest()->send($response);
     }
 
-    /**
-     * @return \Mindy\Http\Http
-     */
-    public function getRequest()
+    protected function getRequest()
     {
-        return $this->getApp()->request;
+        return Mindy::app()->request;
     }
 
     /**
@@ -152,7 +149,7 @@ class BaseController
      * @return \Mindy\Base\Module the module that this controller belongs to. It returns null
      * if the controller does not belong to any module
      */
-    public function getModule()
+    protected function getModule()
     {
         if ($this->_module === null) {
             $reflect = new ReflectionClass(get_class($this));

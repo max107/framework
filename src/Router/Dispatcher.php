@@ -2,7 +2,11 @@
 
 namespace Mindy\Router;
 
+use Exception;
 use Mindy\Router\Exception\HttpMethodNotAllowedException;
+use ReflectionFunction;
+use ReflectionFunctionAbstract;
+use ReflectionMethod;
 
 /**
  * Class Dispatcher
@@ -99,24 +103,51 @@ class Dispatcher
     /**
      * @param $data
      * @return mixed
+     * @throws Exception
      */
     public function getResponse($data)
     {
-        list($handler, $vars) = $data;
-        return call_user_func_array($this->resolveHandler($handler), $vars);
+        list($handler, $vars, $params) = $data;
+        if ($handler instanceof \Closure) {
+            $method = new ReflectionFunction($handler);
+            return $method->invokeArgs($this->parseParams($method, $vars));
+        } else if (is_array($handler)) {
+            list($handler, $actionName) = $handler;
+            $handlerInstance = new $handler;
+
+            $method = new ReflectionMethod($handlerInstance, $actionName);
+            return $method->invokeArgs($handlerInstance, $this->parseParams($method, $vars));
+        } else {
+            throw new Exception('Unknown handler type');
+        }
     }
 
     /**
-     * @param $handler
+     * @param ReflectionFunctionAbstract $method
+     * @param $params
      * @return array
      */
-    public function resolveHandler($handler)
+    protected function parseParams(ReflectionFunctionAbstract $method, $params) : array
     {
-        if (is_array($handler) and is_string($handler[0])) {
-            $handler[0] = new $handler[0];
+        $ps = [];
+        foreach ($method->getParameters() as $i => $param) {
+            $name = $param->getName();
+            if (isset($params[$name])) {
+                if ($param->isArray()) {
+                    $ps[] = is_array($params[$name]) ? $params[$name] : [$params[$name]];
+                } elseif (!is_array($params[$name])) {
+                    $ps[] = $params[$name];
+                } else {
+                    return [];
+                }
+            } elseif ($param->isDefaultValueAvailable()) {
+                $ps[] = $param->getDefaultValue();
+            } else {
+                return [];
+            }
         }
 
-        return $handler;
+        return $ps;
     }
 
     /**

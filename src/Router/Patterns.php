@@ -2,7 +2,6 @@
 
 namespace Mindy\Router;
 
-use Closure;
 use Exception;
 use Mindy\Helper\Alias;
 
@@ -99,31 +98,35 @@ class Patterns
                 if (is_callable($params)) {
                     $collector->addRoute($method, trim($parentPrefix, '/') . $urlPrefix, $params);
                 } else if (is_array($params)) {
-                    if (array_key_exists('callback', $params) == false) {
-                        throw new Exception('Missing callback key in: ' . print_r($params, true));
+                    if (array_key_exists('callback', $params) === false && array_key_exists('restful', $params) === false) {
+                        throw new Exception('Missing callback or controller key in: ' . print_r($params, true));
                     }
 
-                    $callback = $this->fetchCallback($params['callback']);
-                    if ($callback === null) {
-                        throw new Exception("Incorrect callback in rule " . $params['name']);
-                    }
-
-                    if (isset($params['method']) && in_array(strtoupper($params['method']), $collector->getValidMethods())) {
-                        $method = strtoupper($params['method']);
-                    }
-
-                    if (isset($params['name'])) {
-                        $name = $params['name'];
-                        if (!empty($this->namespace)) {
-                            $name = $this->namespace . $this->namespaceDelimeter . $params['name'];
+                    if (isset($params['callback'])) {
+                        $callback = $this->fetchCallback($params['callback']);
+                        if ($callback === null) {
+                            throw new Exception("Incorrect callback in rule " . $params['name']);
                         }
 
-                        $route = [trim($parentPrefix, '/') . $urlPrefix, $name];
-                    } else {
-                        $route = trim($parentPrefix, '/') . $urlPrefix;
-                    }
+                        if (isset($params['method']) && in_array(strtoupper($params['method']), $collector->getValidMethods())) {
+                            $method = strtoupper($params['method']);
+                        }
 
-                    $collector->addRoute($method, $route, $callback, isset($params['params']) ? $params['params'] : []);
+                        if (isset($params['name'])) {
+                            $name = $params['name'];
+                            if (!empty($this->namespace)) {
+                                $name = $this->namespace . $this->namespaceDelimeter . $params['name'];
+                            }
+
+                            $route = [trim($parentPrefix, '/') . $urlPrefix, $name];
+                        } else {
+                            $route = trim($parentPrefix, '/') . $urlPrefix;
+                        }
+
+                        $collector->addRoute($method, $route, $callback, isset($params['params']) ? $params['params'] : []);
+                    } else if (isset($params['restful'])) {
+                        $collector->restful(trim($parentPrefix, '/') . $urlPrefix, $params['restful']);
+                    }
                 }
             }
         }

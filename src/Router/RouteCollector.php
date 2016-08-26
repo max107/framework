@@ -47,6 +47,10 @@ class RouteCollector
      */
     public function reverse($name, $args = [])
     {
+        if (!is_array($args)) {
+            $args = [$args];
+        }
+
         $url = array();
         $replacements = is_null($args) ? [] : array_values($args);
         $variable = 0;
@@ -214,7 +218,7 @@ class RouteCollector
      * @param $classname
      * @return $this
      */
-    public function controller($route, $classname)
+    public function restful($route, $classname)
     {
         $reflection = new ReflectionClass($classname);
         $validMethods = $this->getValidMethods();
@@ -226,7 +230,7 @@ class RouteCollector
                     if ($methodName === self::DEFAULT_CONTROLLER_ROUTE) {
                         $this->addRoute($valid, $route . $params, array($classname, $method->name));
                     }
-                    $sep = $route === '/' ? '' : '/';
+                    $sep = $route === '/' || substr($route, strlen($route) - 1) === '/' ? '' : '/';
                     $this->addRoute($valid, $route . $sep . $methodName . $params, array($classname, $method->name));
                     break;
                 }

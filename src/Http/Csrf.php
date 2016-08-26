@@ -132,9 +132,7 @@ class Csrf
 
         if (!empty($userToken) && $this->http->cookies->has($this->csrfTokenName)) {
             $cookieToken = $this->http->cookies->get($this->csrfTokenName)->value;
-            // https://github.com/studio107/Mindy_Base/issues/1
-            $rawData = Mindy::app()->security->validateData($userToken);
-            $valid = $cookieToken === $userToken || $cookieToken === @unserialize($rawData);
+            $valid = $cookieToken === $userToken;
         } else {
             $valid = false;
         }

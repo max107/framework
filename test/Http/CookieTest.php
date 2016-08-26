@@ -4,10 +4,6 @@ namespace Mindy\Http;
 
 class CookieTest extends \PHPUnit_Framework_TestCase
 {
-    /**
-     * @covers CHttpCookie::configure
-     * @covers CHttpCookie::__construct
-     */
     public function testConfigure()
     {
         //covers construct
@@ -38,9 +34,6 @@ class CookieTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($options['httpOnly'], $cookie->httpOnly);
     }
 
-    /**
-     * @covers HttpCookie::__toString
-     */
     public function test__ToString()
     {
         $cookie = new Cookie('name', 'someValue');

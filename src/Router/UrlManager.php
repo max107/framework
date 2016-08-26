@@ -68,15 +68,6 @@ class UrlManager extends Dispatcher
     }
 
     /**
-     * @param $handler
-     * @return mixed
-     */
-    public function getResponse($handler)
-    {
-        return $handler;
-    }
-
-    /**
      * @param $name
      * @param array $args
      * @return string

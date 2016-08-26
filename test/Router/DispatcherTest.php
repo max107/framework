@@ -227,7 +227,7 @@ class DispatcherTest extends \PHPUnit_Framework_TestCase
 
         $r = $this->router();
 
-        $r->controller('/user', __NAMESPACE__ . '\\Test');
+        $r->restful('/user', __NAMESPACE__ . '\\Test');
 
         $data = $r->getData();
 
@@ -253,8 +253,7 @@ class DispatcherTest extends \PHPUnit_Framework_TestCase
     public function testRestfulOptionalRequiredControllerMethodThrows()
     {
         $r = $this->router();
-
-        $r->controller('/user', __NAMESPACE__ . '\\Test');
+        $r->restful('/user', __NAMESPACE__ . '\\Test');
 
         $this->assertFalse($this->dispatch($r, Dispatcher::GET, '/user/parameter-optional-required'));
     }
@@ -262,8 +261,7 @@ class DispatcherTest extends \PHPUnit_Framework_TestCase
     public function testRestfulRequiredControllerMethodThrows()
     {
         $r = $this->router();
-
-        $r->controller('/user', __NAMESPACE__ . '\\Test');
+        $r->restful('/user', __NAMESPACE__ . '\\Test');
 
         $this->assertFalse($this->dispatch($r, Dispatcher::GET, '/user/parameter-required'));
     }
@@ -271,8 +269,7 @@ class DispatcherTest extends \PHPUnit_Framework_TestCase
     public function testRestfulHyphenateControllerMethodThrows()
     {
         $r = $this->router();
-
-        $r->controller('/user', __NAMESPACE__ . '\\Test');
+        $r->restful('/user', __NAMESPACE__ . '\\Test');
 
         $this->assertFalse($this->dispatch($r, Dispatcher::GET, 'user/camelcasehyphenated'));
     }

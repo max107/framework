@@ -410,17 +410,6 @@ class Application extends BaseApplication
         $newRequest = $this->request->getRequest()->withQueryParams(array_merge($queryParams, $routeVariables));
         $this->request->setRequest($newRequest);
 
-        if (
-            in_array($this->request->getRequest()->getMethod(), ['HEAD', 'OPTIONS', 'GET']) === false &&
-            $this->request->enableCsrfValidation
-        ) {
-            if (array_key_exists('csrf', $params) && $params['csrf'] !== false) {
-                if ($this->request->csrf->isValid() === false) {
-                    throw new HttpException(400, 'The CSRF token could not be verified.');
-                }
-            }
-        }
-
         if (is_callable($handler)) {
             $this->runClosure($handler, $routeVariables);
         } else if (is_array($handler)) {
