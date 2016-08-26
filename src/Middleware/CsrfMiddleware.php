@@ -9,6 +9,7 @@
 namespace Mindy\Middleware;
 
 use function GuzzleHttp\Psr7\stream_for;
+use Mindy\Http\Response;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -36,14 +37,23 @@ class CsrfMiddleware
      */
     private $_csrfToken;
 
+    /**
+     * @param ServerRequestInterface $request
+     * @param ResponseInterface $response
+     * @param callable $next
+     * @return Response|ResponseInterface|static
+     */
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response, callable $next)
     {
         if (in_array($request->getMethod(), ['HEAD', 'OPTIONS', 'GET'])) {
-            /** @var ResponseInterface $response */
             $response = $next($response, $response);
 
             if (array_key_exists($this->getName(), $request->getCookieParams()) === false) {
-                $response->withHeader('Set-Cookie', 'TODO');
+                /** @var Response $response */
+                $response->withCookie([
+                    'name' => $this->getName(),
+                    'value' => $this->getValue($request)
+                ]);
             }
 
             return $this->autoInject ? $this->autoInjectCsrf($request, $response) : $response;
@@ -125,6 +135,6 @@ class CsrfMiddleware
      */
     protected function isValid(ServerRequestInterface $request)
     {
-        return $request->getHeaderLine($this->getName()) == $this->getValue();
+        return $request->getHeaderLine($this->getName()) == $this->getValue($request);
     }
 }
