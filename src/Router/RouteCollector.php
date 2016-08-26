@@ -30,6 +30,10 @@ class RouteCollector
      * @var array
      */
     private $regexToRoutesMap = [];
+    /**
+     * @var string|null prefix for group() method
+     */
+    private $_prefix;
 
     /**
      * @param RouteParser $routeParser
@@ -86,6 +90,10 @@ class RouteCollector
 
         if (is_array($route)) {
             list($route, $name) = $route;
+        }
+
+        if ($this->_prefix) {
+            $route = rtrim($this->_prefix, '/') . '/' . ltrim($route, '/');
         }
 
         // Don't use trim function, because route must be like "//".
@@ -152,71 +160,78 @@ class RouteCollector
     /**
      * @param $route
      * @param $handler
+     * @param array $params
      * @return $this
      */
-    public function get($route, $handler)
+    public function get($route, $handler, $params = [])
     {
-        return $this->addRoute(Dispatcher::GET, $route, $handler);
+        return $this->addRoute(Dispatcher::GET, $route, $handler, $params);
     }
 
     /**
      * @param $route
      * @param $handler
+     * @param array $params
      * @return $this
      */
-    public function head($route, $handler)
+    public function head($route, $handler, $params = [])
     {
-        return $this->addRoute(Dispatcher::HEAD, $route, $handler);
+        return $this->addRoute(Dispatcher::HEAD, $route, $handler, $params);
     }
 
     /**
      * @param $route
      * @param $handler
+     * @param array $params
      * @return $this
      */
-    public function post($route, $handler)
+    public function post($route, $handler, $params = [])
     {
-        return $this->addRoute(Dispatcher::POST, $route, $handler);
+        return $this->addRoute(Dispatcher::POST, $route, $handler, $params);
     }
 
     /**
      * @param $route
      * @param $handler
+     * @param array $params
      * @return $this
      */
-    public function put($route, $handler)
+    public function put($route, $handler, $params = [])
     {
-        return $this->addRoute(Dispatcher::PUT, $route, $handler);
+        return $this->addRoute(Dispatcher::PUT, $route, $handler, $params);
     }
 
     /**
      * @param $route
      * @param $handler
+     * @param array $params
      * @return $this
      */
-    public function delete($route, $handler)
+    public function delete($route, $handler, $params = [])
     {
-        return $this->addRoute(Dispatcher::DELETE, $route, $handler);
+        return $this->addRoute(Dispatcher::DELETE, $route, $handler, $params);
     }
 
     /**
      * @param $route
      * @param $handler
+     * @param array $params
      * @return $this
      */
-    public function options($route, $handler)
+    public function options($route, $handler, $params = [])
     {
-        return $this->addRoute(Dispatcher::OPTIONS, $route, $handler);
+        return $this->addRoute(Dispatcher::OPTIONS, $route, $handler, $params);
     }
 
     /**
      * @param $route
      * @param $handler
+     * @param array $params
      * @return $this
      */
-    public function any($route, $handler)
+    public function any($route, $handler, $params = [])
     {
-        return $this->addRoute(Dispatcher::ANY, $route, $handler);
+        return $this->addRoute(Dispatcher::ANY, $route, $handler, $params);
     }
 
     /**
@@ -347,8 +362,59 @@ class RouteCollector
         ];
     }
 
-    public function group($prefix, callable $callback)
+    public function group($prefix, $callback)
     {
+        $this->setPrefix($prefix);
+        if (is_callable($callback)) {
+            $callback($this);
+        } else {
+            foreach ($callback as $route) {
+                $routePattern = rtrim($prefix, '/') . '/' . ltrim($route['route'], '/');
+                $name = isset($route['name']) ? [$routePattern, $route['name']] : $routePattern;
 
+                $this->addRoute(
+                    $route['method'] ?? Dispatcher::ANY,
+                    $name,
+                    $route['handler'] ?? $route['callback'],
+                    $route['params'] ?? []
+                );
+            }
+        }
+        $this->setPrefix(null);
+        return $this;
+    }
+
+    /**
+     * Set prefix for group() method
+     * @param $prefix
+     * @return $this
+     */
+    protected function setPrefix($prefix)
+    {
+        $this->_prefix = $prefix;
+        return $this;
+    }
+
+    /**
+     * @param $prefix
+     * @param callable $callback
+     * @return $this
+     */
+    public function groupConfig($prefix, callable $callback)
+    {
+        $routes = $callback();
+        foreach ($routes as $route) {
+            $routePattern = rtrim($prefix, '/') . '/' . ltrim($route['route'], '/');
+            $name = isset($route['name']) ? [$routePattern, $route['name']] : $routePattern;
+
+            $this->addRoute(
+                $route['method'] ?? Dispatcher::ANY,
+                $name,
+                $route['handler'] ?? $route['callback'],
+                $route['params'] ?? []
+            );
+        }
+
+        return $this;
     }
 }

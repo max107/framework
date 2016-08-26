@@ -4,6 +4,7 @@ namespace Mindy\Router;
 
 use Exception;
 use Mindy\Router\Exception\HttpMethodNotAllowedException;
+use Psr\Http\Message\ServerRequestInterface;
 use ReflectionFunction;
 use ReflectionFunctionAbstract;
 use ReflectionMethod;
@@ -21,7 +22,7 @@ class Dispatcher
     const PUT = 'PUT';
     const DELETE = 'DELETE';
     const OPTIONS = 'OPTIONS';
-    
+
     /**
      * @var RouteCollector
      */
@@ -108,6 +109,7 @@ class Dispatcher
     public function getResponse($data)
     {
         list($handler, $vars, $params) = $data;
+
         if ($handler instanceof \Closure) {
             $method = new ReflectionFunction($handler);
             return $method->invokeArgs($this->parseParams($method, $vars));
@@ -221,7 +223,7 @@ class Dispatcher
 
             $count = count($matches);
 
-            while (!isset($data['routeMap'][$count++]));
+            while (!isset($data['routeMap'][$count++])) ;
 
             $routes = $data['routeMap'][$count - 1];
 
