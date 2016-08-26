@@ -15,6 +15,7 @@ declare(strict_types = 1);
 
 namespace Mindy\Base;
 
+use function GuzzleHttp\Psr7\stream_for;
 use Mindy\Console\ConsoleCommandRunner;
 use Mindy\Controller\Action\ClosureAction;
 use Mindy\Di\ServiceLocator;
@@ -340,9 +341,6 @@ class Application extends BaseApplication
         }
     }
 
-    /**
-     * @throws HttpException
-     */
     protected function runInternal()
     {
         if (php_sapi_name() === 'cli') {
@@ -385,59 +383,20 @@ class Application extends BaseApplication
     {
         // fix for fcgi
         defined('STDIN') or define('STDIN', fopen('php://stdin', 'r'));
-
         if (!isset($_SERVER['argv'])) {
             echo 'This script must be run from the command line.' . PHP_EOL;
             $this->end(1);
         }
-
         $this->getCommandRunner()->run($_SERVER['argv']);
     }
 
     protected function runWeb()
     {
-        $route = $this->parseRoute();
-        if ($route === null) {
-            throw new HttpException(404, 'Unable to resolve the request "' . $this->request->getPath() . '".');
-        }
-
-        list($handler, $routeVariables, $params) = $route;
-
-        // Fix for compatibility
-        $_GET = array_merge($_GET, $routeVariables);
-
-        $queryParams = $this->request->getRequest()->getQueryParams();
-        $newRequest = $this->request->getRequest()->withQueryParams(array_merge($queryParams, $routeVariables));
-        $this->request->setRequest($newRequest);
-
-        if (is_callable($handler)) {
-            $this->runClosure($handler, $routeVariables);
-        } else if (is_array($handler)) {
-            $this->runController($handler, $routeVariables);
-        }
-    }
-
-    protected function runController(array $handler, array $routeVariables = [])
-    {
-        list($className, $actionID) = $handler;
-        $controller = Creator::createObject($className);
         ob_start();
-        $response = $controller->run($actionID, $routeVariables);
+        $output = $this->parseRoute();
         $html = ob_get_clean();
-        if ($response instanceof ResponseInterface) {
-            $this->request->send($response);
-        } else {
-            $this->request->html($html);
-        }
-    }
-
-    protected function runClosure(callable $handler, array $routeVariables = [])
-    {
-        ob_start();
-        $response = (new ClosureAction($handler))->runInternal($routeVariables);
-        $html = ob_get_clean();
-        if ($response instanceof ResponseInterface) {
-            $this->request->send($response);
+        if ($output instanceof ResponseInterface) {
+            $this->request->send($output);
         } else {
             $this->request->html($html);
         }
@@ -492,13 +451,14 @@ class Application extends BaseApplication
         ];
     }
 
-    /**
-     * @return \Mindy\Router\Route
-     */
     public function parseRoute()
     {
         $request = $this->request->getRequest();
-        return $this->urlManager->dispatch($request->getMethod(), $request->getRequestTarget());
+        $response = $this->urlManager->dispatch($request->getMethod(), $request->getRequestTarget());
+        if ($response === false) {
+            throw new HttpException(404);
+        }
+        return $response;
     }
 
     /**

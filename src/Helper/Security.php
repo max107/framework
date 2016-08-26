@@ -6,7 +6,11 @@
  * Time: 11:34
  */
 
+// TODO replace mcrypt with https://paragonie.com/blog/2015/05/if-you-re-typing-word-mcrypt-into-your-code-you-re-doing-it-wrong
+// because mcrypt is deprecated from 7.1
+
 namespace Mindy\Helper;
+
 use Exception;
 
 /**

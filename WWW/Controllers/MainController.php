@@ -6,7 +6,7 @@
  * Time: 23:25
  */
 
-namespace App\Controllers;
+namespace WWW\Controllers;
 
 use function GuzzleHttp\Psr7\stream_for;
 use Mindy\Controller\BaseController;
