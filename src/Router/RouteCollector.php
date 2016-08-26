@@ -80,6 +80,10 @@ class RouteCollector
      */
     public function addRoute($httpMethod, $route, $handler, array $params = [])
     {
+        if (is_array($httpMethod) === false) {
+            $httpMethod = [$httpMethod];
+        }
+
         if (is_array($route)) {
             list($route, $name) = $route;
         }
@@ -94,10 +98,12 @@ class RouteCollector
             $this->reverse[$name] = $reverseData;
         }
 
-        if (isset($routeData[1])) {
-            $this->addVariableRoute($httpMethod, $routeData, $handler, $params);
-        } else {
-            $this->addStaticRoute($httpMethod, $routeData, $handler, $params);
+        foreach ($httpMethod as $method) {
+            if (isset($routeData[1])) {
+                $this->addVariableRoute($method, $routeData, $handler, $params);
+            } else {
+                $this->addStaticRoute($method, $routeData, $handler, $params);
+            }
         }
 
         return $this;
@@ -335,6 +341,14 @@ class RouteCollector
         }
 
         $regex = '~^(?|' . implode('|', $regexes) . ')$~';
-        return ['regex' => $regex, 'routeMap' => $routeMap];
+        return [
+            'regex' => $regex,
+            'routeMap' => $routeMap
+        ];
+    }
+
+    public function group($prefix, callable $callback)
+    {
+
     }
 }

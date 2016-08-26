@@ -153,6 +153,16 @@ class DispatcherTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('/foo/joe/something', $r->reverse('name2', ['joe', 'something']));
     }
 
+    public function testMultipleMethodsRoutes()
+    {
+        $r = $this->router();
+
+        $r->addRoute(['GET', 'POST'], array('/foo', 'name'), array(__NAMESPACE__ . '\\Test', 'route'));
+        $this->assertEquals('/foo', $r->reverse('name'));
+        $this->assertEquals('testRoute', $this->dispatch($r, 'GET', '/foo'));
+        $this->assertEquals('testRoute', $this->dispatch($r, 'POST', '/foo'));
+    }
+
     /**
      * @expectedException \Mindy\Router\Exception\BadRouteException
      * @expectedExceptionMessage Cannot use the same placeholder 'test' twice
