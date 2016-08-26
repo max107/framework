@@ -16,19 +16,14 @@ declare(strict_types = 1);
 namespace Mindy\Base;
 
 use function GuzzleHttp\Psr7\stream_for;
-use Mindy\Console\ConsoleCommandRunner;
-use Mindy\Controller\Action\ClosureAction;
+use Mindy\Console\ConsoleApplication;
 use Mindy\Di\ServiceLocator;
 use Mindy\Exception\Exception;
 use Mindy\Exception\HttpException;
 use Mindy\Helper\Alias;
-use Mindy\Helper\Creator;
 use Mindy\Helper\Traits\Accessors;
 use Mindy\Helper\Traits\Configurator;
-use Monolog\Handler\RotatingFileHandler;
-use Monolog\Logger;
 use Psr\Http\Message\ResponseInterface;
-use Psr\Log\LoggerInterface;
 use RuntimeException;
 
 /**
@@ -75,10 +70,6 @@ class Application extends BaseApplication
      * @var string
      */
     private $_homeUrl;
-    /**
-     * @var ConsoleCommandRunner
-     */
-    private $_consoleRunner;
     /**
      * @var ServiceLocator
      */
@@ -171,11 +162,11 @@ class Application extends BaseApplication
                 throw new RuntimeException('Unknown module config format');
             }
 
-            $path = Alias::get('modules') . DIRECTORY_SEPARATOR . ucfirst($module);
-            Alias::set(ucfirst($module), $path);
-            $modulesDefinitions[ucfirst($module)] = function () use ($className, $module, $config) {
-                return Creator::createObject($config, $module);
-            };
+            Alias::set($module, $this->getModulePath() . DIRECTORY_SEPARATOR . $module);
+            $modulesDefinitions[$module] = array_merge($config, [
+                'class' => $className,
+                'id' => $module
+            ]);
             call_user_func([$className, 'preConfigure']);
         }
 
@@ -341,53 +332,36 @@ class Application extends BaseApplication
         }
     }
 
+    /**
+     * Start application
+     */
     protected function runInternal()
     {
-        if (php_sapi_name() === 'cli') {
-            $this->runCli();
-        } else {
-            $this->runWeb();
-        }
+        php_sapi_name() === 'cli' ? $this->runCli() : $this->runWeb();
     }
 
     /**
-     * @return ConsoleCommandRunner
+     * @throws \Exception
      */
-    public function getCommandRunner()
-    {
-        if ($this->_consoleRunner === null) {
-            $runner = new ConsoleCommandRunner();
-            $runner->setCommandMap($this->commandMap);
-
-            $applicationCommandPath = $this->getBasePath() . DIRECTORY_SEPARATOR . 'Commands';
-            if ($commandPath = realpath($applicationCommandPath)) {
-                $runner->addCommands($commandPath, 'base');
-            }
-
-            if ($env = @getenv('CONSOLE_COMMANDS')) {
-                $runner->addCommands($env, 'base');
-            }
-
-            foreach ($this->getModules() as $name => $settings) {
-                $modulePath = Alias::get("Modules." . $name . ".Commands");
-                if ($modulePath) {
-                    $runner->addCommands($modulePath, $name);
-                }
-            }
-            $this->_consoleRunner = $runner;
-        }
-        return $this->_consoleRunner;
-    }
-
     protected function runCli()
     {
-        // fix for fcgi
-        defined('STDIN') or define('STDIN', fopen('php://stdin', 'r'));
-        if (!isset($_SERVER['argv'])) {
-            echo 'This script must be run from the command line.' . PHP_EOL;
-            $this->end(1);
+        $consoleApplication = new ConsoleApplication($this->name, self::getVersion());
+
+        // Preload all modules
+        $modules = [];
+        foreach ($this->getModules() as $id => $module) {
+            $modules[$id] = $this->getModuleLocator()->get($id);
         }
-        $this->getCommandRunner()->run($_SERVER['argv']);
+
+        $modulesCommands = $consoleApplication->findModulesCommands($modules);
+        $consoleApplication->addCommands($modulesCommands);
+
+        if ($envPath = @getenv('CONSOLE_COMMANDS')) {
+            $envCommands = $consoleApplication->findCommands($envPath);
+            $consoleApplication->addCommands($envCommands);
+        }
+
+        $consoleApplication->run();
     }
 
     protected function runWeb()

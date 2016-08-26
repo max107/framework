@@ -12,8 +12,8 @@ class ModuleTest extends PHPUnit_Framework_TestCase
 
     public function setUp()
     {
-        $this->parent = new NewModule('root', NULL);
-        $this->mod = new NewModule('foo', $this->parent);
+        $this->parent = new NewModule(['id' => 'root']);
+        $this->mod = new NewModule(['id' => 'foo']);
         $this->d = dirname(__FILE__);
     }
 
@@ -41,7 +41,8 @@ class ModuleTest extends PHPUnit_Framework_TestCase
 
     public function testSetComponentsViaConfig()
     {
-        $this->mod = new NewModule('foo', [
+        $this->mod = new NewModule([
+            'id' => 'foo',
             'components' => [
                 'bar' => [
                     'class' => NewApplicationComponent::class

@@ -2,6 +2,11 @@
 
 return [
     'basePath' => __DIR__,
+    'modules' => [
+        'Core' => [
+            'class' => \Modules\Core\CoreModule::class
+        ]
+    ],
     'components' => [
         'urlManager' => [
             'class' => \Mindy\Router\UrlManager::class,

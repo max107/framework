@@ -9,6 +9,7 @@ use function GuzzleHttp\Psr7\stream_for;
 use Mindy\Base\Application;
 use Mindy\Base\Mindy;
 use Mindy\Base\Module;
+use Mindy\Controller\Action\ClosureAction;
 use Mindy\Controller\Action\IAction;
 use Mindy\Controller\Action\InlineAction;
 use Mindy\Helper\HttpError;
@@ -138,8 +139,12 @@ class BaseController
             return new InlineAction($this, ucfirst($actionID));
         } else if ($this->hasExternalAction($actionID)) {
             $actions = $this->actions();
-            $config = is_array($actions[$actionID]) ? $actions[$actionID] : ['class' => $actions[$actionID]];
-            return Creator::createObject($config, $this, $actionID);
+            if ($actions[$actionID] instanceof \Closure) {
+                return new ClosureAction($actions[$actionID]);
+            } else {
+                $config = is_array($actions[$actionID]) ? $actions[$actionID] : ['class' => $actions[$actionID]];
+                return Creator::createObject($config, $this, $actionID);
+            }
         } else {
             return null;
         }

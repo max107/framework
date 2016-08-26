@@ -55,14 +55,11 @@ abstract class BaseModule
 
     /**
      * Constructor.
-     * @param string $id the ID of this module
-     * @param Module $parent the parent module (if any)
      * @param mixed $config the module configuration. It can be either an array or
      * the path of a PHP file returning the configuration array.
      */
-    public function __construct($id, $config = null)
+    public function __construct(array $config = [])
     {
-        $this->_id = $id;
         $this->preinit();
         $this->configure($config);
         $this->preloadComponents();

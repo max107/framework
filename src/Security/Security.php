@@ -142,8 +142,7 @@ class Security
      */
     public function encrypt($data, $key = null)
     {
-        $module = SecurityHelper::openCryptModule($this->cryptAlgorithm);
-        return SecurityHelper::encrypt($module, $data, $key === null ? md5($this->getEncryptionKey()) : $key);
+        return SecurityHelper::encrypt($data, $key === null ? md5($this->getEncryptionKey()) : $key);
     }
 
     /**
@@ -155,8 +154,7 @@ class Security
      */
     public function decrypt($data, $key = null)
     {
-        $module = SecurityHelper::openCryptModule($this->cryptAlgorithm);
-        return SecurityHelper::decrypt($module, $data, $key === null ? md5($this->getEncryptionKey()) : $key);
+        return SecurityHelper::decrypt($data, $key === null ? md5($this->getEncryptionKey()) : $key);
     }
 
     /**

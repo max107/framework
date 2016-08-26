@@ -6,9 +6,6 @@
  * Time: 11:34
  */
 
-// TODO replace mcrypt with https://paragonie.com/blog/2015/05/if-you-re-typing-word-mcrypt-into-your-code-you-re-doing-it-wrong
-// because mcrypt is deprecated from 7.1
-
 namespace Mindy\Helper;
 
 use Exception;
@@ -19,6 +16,8 @@ use Exception;
  */
 class Security
 {
+    const METHOD = 'aes-256-cbc';
+
     /**
      * Computes the HMAC for the data with {@link getValidationKey validationKey}. This method has been made public
      * since 1.1.14.
@@ -79,7 +78,7 @@ class Security
             return false;
         }
     }
-    
+
     /**
      * Returns the length of the given string.
      * If available uses the multibyte string function mb_strlen.
@@ -88,7 +87,7 @@ class Security
      */
     private static function strlen($string)
     {
-        return extension_loaded('mbstring') ? mb_strlen($string, '8bit') : strlen($string);
+        return mb_strlen($string, '8bit');
     }
 
     /**
@@ -101,7 +100,7 @@ class Security
      */
     private static function substr($string, $start, $length)
     {
-        return extension_loaded('mbstring') ? mb_substr($string, $start, $length, '8bit') : substr($string, $start, $length);
+        return mb_substr($string, $start, $length, '8bit');
     }
 
     /**
@@ -215,66 +214,40 @@ class Security
         return self::substr($bytes, 0, $length);
     }
 
-    /**
-     * Decrypts data
-     * @param string $data data to be decrypted.
-     * @param string $key the decryption key. This defaults to null, meaning using {@link getEncryptionKey EncryptionKey}.
-     * @return string the decrypted data
-     * @throws Exception if PHP Mcrypt extension is not loaded
-     */
-    public static function decrypt($module, $data, $key)
+    public static function encrypt($message, $key)
     {
-        $key = self::substr($key, 0, mcrypt_enc_get_key_size($module));
-        $ivSize = mcrypt_enc_get_iv_size($module);
-        $iv = self::substr($data, 0, $ivSize);
-        mcrypt_generic_init($module, $key, $iv);
-        $decrypted = mdecrypt_generic($module, self::substr($data, $ivSize, self::strlen($data)));
-        mcrypt_generic_deinit($module);
-        mcrypt_module_close($module);
-        return rtrim($decrypted, "\0");
-    }
-
-    /**
-     * Encrypts data.
-     * @param $module
-     * @param string $data data to be encrypted.
-     * @param string $key the decryption key. This defaults to null, meaning using {@link getEncryptionKey EncryptionKey}.
-     * @return string the encrypted data
-     */
-    public static function encrypt($module, $data, $key)
-    {
-        $key = self::substr($key, 0, mcrypt_enc_get_key_size($module));
-        srand();
-        $iv = mcrypt_create_iv(mcrypt_enc_get_iv_size($module), MCRYPT_RAND);
-        mcrypt_generic_init($module, $key, $iv);
-        $encrypted = $iv . mcrypt_generic($module, $data);
-        mcrypt_generic_deinit($module);
-        mcrypt_module_close($module);
-        return $encrypted;
-    }
-
-    /**
-     * Opens the mcrypt module with the configuration specified in {@link cryptAlgorithm}.
-     * @throws Exception if failed to initialize the mcrypt module or PHP mcrypt extension
-     * @return resource the mycrypt module handle.
-     * @since 1.1.3
-     */
-    public static function openCryptModule($cryptAlgorithm)
-    {
-        if (extension_loaded('mcrypt')) {
-            if (is_array($cryptAlgorithm)) {
-                $module = @call_user_func_array('mcrypt_module_open', $cryptAlgorithm);
-            } else {
-                $module = @mcrypt_module_open($cryptAlgorithm, '', MCRYPT_MODE_CBC, '');
-            }
-
-            if ($module === false) {
-                throw new Exception('Failed to initialize the mcrypt module');
-            }
-
-            return $module;
-        } else {
-            throw new Exception('SecurityManager requires PHP mcrypt extension to be loaded in order to use data encryption feature');
+        if (mb_strlen($key, '8bit') !== 32) {
+            throw new Exception("Needs a 256-bit key!");
         }
+        $ivsize = openssl_cipher_iv_length(self::METHOD);
+        $iv = openssl_random_pseudo_bytes($ivsize);
+
+        $ciphertext = openssl_encrypt(
+            $message,
+            self::METHOD,
+            $key,
+            OPENSSL_RAW_DATA,
+            $iv
+        );
+
+        return $iv . $ciphertext;
+    }
+
+    public static function decrypt($message, $key)
+    {
+        if (mb_strlen($key, '8bit') !== 32) {
+            throw new Exception("Needs a 256-bit key!");
+        }
+        $ivsize = openssl_cipher_iv_length(self::METHOD);
+        $iv = mb_substr($message, 0, $ivsize, '8bit');
+        $ciphertext = mb_substr($message, $ivsize, null, '8bit');
+
+        return openssl_decrypt(
+            $ciphertext,
+            self::METHOD,
+            $key,
+            OPENSSL_RAW_DATA,
+            $iv
+        );
     }
 }

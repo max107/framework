@@ -6,7 +6,6 @@ use Mindy\Helper\Traits\Accessors;
 use Mindy\Helper\Traits\Configurator;
 use PHPUnit_Framework_TestCase;
 
-
 /**
  * @group base
  */
