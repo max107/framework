@@ -41,18 +41,14 @@ class ConsoleApplication extends Application
      * @return null|ConsoleCommand
      * @throws Exception
      */
-    protected function createCommandFromFile(SplFileInfo $fileInfo)
+    public function createCommandFromFile(SplFileInfo $fileInfo)
     {
-        $className = $this->getClassFromCode($fileInfo->getContents());
-        if ($className) {
-            $command = new $className;
-            if ($command instanceof ConsoleCommand) {
-                return $command;
-            }
-            return null;
+        $className = $this->getClassFromCode($fileInfo);
+        $command = new $className;
+        if ($command instanceof ConsoleCommand) {
+            return $command;
         }
-
-        throw new Exception('Classes not found in: ' . $fileInfo->getPath());
+        return null;
     }
 
     /**
@@ -82,8 +78,9 @@ class ConsoleApplication extends Application
      * @return string
      * @throws Exception
      */
-    public function getClassFromCode($code) : string
+    public function getClassFromCode(SplFileInfo $fileInfo) : string
     {
+        $code = $fileInfo->getContents();
         $class = null;
         $namespace = '';
 
@@ -110,6 +107,10 @@ class ConsoleApplication extends Application
                     }
                 }
             }
+        }
+
+        if (empty($class)) {
+            throw new Exception('Classes not found in: ' . $fileInfo->getPath());
         }
 
         return $class;

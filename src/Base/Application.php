@@ -59,10 +59,6 @@ class Application extends BaseApplication
      */
     public $locale = [];
     /**
-     * @var array the IDs of the application components that should be preloaded.
-     */
-    public $preload = [];
-    /**
      * @var array
      */
     public $commandMap = [];
@@ -110,13 +106,17 @@ class Application extends BaseApplication
         $this->registerCoreComponents();
         $this->preinit();
         $this->configure($config);
-        $this->preloadComponents();
 
         /**
          * Raise preConfigure method
          * on every iterable module
          */
         $this->init();
+    }
+    
+    public function setMiddleware(array $middleware = [])
+    {
+        
     }
 
     /**
@@ -255,20 +255,6 @@ class Application extends BaseApplication
      */
     protected function preinit()
     {
-    }
-
-    /**
-     * Loads static application components.
-     */
-    protected function preloadComponents()
-    {
-        if (php_sapi_name() !== 'cli') {
-            $this->preload[] = 'request';
-        }
-
-        foreach ($this->preload as $id) {
-            $this->getComponent($id);
-        }
     }
 
     /**

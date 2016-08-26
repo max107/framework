@@ -1,17 +1,21 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Mindy\Http;
 
 use Psr\Http\Message\ResponseInterface;
 
 /**
- * Created by PhpStorm.
- * User: max
- * Date: 16/08/16
- * Time: 16:20
+ * @param ResponseInterface $response
+ * @return bool
  */
+function isRedirectResponse(ResponseInterface $response) : bool
+{
+    return in_array($response->getStatusCode(), [301, 302]);
+}
 
-function isEmptyResponse(ResponseInterface $response)
+function isEmptyResponse(ResponseInterface $response) : bool
 {
     if (method_exists($response, 'isEmpty')) {
         return $response->isEmpty();
@@ -19,6 +23,9 @@ function isEmptyResponse(ResponseInterface $response)
     return in_array($response->getStatusCode(), [204, 205, 304]);
 }
 
+/**
+ * @param ResponseInterface|Response $response
+ */
 function sendResponse(ResponseInterface $response)
 {
     // Send response
@@ -35,6 +42,10 @@ function sendResponse(ResponseInterface $response)
             foreach ($values as $value) {
                 header(sprintf('%s: %s', $name, $value), false);
             }
+        }
+        // Cookies
+        foreach ($response->getCookies() as $cookie) {
+            header(sprintf('%s: %s', 'Set-Cookie', $cookie->getHeaderValue()), false);
         }
     }
 

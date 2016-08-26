@@ -6,51 +6,31 @@
  * Time: 23:04
  */
 
+declare(strict_types = 1);
+
 namespace Mindy\Http;
 
 use Exception;
 use function GuzzleHttp\Psr7\stream_for;
 use Mindy\Base\Mindy;
-use Mindy\Helper\Creator;
+use Mindy\Helper\Json;
+use Mindy\Helper\ReadOnlyCollection;
 use Mindy\Helper\Traits\Configurator;
-use Mindy\Session\HttpSession;
+use Mindy\Http\Response\Response;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Class Http
  * @package Mindy\Http
- * @property CookieCollection cookies
  */
 class Http
 {
     use Configurator;
-    use LegacyHttp;
-
-    /**
-     * @var bool
-     */
-    public $enableCsrfValidation = true;
     /**
      * @var array
      */
     public $settings = [];
-    /**
-     * @var CookieCollection
-     */
-    public $cookies;
-    /**
-     * @var Collection
-     */
-    public $get;
-    /**
-     * @var Collection
-     */
-    public $post;
-    /**
-     * @var HttpSession
-     */
-    public $session;
     /**
      * @var array
      */
@@ -75,79 +55,40 @@ class Http
     private $_sended = false;
 
     /**
+     * @var ReadOnlyCollection
+     */
+    public $get;
+    /**
+     * @var ReadOnlyCollection
+     */
+    public $post;
+    /**
+     * @var ReadOnlyCollection
+     */
+    public $files;
+    /**
+     * @var ReadOnlyCollection
+     */
+    public $cookies;
+
+    /**
      * Http constructor.
      * @param array $config
      */
     public function __construct(array $config = [])
     {
-        $session = null;
-        foreach ($config as $key => $value) {
-            if ($key === 'session') {
-                if (is_array($value) || is_string($value)) {
-                    $session = Creator::createObject($value);
-                } else {
-                    $session = $value;
-                }
-                continue;
-            }
-            $this->{$key} = $value;
-        }
-
         $this->request = Request::fromGlobals();
 
-        $this->cookies = new CookieCollection($this->getRequest()->getCookieParams());
-        $this->get = new Collection($this->getRequest()->getQueryParams());
-        $this->post = new Collection($this->getRequest()->getServerParams());
-        $this->files = new Collection($this->getRequest()->getUploadedFiles());
+        $this->cookies = new ReadOnlyCollection($this->getRequest()->getCookieParams());
+        $this->get = new ReadOnlyCollection($this->getRequest()->getQueryParams());
+        $this->post = new ReadOnlyCollection($this->getRequest()->getServerParams());
+        $this->files = new ReadOnlyCollection($this->getRequest()->getUploadedFiles());
 
-        $this->session = $session ? $session : new HttpSession([
-            'autoStart' => false,
-            'iniOptions' => [
-                'gc_maxlifetime' => 60 * 60 * 24
-            ]
-        ]);
-        $this->flash = new FlashCollection($this->session);
+        $this->response = $this->withMiddleware($this->request, new Response());
 
-        $this->csrf = new Csrf($this);
-
-        $response = new Response();
-        $this->response = $this->withMiddleware($this->request, $response);
-        if (in_array($this->response->getStatusCode(), [301, 302])) {
+        if (isRedirectResponse($this->response)) {
             $this->send($this->response);
         }
-    }
-
-    /**
-     * @return bool
-     */
-    public function getIsAjax()
-    {
-        return $this->getRequest()->isXhr();
-    }
-
-    public function __get($name)
-    {
-        if ($name === 'http') {
-            return $this;
-        } else if ($name === 'requestUri' || $name === 'path') {
-            return $this->getRequest()->getRequestTarget();
-        } else if ($name === 'isAjax') {
-            return $this->getRequest()->isXhr();
-        } else if ($name === 'isPost') {
-            return strtoupper($this->getRequest()->getMethod()) === 'POST';
-        }
-
-        return $this->{$name};
-    }
-
-    /**
-     * @param Request $request
-     * @return $this
-     */
-    public function setRequest(Request $request)
-    {
-        $this->request = $request;
-        return $this;
     }
 
     /**
@@ -156,23 +97,6 @@ class Http
     public function getRequest()
     {
         return $this->request;
-    }
-
-    /**
-     * Helper method, which returns true if the provided response must not output a body and false
-     * if the response could have a body.
-     *
-     * @see https://tools.ietf.org/html/rfc7231
-     *
-     * @param ResponseInterface $response
-     * @return bool
-     */
-    public function isEmptyResponse(ResponseInterface $response)
-    {
-        if (method_exists($response, 'isEmpty')) {
-            return $response->isEmpty();
-        }
-        return in_array($response->getStatusCode(), [204, 205, 304]);
     }
 
     /**
@@ -201,63 +125,7 @@ class Http
             throw new Exception('Response already sended');
         }
         $this->_sended = true;
-        $this->setResponse($this->withMiddleware($this->getRequest(), $response));
-
-        $response = $this->getResponse();
-
-        // Send response
-        if (!headers_sent()) {
-            // Status
-            header(sprintf(
-                'HTTP/%s %s %s',
-                $response->getProtocolVersion(),
-                $response->getStatusCode(),
-                $response->getReasonPhrase()
-            ));
-            // Headers
-            foreach ($response->getHeaders() as $name => $values) {
-                foreach ($values as $value) {
-                    header(sprintf('%s: %s', $name, $value), false);
-                }
-            }
-            // Cookies
-            foreach ($response->getCookies() as $cookie) {
-                header(sprintf('%s: %s', 'Set-Cookie', $cookie->getHeaderValue()), false);
-            }
-        }
-
-        // Body
-        if (!$this->isEmptyResponse($response)) {
-            $body = $response->getBody();
-            if ($body->isSeekable()) {
-                $body->rewind();
-            }
-            $chunkSize = $this->getSettings()['responseChunkSize'];
-            $contentLength = $response->getHeaderLine('Content-Length');
-            if (!$contentLength) {
-                $contentLength = $body->getSize();
-            }
-            if (isset($contentLength)) {
-                $amountToRead = $contentLength;
-                while ($amountToRead > 0 && !$body->eof()) {
-                    $data = $body->read(min($chunkSize, $amountToRead));
-                    echo $data;
-
-                    $amountToRead -= strlen($data);
-
-                    if (connection_status() != CONNECTION_NORMAL) {
-                        break;
-                    }
-                }
-            } else {
-                while (!$body->eof()) {
-                    echo $body->read($chunkSize);
-                    if (connection_status() != CONNECTION_NORMAL) {
-                        break;
-                    }
-                }
-            }
-        }
+        sendResponse($this->withMiddleware($this->getRequest(), $response));
         Mindy::app()->end();
     }
 
@@ -308,16 +176,6 @@ class Http
     }
 
     /**
-     * @param ResponseInterface $response
-     * @return $this
-     */
-    public function setResponse(ResponseInterface $response)
-    {
-        $this->response = $response;
-        return $this;
-    }
-
-    /**
      * @param $route
      * @param null $data
      * @return mixed
@@ -332,25 +190,25 @@ class Http
      * Send response with application/json headers
      * @param $data
      */
-    public function json($data)
+    public function json($data, $status = 200)
     {
-        $body = !is_string($data) ? json_encode($data) : $data;
-        $this->send($this->getResponse()
-            ->withStatus(200)
+        $body = !is_string($data) ? Json::encode($data) : $data;
+        return $this->getResponse()
+            ->withStatus($status)
             ->withHeader('Content-Type', 'application/json')
-            ->withBody(stream_for($body)));
+            ->withBody(stream_for($body));
     }
 
     /**
      * Shortcut for text/html response
      * @param $html
      */
-    public function html($html)
+    public function html($html, $status = 200)
     {
-        $this->send($this->getResponse()
-            ->withStatus(200)
+        return $this->getResponse()
+            ->withStatus($status)
             ->withHeader('Content-Type', 'text/html')
-            ->withBody(stream_for($html)));
+            ->withBody(stream_for($html));
     }
 
     /**

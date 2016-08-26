@@ -6,9 +6,10 @@
  * Time: 19:40
  */
 
-namespace Mindy\Http;
+namespace Mindy\Http\Response;
 
 use GuzzleHttp\Psr7\Response as ResponseGuzzle;
+use Mindy\Http\Cookie;
 
 class Response extends ResponseGuzzle
 {

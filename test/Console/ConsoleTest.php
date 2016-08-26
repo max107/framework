@@ -9,9 +9,10 @@
 namespace Mindy\Tests\Console;
 
 use Mindy\Console\ConsoleApplication;
-use Mindy\Console\ConsoleCommand;
+use Exception;
 use Symfony\Component\Console\Tester\CommandTester;
 
+require_once 'empty/EmptyCommand.php';
 require_once 'data/FailCommand.php';
 require_once 'data/SuccessCommand.php';
 
@@ -33,5 +34,12 @@ class ConsoleTest extends \PHPUnit_Framework_TestCase
         ]);
         $output = $commandTester->getDisplay();
         $this->assertContains('SuccessCommand foo:bar', $output);
+    }
+
+    public function testEmpty()
+    {
+        $this->setExpectedException(Exception::class);
+        $application = new ConsoleApplication();
+        $application->findCommands(__DIR__ . DIRECTORY_SEPARATOR . 'empty');
     }
 }

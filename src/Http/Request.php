@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types = 1);
+
 /**
  * Created by PhpStorm.
  * User: max
@@ -44,8 +47,18 @@ class Request extends ServerRequestGuzzle
     /**
      * @return bool
      */
-    public function isXhr()
+    public function isXhr() : bool
     {
         return $this->getHeaderLine('X-Requested-With') === 'XMLHttpRequest';
+    }
+
+    /**
+     * Returns the user IP address.
+     * @return string user IP address
+     */
+    public function getUserHostAddress() : string
+    {
+        $server = $this->getServerParams();
+        return isset($server['REMOTE_ADDR']) ?? '127.0.0.1';
     }
 }

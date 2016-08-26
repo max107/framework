@@ -12,15 +12,17 @@ class ExampleController extends \Mindy\Controller\BaseController
 }
 
 return [
-    '/controller/' => [
+    [
+        'route' => '/controller/',
         'restful' => \WWW\Controllers\MainController::class
     ],
-    '/user/{name:c}?' => [
+    [
+        'route' => '/user/{name:c}?',
         'name' => 'view_user',
         'callback' => function ($name = null) {
             echo $name;
             die();
-            
+
             $response = Mindy::app()->request->getResponse();
             return $response
                 ->withStatus(200)
@@ -31,7 +33,8 @@ return [
             'csrf' => false
         ]
     ],
-    '/test/' => [
+    [
+        'route' => '/test/',
         'callback' => [
             ExampleController::class => 'index'
         ]

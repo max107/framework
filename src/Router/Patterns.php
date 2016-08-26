@@ -67,19 +67,19 @@ class Patterns
 
     protected function fetchCallback($callback)
     {
+        if (is_string($callback) && strpos($callback, ':') !== false) {
+            $callback = explode(':', $callback);
+        }
+
         if (is_callable($callback)) {
             return $callback;
-        } else if (is_string($callback) && strpos($callback, ':') !== false) {
-            return explode(':', $callback);
-        } else if (is_array($callback)) {
-            if (count($callback) == 2) {
-                return $callback;
-            } else {
-                return [key($callback), array_shift($callback)];
-            }
-        } else {
-            return null;
         }
+
+        if (is_array($callback) && count($callback) == 1) {
+            $callback = [key($callback), array_shift($callback)];
+        }
+
+        return $callback;
     }
 
     /**
@@ -102,10 +102,13 @@ class Patterns
                         throw new Exception('Missing callback or controller key in: ' . print_r($params, true));
                     }
 
+                    if (isset($params['handler'])) {
+                        $params['callback'] = $params['handler'];
+                    }
                     if (isset($params['callback'])) {
                         $callback = $this->fetchCallback($params['callback']);
                         if ($callback === null) {
-                            throw new Exception("Incorrect callback in rule " . $params['name']);
+                            throw new Exception("Incorrect callback in rule" . print_r($params, true));
                         }
 
                         if (isset($params['method']) && in_array(strtoupper($params['method']), $collector->getValidMethods())) {
