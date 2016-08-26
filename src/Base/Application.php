@@ -23,7 +23,9 @@ use Mindy\Exception\HttpException;
 use Mindy\Helper\Alias;
 use Mindy\Helper\Traits\Accessors;
 use Mindy\Helper\Traits\Configurator;
+use Mindy\Middleware\MiddlewareManager;
 use Psr\Http\Message\ResponseInterface;
+use Psr7Middlewares\Middleware;
 use RuntimeException;
 
 /**
@@ -113,10 +115,14 @@ class Application extends BaseApplication
          */
         $this->init();
     }
-    
+
+    private $_middleware;
     public function setMiddleware(array $middleware = [])
     {
-        
+        if ($this->_middleware === null) {
+            $this->_middleware = new MiddlewareManager($middleware);
+        }
+        return $this->_middleware;
     }
 
     /**

@@ -16,6 +16,7 @@
   },
   "autoload-dev": {
     "files": [
+      "src/Http/functions.php",
       "src/constants.php",
       "src/global_functions.php",
       "src/functions.php"

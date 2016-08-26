@@ -36,21 +36,6 @@ class Module extends BaseModule
         return [];
     }
 
-
-    /**
-     * @return Finder|\Symfony\Component\Finder\SplFileInfo[]
-     */
-    public function getConsoleCommands()
-    {
-        $finder = new Finder();
-        return $finder
-            ->files()
-            ->ignoreUnreadableDirs()
-            ->in($this->getBasePath() . DIRECTORY_SEPARATOR . 'Commands')
-            ->name('*Command.php');
-    }
-
-
     /**
      * @return \Mindy\Orm\Model[]
      */

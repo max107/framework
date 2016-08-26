@@ -8,16 +8,13 @@
 
 namespace WWW\Controllers;
 
-use function GuzzleHttp\Psr7\stream_for;
 use Mindy\Controller\BaseController;
-use Mindy\Http\Response;
+use Mindy\Http\Response\JsonResponse;
 
 class MainController extends BaseController
 {
-    public function getIndex($firstName = '?', $lastName = '?')
+    public function getIndex($fistName = '?', $lastName = '?')
     {
-        $response = (new Response())
-            ->withBody(stream_for('Hello world: ' . $firstName . ' - ' . $lastName));
-        $this->getRequest()->send($response);
+        return new JsonResponse(200, [], ['foo' => 'bar']);
     }
 }

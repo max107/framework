@@ -18,16 +18,19 @@ class ConsoleApplication extends Application
 {
     /**
      * Find console commands in modules and create
-     * @param array $modules
+     * @param array|\Mindy\Base\Module[] $modules
      * @return array|ConsoleCommand[]
      */
     public function findModulesCommands(array $modules = [])
     {
         $commands = [];
         foreach ($modules as $id => $module) {
-            foreach ($module->getConsoleCommands() as $fileInfo) {
-                $command = $this->createCommandFromFile($fileInfo);
-                if ($command) {
+            $finder = new Finder();
+            $files = $finder
+                ->ignoreUnreadableDirs()
+                ->files()->in($module->getBasePath() . DIRECTORY_SEPARATOR . 'Commands')->name('*Command.php');
+            foreach ($files as $fileInfo) {
+                if ($command = $this->createCommandFromFile($fileInfo)) {
                     $command->setModuleId(Text::toUnderscore($id));
                     $commands[] = $command;
                 }

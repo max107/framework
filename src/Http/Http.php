@@ -125,7 +125,7 @@ class Http
             throw new Exception('Response already sended');
         }
         $this->_sended = true;
-        sendResponse($this->withMiddleware($this->getRequest(), $response));
+        sendResponse($this->withMiddleware($this->getRequest(), $response), $this->getSettings());
         Mindy::app()->end();
     }
 

@@ -93,15 +93,15 @@ abstract class MindyBase
      */
     protected static function registerErrorHandler()
     {
-        if (MINDY_ENABLE_EXCEPTION_HANDLER || MINDY_ENABLE_ERROR_HANDLER) {
-            self::$_errorHandler = new ErrorHandler();
-            if (MINDY_ENABLE_EXCEPTION_HANDLER) {
-                set_exception_handler([self::$_errorHandler, 'handleException']);
-            }
-            if (MINDY_ENABLE_ERROR_HANDLER) {
-                set_error_handler([self::$_errorHandler, 'handleError'], error_reporting());
-            }
-        }
+//        if (MINDY_ENABLE_EXCEPTION_HANDLER || MINDY_ENABLE_ERROR_HANDLER) {
+//            self::$_errorHandler = new ErrorHandler();
+//            if (MINDY_ENABLE_EXCEPTION_HANDLER) {
+//                set_exception_handler([self::$_errorHandler, 'handleException']);
+//            }
+//            if (MINDY_ENABLE_ERROR_HANDLER) {
+//                set_error_handler([self::$_errorHandler, 'handleError'], error_reporting());
+//            }
+//        }
     }
 
     /**
@@ -115,9 +115,9 @@ abstract class MindyBase
     {
         self::registerErrorHandler();
         $app = new $class($config);
-        if (MINDY_ENABLE_EXCEPTION_HANDLER || MINDY_ENABLE_ERROR_HANDLER) {
-            self::$_errorHandler->setLogger($app->getLogger());
-        }
+//        if (MINDY_ENABLE_EXCEPTION_HANDLER || MINDY_ENABLE_ERROR_HANDLER) {
+//            self::$_errorHandler->setLogger($app->getLogger());
+//        }
         return $app;
     }
 

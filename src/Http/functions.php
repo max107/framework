@@ -24,9 +24,10 @@ function isEmptyResponse(ResponseInterface $response) : bool
 }
 
 /**
- * @param ResponseInterface|Response $response
+ * @param ResponseInterface|Response\Response $response
+ * @param array $settings
  */
-function sendResponse(ResponseInterface $response)
+function sendResponse(ResponseInterface $response, array $settings = [])
 {
     // Send response
     if (!headers_sent()) {
@@ -55,7 +56,7 @@ function sendResponse(ResponseInterface $response)
         if ($body->isSeekable()) {
             $body->rewind();
         }
-        $chunkSize = $this->getSettings()['responseChunkSize'];
+        $chunkSize = $settings['responseChunkSize'];
         $contentLength = $response->getHeaderLine('Content-Length');
         if (!$contentLength) {
             $contentLength = $body->getSize();
@@ -67,7 +68,6 @@ function sendResponse(ResponseInterface $response)
                 echo $data;
 
                 $amountToRead -= strlen($data);
-
                 if (connection_status() != CONNECTION_NORMAL) {
                     break;
                 }

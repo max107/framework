@@ -9,7 +9,6 @@
 namespace Mindy\Middleware;
 
 use function GuzzleHttp\Psr7\stream_for;
-use Mindy\Http\Response;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -41,7 +40,7 @@ class CsrfMiddleware
      * @param ServerRequestInterface $request
      * @param ResponseInterface $response
      * @param callable $next
-     * @return Response|ResponseInterface|static
+     * @return \Mindy\Http\Response\Response|ResponseInterface|static
      */
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response, callable $next)
     {
@@ -49,7 +48,7 @@ class CsrfMiddleware
             $response = $next($response, $response);
 
             if (array_key_exists($this->getName(), $request->getCookieParams()) === false) {
-                /** @var Response $response */
+                /** @var \Mindy\Http\Response\Response $response */
                 $response->withCookie([
                     'name' => $this->getName(),
                     'value' => $this->getValue($request)

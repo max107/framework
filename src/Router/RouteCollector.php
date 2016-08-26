@@ -12,7 +12,6 @@ use ReflectionMethod;
  */
 class RouteCollector
 {
-    const DEFAULT_CONTROLLER_ROUTE = 'index';
     const APPROX_CHUNK_SIZE = 10;
     /**
      * @var array
@@ -248,9 +247,6 @@ class RouteCollector
                 if (stripos($method->name, $valid) === 0) {
                     $methodName = $this->camelCaseToDashed(substr($method->name, strlen($valid)));
                     $params = $this->buildControllerParameters($method);
-                    if ($methodName === self::DEFAULT_CONTROLLER_ROUTE) {
-                        $this->addRoute($valid, $route . $params, array($classname, $method->name));
-                    }
                     $sep = $route === '/' || substr($route, strlen($route) - 1) === '/' ? '' : '/';
                     $this->addRoute($valid, $route . $sep . $methodName . $params, array($classname, $method->name));
                     break;

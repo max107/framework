@@ -10,10 +10,13 @@ declare(strict_types = 1);
 
 namespace Mindy;
 
+use Mindy\Base\Application;
+use Mindy\Base\Mindy;
+
 /**
- * @return \Mindy\Application
+ * @return \Mindy\Base\Application
  */
 function app() : Application
 {
-    return Application::app();
+    return Mindy::app();
 }

@@ -34,23 +34,27 @@ class PatternsTest extends \PHPUnit_Framework_TestCase
 
         $patterns = new Patterns([
             '/blog' => new Patterns([
-                '/' => [
+                [
+                    'route' => '/',
                     'name' => 'index',
                     'callback' => $callback
                 ],
-                '/view/{id:i}' => [
+                [
+                    'route' => '/view/{id:i}',
                     'name' => 'view',
                     'callback' => $callback
                 ]
             ], 'blog'),
             '' => new Patterns([
-                'forum' => [
+                [
+                    'route' => 'forum',
                     'name' => 'index',
                     'callback' => $callback
                 ]
             ], 'forum'),
             '/page' => new Patterns([
-                '/' => [
+                [
+                    'route' => '/',
                     'name' => 'index',
                     'callback' => $callback
                 ]

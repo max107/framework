@@ -94,6 +94,7 @@ class Patterns
             if ($params instanceof Patterns || $params instanceof CustomPatterns) {
                 $params->parse($collector, $params->getPatterns(), trim($parentPrefix, '/') . $urlPrefix);
             } else {
+                $urlPrefix = $params['route'];
                 $method = Dispatcher::ANY;
                 if (is_callable($params)) {
                     $collector->addRoute($method, trim($parentPrefix, '/') . $urlPrefix, $params);
@@ -128,7 +129,7 @@ class Patterns
 
                         $collector->addRoute($method, $route, $callback, isset($params['params']) ? $params['params'] : []);
                     } else if (isset($params['restful'])) {
-                        $collector->restful(trim($parentPrefix, '/') . $urlPrefix, $params['restful']);
+                        $collector->restful($urlPrefix, $params['restful']);
                     }
                 }
             }
