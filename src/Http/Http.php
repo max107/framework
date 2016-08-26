@@ -220,6 +220,10 @@ class Http
                     header(sprintf('%s: %s', $name, $value), false);
                 }
             }
+            // Cookies
+            foreach ($response->getCookies() as $cookie) {
+                header(sprintf('%s: %s', 'Set-Cookie', $cookie->getHeaderValue()), false);
+            }
         }
 
         // Body

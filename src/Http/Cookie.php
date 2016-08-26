@@ -2,17 +2,27 @@
 
 namespace Mindy\Http;
 
+/**
+ * Class Cookie
+ * @package Mindy\Http
+ */
 class Cookie
 {
     private $name;
     private $value;
     private $expires = 0;
     private $maxAge = 0;
-    private $path;
+    private $path = '/';
     private $domain;
     private $secure = false;
     private $httpOnly = false;
 
+    /**
+     * Cookie constructor.
+     * @param $name
+     * @param null $value
+     * @param array $options
+     */
     public function __construct($name, $value = null, array $options = [])
     {
         $this->name = $name;
@@ -22,7 +32,18 @@ class Cookie
         }
     }
 
-    public function __toString()
+    /**
+     * @return string
+     */
+    public function __toString() : string
+    {
+        return $this->getHeaderValue();
+    }
+
+    /**
+     * @return string
+     */
+    public function getHeaderValue() : string
     {
         $cookieStringParts = [
             urlencode($this->name) . '=' . urlencode($this->value),
