@@ -3,28 +3,26 @@
 namespace Mindy\Helper;
 
 use ArrayIterator;
-use Countable;
-use IteratorAggregate;
-use Serializable;
+use Mindy\Interfaces\CollectionInterface;
 use Traversable;
 
 /**
  * Class Collection
  * @package Mindy\Helper
  */
-class Collection implements Countable, Serializable, IteratorAggregate
+class Collection implements CollectionInterface
 {
     /**
      * @var array
      */
     private $_data = [];
 
-    public function __construct(array $data)
+    public function __construct(array $data = [])
     {
         $this->_data = $data;
     }
 
-    public function add($key, $value)
+    public function set($key, $value)
     {
         $this->_data[$key] = $value;
         return $this;
@@ -70,46 +68,13 @@ class Collection implements Countable, Serializable, IteratorAggregate
     }
 
     /**
-     * Merges two or more arrays into one recursively.
-     * If each array has an element with the same string key value, the latter
-     * will overwrite the former (different from array_merge_recursive).
-     * Recursive merging will be conducted if both arrays have an element of array
-     * type and are having the same key.
-     * For integer-keyed elements, the elements from the latter array will
-     * be appended to the former array.
-     * @param array $a array to be merged to
-     * @param array $b array to be merged from. You can specify additional
-     * arrays via third argument, fourth argument etc.
-     * @return array the merged array (the original arrays are not changed.)
-     * @see mergeWith
-     */
-    public static function mergeArray($a, $b)
-    {
-        $args = func_get_args();
-        $res = array_shift($args);
-        while (!empty($args)) {
-            $next = array_shift($args);
-            foreach ($next as $k => $v) {
-                if (is_integer($k)) {
-                    isset($res[$k]) ? $res[] = $v : $res[$k] = $v;
-                } elseif (is_array($v) && isset($res[$k]) && is_array($res[$k])) {
-                    $res[$k] = self::mergeArray($res[$k], $v);
-                } else {
-                    $res[$k] = $v;
-                }
-            }
-        }
-        return $res;
-    }
-
-    /**
      * Count elements of an object
      * @link http://php.net/manual/en/countable.count.php
      * @return int The custom count as an integer. The return value is cast to an integer.
      */
     public function count()
     {
-        return count($this->_data);
+        return count($this->all());
     }
 
     /**
@@ -143,7 +108,7 @@ class Collection implements Countable, Serializable, IteratorAggregate
      */
     public function getIterator()
     {
-        return new ArrayIterator($this->_data);
+        return new ArrayIterator($this->all());
     }
 
     /**
@@ -151,6 +116,68 @@ class Collection implements Countable, Serializable, IteratorAggregate
      */
     public function toArray()
     {
-        return $this->_data;
+        return $this->all();
+    }
+
+    /**
+     * Whether a offset exists
+     * @link http://php.net/manual/en/arrayaccess.offsetexists.php
+     * @param mixed $offset <p>
+     * An offset to check for.
+     * </p>
+     * @return boolean true on success or false on failure.
+     * </p>
+     * <p>
+     * The return value will be casted to boolean if non-boolean was returned.
+     * @since 5.0.0
+     */
+    public function offsetExists($offset)
+    {
+        return $this->has($offset);
+    }
+
+    /**
+     * Offset to retrieve
+     * @link http://php.net/manual/en/arrayaccess.offsetget.php
+     * @param mixed $offset <p>
+     * The offset to retrieve.
+     * </p>
+     * @return mixed Can return all value types.
+     * @since 5.0.0
+     */
+    public function offsetGet($offset)
+    {
+        return $this->get($offset);
+    }
+
+    /**
+     * Offset to set
+     * @link http://php.net/manual/en/arrayaccess.offsetset.php
+     * @param mixed $offset <p>
+     * The offset to assign the value to.
+     * </p>
+     * @param mixed $value <p>
+     * The value to set.
+     * </p>
+     * @return void
+     * @since 5.0.0
+     */
+    public function offsetSet($offset, $value)
+    {
+        $this->set($offset, $value);
+    }
+
+    /**
+     * Offset to unset
+     * @link http://php.net/manual/en/arrayaccess.offsetunset.php
+     * @param mixed $offset <p>
+     * The offset to unset.
+     * </p>
+     * @return void
+     * @since 5.0.0
+     */
+    public function offsetUnset($offset)
+    {
+        $this->remove($offset);
     }
 }

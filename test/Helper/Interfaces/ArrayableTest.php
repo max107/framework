@@ -2,7 +2,7 @@
 
 namespace Mindy\Helper\Tests\Interfaces;
 
-use Mindy\Helper\Interfaces\Arrayable;
+use Mindy\Interfaces\Arrayable;
 
 /**
  * 

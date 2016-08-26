@@ -52,15 +52,6 @@ trait Singleton
     }
 
     /**
-     * @return string the short name of this class.
-     */
-    public static function classNameShort()
-    {
-        $reflect = new ReflectionClass(self::className());
-        return $reflect->getShortName();
-    }
-
-    /**
      * Constructor.
      * The default implementation does two things:
      *

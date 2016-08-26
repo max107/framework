@@ -8,7 +8,9 @@
 
 namespace Mindy\Http;
 
-class FlashCollection implements CollectionInterface
+use Mindy\Helper\Collection;
+
+class FlashCollection extends Collection
 {
     const KEY = 'flash';
 

@@ -31,6 +31,11 @@ class AliasTest extends \PHPUnit_Framework_TestCase
             'foo' => __DIR__,
             'Modules' => __DIR__ . DIRECTORY_SEPARATOR . 'Modules',
         ], Alias::all());
+
+        Alias::remove('foo');
+        $this->assertEquals([
+            'Modules' => __DIR__ . DIRECTORY_SEPARATOR . 'Modules',
+        ], Alias::all());
         
         Alias::replace($aliases);
     }

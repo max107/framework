@@ -14,7 +14,7 @@ class Creator
     /**
      * @var string
      */
-    public static $singletonMethod = 'getInstance';
+    const SINGLETON_METHOD = 'getInstance';
     /**
      * @var array initial property values that will be applied to objects newly created via [[createObject]].
      * The array keys are class names without leading backslashes "\", and the array values are the corresponding
@@ -103,9 +103,8 @@ class Creator
             if (!empty($config)) {
                 $args[] = $config;
             }
-            if (method_exists($class, self::$singletonMethod)) {
-                $method = $reflection->getMethod(self::$singletonMethod);
-                $obj = $method->invokeArgs($class, $args);
+            if (method_exists($class, self::SINGLETON_METHOD)) {
+                $obj = call_user_func_array([$class, self::SINGLETON_METHOD], $args);
             } else {
                 $obj = $reflection->newInstanceArgs($args);
             }
@@ -114,14 +113,15 @@ class Creator
         }
 
 
-        if (array_key_exists(Configurator::className(), self::class_uses_deep($obj))) {
-            return $obj;
-        } else {
-            return self::configure($obj, $config);
-        }
+        return self::classUseTrait($obj, Configurator::class) ? $obj : self::configure($obj, $config);
     }
 
-    public static function class_uses_deep($class, $autoload = true)
+    /**
+     * @param $class
+     * @param bool $autoload
+     * @return array
+     */
+    public static function classUseTrait($class, $trait, $autoload = true)
     {
         $traits = [];
 
@@ -133,7 +133,7 @@ class Creator
             $traits = array_merge(class_uses($trait, $autoload), $traits);
         }
 
-        return array_unique($traits);
+        return array_key_exists($trait, array_unique($traits));
     }
 
     /**

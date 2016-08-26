@@ -6,9 +6,14 @@
  * Time: 19:23
  */
 
-namespace Mindy\Http;
+namespace Mindy\Interfaces;
 
-interface CollectionInterface
+use Countable;
+use Serializable;
+use IteratorAggregate;
+use ArrayAccess;
+
+interface CollectionInterface extends Arrayable, Countable, Serializable, IteratorAggregate, ArrayAccess
 {
     /**
      * @return array

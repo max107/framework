@@ -1,6 +1,6 @@
 <?php
 
-namespace Mindy\Helper\Interfaces;
+namespace Mindy\Interfaces;
 
 /**
  * Interface Arrayable
