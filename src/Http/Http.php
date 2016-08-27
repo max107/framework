@@ -15,6 +15,7 @@ use function GuzzleHttp\Psr7\stream_for;
 use Mindy\Base\Mindy;
 use Mindy\Helper\Creator;
 use Mindy\Helper\Json;
+use Mindy\Helper\Traits\Accessors;
 use Mindy\Helper\Traits\Configurator;
 use Mindy\Http\Collection\CookieParamCollection;
 use Mindy\Http\Collection\FileParamCollection;
@@ -22,6 +23,7 @@ use Mindy\Http\Collection\GetParamCollection;
 use Mindy\Http\Collection\PostParamCollection;
 use Mindy\Http\Response\Response;
 use Mindy\Middleware\MiddlewareManager;
+use Mindy\Session\Adapter\PdoSessionAdapter;
 use Mindy\Session\Flash;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -33,6 +35,8 @@ use Psr\Http\Message\ServerRequestInterface;
 class Http
 {
     use Configurator;
+    use Accessors;
+
     /**
      * @var array
      */
@@ -73,9 +77,9 @@ class Http
      */
     public $cookies;
     /**
-     * @var \Mindy\Session\Session
+     * @var Flash
      */
-    public $session;
+    public $flash;
     /**
      * @var callable
      */
@@ -88,9 +92,19 @@ class Http
     public function __construct(array $config = [])
     {
         if (!isset($config['session'])) {
-            $config['session'] = [
-                'class' => '\Mindy\Session\Session'
-            ];
+            $config['session'] = array(
+                'class' => '\Mindy\Session\Session',
+//                'handler' => Creator::createObject([
+//                    'class' => '\Mindy\Session\Adapter\RedisSessionAdapter'
+//                ])
+                'handler' => Creator::createObject([
+                    'class' => '\Mindy\Session\Adapter\NativeSessionAdapter'
+                ])
+//                'handler' => new PdoSessionAdapter(new \PDO('mysql:host=localhost;dbname=test;charset=utf8', 'root', '', array(
+//                    \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+//                    \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC
+//                )))
+            );
         }
 
         $this->configure($config);
@@ -108,6 +122,11 @@ class Http
         if (isRedirectResponse($this->response)) {
             $this->send($this->response);
         }
+    }
+
+    public function getSession()
+    {
+        return $this->_session;
     }
 
     /**

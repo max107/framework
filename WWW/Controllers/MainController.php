@@ -15,7 +15,15 @@ class MainController extends BaseController
 {
     public function getIndex($fistName = '?', $lastName = '?')
     {
+        /** @var \Mindy\Session\Session $session */
         $session = app()->http->session;
-        $session->set('qwe', '123');
+        $session->start();
+//        $session->set('baz', 'qwe');
+        $data = $session->all();
+        d(
+            $data,
+            ini_get('session.save_path'),
+            ini_get('session.save_handler')
+        );
     }
 }

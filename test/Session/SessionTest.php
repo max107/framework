@@ -8,15 +8,21 @@
 
 namespace Mindy\Tests\Session;
 
+use Mindy\Session\Adapter\SessionAdapterInterface;
 use Mindy\Session\Adapter\MemcachedSessionAdapter;
 use Mindy\Session\Adapter\MemorySessionAdapter;
 use Mindy\Session\Adapter\NativeSessionAdapter;
 use Mindy\Session\Adapter\RedisSessionAdapter;
 use Mindy\Session\Session;
-use Mindy\Session\Adapter\SessionAdapterInterface;
 
 class SessionTest extends \PHPUnit_Framework_TestCase
 {
+    public function setUp()
+    {
+        ini_set('session.save_handler', 'files');
+        ini_set('session.save_path', '/tmp/');
+    }
+
     protected function sessionTesting(SessionAdapterInterface $handler)
     {
         $session = new Session([
@@ -24,10 +30,8 @@ class SessionTest extends \PHPUnit_Framework_TestCase
         ]);
 
         $this->assertFalse($session->isStarted());
-        $this->assertFalse($session->isClosed());
         $session->start();
         $this->assertTrue($session->isStarted());
-        $this->assertFalse($session->isClosed());
 
         $this->assertTrue($session->set('foo', 'bar'));
         $this->assertEquals('bar', $session->get('foo'));
@@ -36,11 +40,13 @@ class SessionTest extends \PHPUnit_Framework_TestCase
 
         $this->assertTrue($session->clear());
         $this->assertEquals(0, count($session));
+        $session->close();
     }
 
     public function testMemorySession()
     {
-        $this->sessionTesting(new MemorySessionAdapter());
+        $handler = new MemorySessionAdapter();
+        $this->sessionTesting($handler);
     }
 
     /**
@@ -48,7 +54,9 @@ class SessionTest extends \PHPUnit_Framework_TestCase
      */
     public function testMemcachedSession()
     {
-        $this->sessionTesting(new MemcachedSessionAdapter());
+        $handler = new MemcachedSessionAdapter();
+        $this->sessionTesting($handler);
+        $this->assertEquals(ini_get('session.save_path'), $handler->getServerString());
     }
 
     /**
@@ -56,7 +64,9 @@ class SessionTest extends \PHPUnit_Framework_TestCase
      */
     public function testRedisSession()
     {
-        $this->sessionTesting(new RedisSessionAdapter());
+        $handler = new RedisSessionAdapter();
+        $this->sessionTesting($handler);
+        $this->assertEquals(ini_get('session.save_path'), $handler->getServerString());
     }
 
     /**
