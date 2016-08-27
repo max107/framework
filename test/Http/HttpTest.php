@@ -32,40 +32,4 @@ class HttpTest extends \PHPUnit_Framework_TestCase
         $this->assertInstanceOf(UploadedFile::class, $file);
         $this->assertEquals(123, $file->getSize());
     }
-
-    /**
-     * @expectedException Exception
-     */
-    public function testGetSetException()
-    {
-        $http = new Http;
-        $this->assertEquals('bar', $http->get->set('qwe', 'bar'));
-    }
-
-    /**
-     * @expectedException Exception
-     */
-    public function testPostSetException()
-    {
-        $http = new Http;
-        $this->assertEquals('bar', $http->post->set('qwe', 'bar'));
-    }
-
-    /**
-     * @expectedException Exception
-     */
-    public function testCookiesSetException()
-    {
-        $http = new Http;
-        $this->assertEquals('bar', $http->cookies->set('qwe', 'bar'));
-    }
-
-    /**
-     * @expectedException Exception
-     */
-    public function testFilesSetException()
-    {
-        $http = new Http;
-        $this->assertEquals('bar', $http->files->set('qwe', 'bar'));
-    }
 }

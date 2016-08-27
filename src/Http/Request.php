@@ -61,4 +61,58 @@ class Request extends ServerRequestGuzzle
         $server = $this->getServerParams();
         return isset($server['REMOTE_ADDR']) ? $server['REMOTE_ADDR'] : '127.0.0.1';
     }
+
+    /**
+     * @param $name
+     * @param null $defaultValue
+     * @return mixed
+     */
+    public function getQueryParam($name, $defaultValue = null)
+    {
+        $params = $this->getQueryParams();
+        return isset($params[$name]) ? $params[$name] : $defaultValue;
+    }
+
+    /**
+     * @param $name
+     * @param null $defaultValue
+     * @return mixed
+     */
+    public function getParsedBodyParam($name, $defaultValue = null)
+    {
+        $params = $this->getParsedBody();
+        return isset($params[$name]) ? $params[$name] : $defaultValue;
+    }
+
+    /**
+     * @param $name
+     * @param null $defaultValue
+     * @return mixed
+     */
+    public function getCookieParam($name, $defaultValue = null)
+    {
+        $params = $this->getCookieParams();
+        return isset($params[$name]) ? $params[$name] : $defaultValue;
+    }
+
+    /**
+     * @param $name
+     * @param null $defaultValue
+     * @return mixed
+     */
+    public function getServerParam($name, $defaultValue = null)
+    {
+        $params = $this->getServerParams();
+        return isset($params[$name]) ? $params[$name] : $defaultValue;
+    }
+
+    /**
+     * @param $name
+     * @return mixed
+     */
+    public function getUploadedFile($name)
+    {
+        $params = $this->getUploadedFiles();
+        return isset($params[$name]) ? $params[$name] : null;
+    }
 }

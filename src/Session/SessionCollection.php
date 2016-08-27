@@ -8,9 +8,7 @@
 
 namespace Mindy\Session;
 
-use Mindy\Http\CollectionInterface;
-
-class SessionCollection implements CollectionInterface
+class SessionCollection
 {
     /**
      * @param $key

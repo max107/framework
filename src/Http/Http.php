@@ -13,11 +13,16 @@ namespace Mindy\Http;
 use Exception;
 use function GuzzleHttp\Psr7\stream_for;
 use Mindy\Base\Mindy;
+use Mindy\Helper\Creator;
 use Mindy\Helper\Json;
-use Mindy\Helper\ReadOnlyCollection;
 use Mindy\Helper\Traits\Configurator;
+use Mindy\Http\Collection\CookieParamCollection;
+use Mindy\Http\Collection\FileParamCollection;
+use Mindy\Http\Collection\GetParamCollection;
+use Mindy\Http\Collection\PostParamCollection;
 use Mindy\Http\Response\Response;
 use Mindy\Middleware\MiddlewareManager;
+use Mindy\Session\Flash;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -52,21 +57,25 @@ class Http
     private $_sended = false;
 
     /**
-     * @var ReadOnlyCollection
+     * @var GetParamCollection
      */
     public $get;
     /**
-     * @var ReadOnlyCollection
+     * @var PostParamCollection
      */
     public $post;
     /**
-     * @var ReadOnlyCollection
+     * @var FileParamCollection
      */
     public $files;
     /**
-     * @var ReadOnlyCollection
+     * @var CookieParamCollection
      */
     public $cookies;
+    /**
+     * @var \Mindy\Session\Session
+     */
+    public $session;
     /**
      * @var callable
      */
@@ -78,14 +87,22 @@ class Http
      */
     public function __construct(array $config = [])
     {
+        if (!isset($config['session'])) {
+            $config['session'] = [
+                'class' => '\Mindy\Session\Session'
+            ];
+        }
+
         $this->configure($config);
 
         $this->request = Request::fromGlobals();
 
-        $this->cookies = new ReadOnlyCollection($this->getRequest()->getCookieParams());
-        $this->get = new ReadOnlyCollection($this->getRequest()->getQueryParams());
-        $this->post = new ReadOnlyCollection($this->getRequest()->getParsedBody());
-        $this->files = new ReadOnlyCollection($this->getRequest()->getUploadedFiles());
+        $this->cookies = new CookieParamCollection($this->request);
+        $this->get = new GetParamCollection($this->request);
+        $this->post = new PostParamCollection($this->request);
+        $this->files = new FileParamCollection($this->request);
+
+        $this->flash = new Flash();
 
         $this->response = $this->withMiddleware($this->request, new Response());
         if (isRedirectResponse($this->response)) {
@@ -93,6 +110,27 @@ class Http
         }
     }
 
+    /**
+     * @param array $config
+     */
+    public function setSession(array $config)
+    {
+        if (is_array($config)) {
+            $session = Creator::createObject($config);
+        } else if (is_object($config)) {
+            $session = $config;
+        } else if ($config instanceof \Closure) {
+            $session = $config();
+        } else {
+            throw new \RuntimeException("Unknown settings type");
+        }
+        $this->session = $session;
+    }
+
+    /**
+     * @param array $middleware
+     * @return callable|MiddlewareManager
+     */
     public function setMiddleware(array $middleware = [])
     {
         if ($this->_middleware === null) {
@@ -126,6 +164,7 @@ class Http
 
     /**
      * Apply middlewares to response
+     * @param ServerRequestInterface $request
      * @param ResponseInterface $response
      * @return ResponseInterface
      */
@@ -143,7 +182,7 @@ class Http
      * Return request global settings
      * @return array
      */
-    public function getSettings()
+    public function getSettings() : array
     {
         return array_merge($this->defaultSettings, $this->settings);
     }
@@ -180,7 +219,7 @@ class Http
     /**
      * @return Response
      */
-    public function getResponse()
+    public function getResponse() : ResponseInterface
     {
         return $this->response;
     }
@@ -200,7 +239,7 @@ class Http
      * Send response with application/json headers
      * @param $data
      */
-    public function json($data, $status = 200)
+    public function json($data, $status = 200) : ResponseInterface
     {
         $body = !is_string($data) ? Json::encode($data) : $data;
         return $this->getResponse()
@@ -214,7 +253,7 @@ class Http
      * @param $html
      * @return ResponseInterface
      */
-    public function html($html, $status = 200)
+    public function html($html, $status = 200) : ResponseInterface
     {
         return $this->getResponse()
             ->withStatus($status)
@@ -225,7 +264,7 @@ class Http
     /**
      * @return bool
      */
-    public function isXhr()
+    public function isXhr() : bool
     {
         return $this->getRequest()->isXhr();
     }

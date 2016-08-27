@@ -8,12 +8,14 @@
 
 namespace WWW\Controllers;
 
+use function Mindy\app;
 use Mindy\Controller\BaseController;
 
 class MainController extends BaseController
 {
     public function getIndex($fistName = '?', $lastName = '?')
     {
-        echo 123;
+        $session = app()->http->session;
+        $session->set('qwe', '123');
     }
 }

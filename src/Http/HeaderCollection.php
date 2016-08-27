@@ -8,6 +8,8 @@
 
 namespace Mindy\Http;
 
+use Mindy\Helper\Collection;
+
 class HeaderCollection extends Collection
 {
     private $_headerStrings = [];

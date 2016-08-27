@@ -27,6 +27,6 @@ trait Legacy
      */
     public function getIsAjax()
     {
-        return $this->getHeaderLine('X-Requested-With:') === 'XMLHttpRequest';
+        return $this->isXhr();
     }
 }
