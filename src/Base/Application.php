@@ -117,14 +117,6 @@ class Application extends BaseApplication
         $this->init();
     }
 
-    public function setMiddleware(array $middleware = [])
-    {
-        if ($this->_middleware === null) {
-            $this->_middleware = new MiddlewareManager($middleware);
-        }
-        return $this->_middleware;
-    }
-
     /**
      * return $this;
      */
@@ -366,8 +358,6 @@ class Application extends BaseApplication
         } else {
             $response = $output instanceof ResponseInterface ? $output : $this->request->html($output);
         }
-        $middleware = $this->_middleware;
-        $response = $middleware($this->request->getRequest(), $response);
         $this->request->send($response);
     }
 

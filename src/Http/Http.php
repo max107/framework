@@ -17,6 +17,7 @@ use Mindy\Helper\Json;
 use Mindy\Helper\ReadOnlyCollection;
 use Mindy\Helper\Traits\Configurator;
 use Mindy\Http\Response\Response;
+use Mindy\Middleware\MiddlewareManager;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -37,10 +38,6 @@ class Http
     protected $defaultSettings = [
         'responseChunkSize' => 4096,
     ];
-    /**
-     * @var callable
-     */
-    public $middleware;
     /**
      * @var Request
      */
@@ -70,6 +67,10 @@ class Http
      * @var ReadOnlyCollection
      */
     public $cookies;
+    /**
+     * @var callable
+     */
+    private $_middleware;
 
     /**
      * Http constructor.
@@ -77,18 +78,27 @@ class Http
      */
     public function __construct(array $config = [])
     {
+        $this->configure($config);
+
         $this->request = Request::fromGlobals();
 
         $this->cookies = new ReadOnlyCollection($this->getRequest()->getCookieParams());
         $this->get = new ReadOnlyCollection($this->getRequest()->getQueryParams());
-        $this->post = new ReadOnlyCollection($this->getRequest()->getServerParams());
+        $this->post = new ReadOnlyCollection($this->getRequest()->getParsedBody());
         $this->files = new ReadOnlyCollection($this->getRequest()->getUploadedFiles());
 
         $this->response = $this->withMiddleware($this->request, new Response());
-
         if (isRedirectResponse($this->response)) {
             $this->send($this->response);
         }
+    }
+
+    public function setMiddleware(array $middleware = [])
+    {
+        if ($this->_middleware === null) {
+            $this->_middleware = new MiddlewareManager($middleware);
+        }
+        return $this->_middleware;
     }
 
     /**
@@ -97,21 +107,6 @@ class Http
     public function getRequest()
     {
         return $this->request;
-    }
-
-    /**
-     * Apply middlewares to response
-     * @param ResponseInterface $response
-     * @return ResponseInterface
-     */
-    protected function withMiddleware(ServerRequestInterface $request, ResponseInterface $response)
-    {
-        if ($this->middleware === null) {
-            return $response;
-        }
-
-        $middleware = $this->middleware;
-        return $middleware($request, $response);
     }
 
     /**
@@ -127,6 +122,21 @@ class Http
         $this->_sended = true;
         sendResponse($this->withMiddleware($this->getRequest(), $response), $this->getSettings());
         Mindy::app()->end();
+    }
+
+    /**
+     * Apply middlewares to response
+     * @param ResponseInterface $response
+     * @return ResponseInterface
+     */
+    protected function withMiddleware(ServerRequestInterface $request, ResponseInterface $response)
+    {
+        if ($this->_middleware === null) {
+            return $response;
+        }
+
+        $middleware = $this->_middleware;
+        return $middleware($request, $response);
     }
 
     /**

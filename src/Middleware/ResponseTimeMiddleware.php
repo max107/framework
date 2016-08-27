@@ -8,7 +8,6 @@
 
 namespace Mindy\Middleware;
 
-
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -21,6 +20,7 @@ class ResponseTimeMiddleware
             $server['REQUEST_TIME_FLOAT'] = microtime(true);
         }
 
+        /** @var ResponseInterface $response */
         $response = $next($request, $response);
         $time = (microtime(true) - $server['REQUEST_TIME_FLOAT']) * 1000;
         return $response->withHeader('X-Response-Time', sprintf('%2.3fms', $time));

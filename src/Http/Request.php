@@ -59,6 +59,6 @@ class Request extends ServerRequestGuzzle
     public function getUserHostAddress() : string
     {
         $server = $this->getServerParams();
-        return isset($server['REMOTE_ADDR']) ?? '127.0.0.1';
+        return isset($server['REMOTE_ADDR']) ? $server['REMOTE_ADDR'] : '127.0.0.1';
     }
 }
