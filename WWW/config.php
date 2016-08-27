@@ -3,7 +3,12 @@
 return [
     'basePath' => __DIR__,
     'middleware' => [
-        'csrf' => ['class' => \Mindy\Middleware\CsrfMiddleware::class]
+        'csrf' => [
+            'class' => \Mindy\Middleware\CsrfMiddleware::class
+        ],
+        'response_time' => [
+            'class' => \Mindy\Middleware\ResponseTimeMiddleware::class
+        ]
     ],
     'modules' => [
         'Core' => [

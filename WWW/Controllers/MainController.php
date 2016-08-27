@@ -9,12 +9,11 @@
 namespace WWW\Controllers;
 
 use Mindy\Controller\BaseController;
-use Mindy\Http\Response\JsonResponse;
 
 class MainController extends BaseController
 {
     public function getIndex($fistName = '?', $lastName = '?')
     {
-        return new JsonResponse(200, [], ['foo' => 'bar']);
+        echo 123;
     }
 }

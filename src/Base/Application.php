@@ -25,6 +25,7 @@ use Mindy\Helper\Traits\Accessors;
 use Mindy\Helper\Traits\Configurator;
 use Mindy\Middleware\MiddlewareManager;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use Psr7Middlewares\Middleware;
 use RuntimeException;
 
@@ -61,10 +62,6 @@ class Application extends BaseApplication
      */
     public $locale = [];
     /**
-     * @var array
-     */
-    public $commandMap = [];
-    /**
      * @var string
      */
     private $_homeUrl;
@@ -76,6 +73,10 @@ class Application extends BaseApplication
      * @var ServiceLocator
      */
     private $_moduleLocator;
+    /**
+     * @var MiddlewareManager
+     */
+    private $_middleware;
 
     /**
      * Constructor.
@@ -116,7 +117,6 @@ class Application extends BaseApplication
         $this->init();
     }
 
-    private $_middleware;
     public function setMiddleware(array $middleware = [])
     {
         if ($this->_middleware === null) {
@@ -361,11 +361,14 @@ class Application extends BaseApplication
         ob_start();
         $output = $this->parseRoute();
         $html = ob_get_clean();
-        if ($output instanceof ResponseInterface) {
-            $this->request->send($output);
+        if (!empty($html)) {
+            $response = $html instanceof ResponseInterface ? $html : $this->request->html($html);
         } else {
-            $this->request->html($html);
+            $response = $output instanceof ResponseInterface ? $output : $this->request->html($output);
         }
+        $middleware = $this->_middleware;
+        $response = $middleware($this->request->getRequest(), $response);
+        $this->request->send($response);
     }
 
     /**

@@ -202,6 +202,7 @@ class Http
     /**
      * Shortcut for text/html response
      * @param $html
+     * @return ResponseInterface
      */
     public function html($html, $status = 200)
     {

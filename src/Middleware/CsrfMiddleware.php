@@ -45,7 +45,7 @@ class CsrfMiddleware
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response, callable $next)
     {
         if (in_array($request->getMethod(), ['HEAD', 'OPTIONS', 'GET'])) {
-            $response = $next($response, $response);
+            $response = $next($request, $response);
 
             if (array_key_exists($this->getName(), $request->getCookieParams()) === false) {
                 /** @var \Mindy\Http\Response\Response $response */

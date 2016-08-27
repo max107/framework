@@ -9,6 +9,10 @@ return [
         'restful' => \WWW\Controllers\MainController::class
     ],
     [
+        'route' => '/',
+        'callback' => [\WWW\Controllers\MainController::class, 'getIndex']
+    ],
+    [
         'route' => '/user/{name:c}?',
         'name' => 'view_user',
         'callback' => function ($name = null) {
