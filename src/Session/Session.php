@@ -4,6 +4,7 @@ namespace Mindy\Session;
 
 use Countable;
 use Exception;
+use Mindy\Helper\Creator;
 use Mindy\Session\Adapter\SessionAdapterInterface;
 
 /**
@@ -53,11 +54,14 @@ class Session implements Countable
     }
 
     /**
-     * @param SessionAdapterInterface $handler
+     * @param array|SessionAdapterInterface $handler
      * @throws Exception
      */
-    public function setHandler(SessionAdapterInterface $handler)
+    public function setHandler($handler)
     {
+        if (is_array($handler)) {
+            $handler = Creator::createObject($handler);
+        }
         $this->_handler = $handler;
 
         if (session_set_save_handler($handler, true) === false) {
@@ -78,7 +82,7 @@ class Session implements Countable
      */
     public function start()
     {
-        return $this->_handler->start();
+        return $this->getHandler()->start();
     }
 
     /**
@@ -88,7 +92,7 @@ class Session implements Countable
      */
     public function set($name, $value)
     {
-        return $this->_handler->set($name, $value);
+        return $this->getHandler()->set($name, $value);
     }
 
     /**
@@ -98,7 +102,7 @@ class Session implements Countable
      */
     public function get($name, $defaultValue = null)
     {
-        return $this->_handler->get($name, $defaultValue);
+        return $this->getHandler()->get($name, $defaultValue);
     }
 
     /**
@@ -112,7 +116,7 @@ class Session implements Countable
      */
     public function count()
     {
-        return count($this->_handler);
+        return count($this->getHandler());
     }
 
     /**
@@ -120,7 +124,7 @@ class Session implements Countable
      */
     public function all() : array
     {
-        return $this->_handler->all();
+        return $this->getHandler()->all();
     }
 
     /**
@@ -128,7 +132,7 @@ class Session implements Countable
      */
     public function getId() : string
     {
-        return $this->_handler->getId();
+        return $this->getHandler()->getId();
     }
 
     /**
@@ -146,7 +150,7 @@ class Session implements Countable
      */
     public function isStarted() : bool
     {
-        return $this->_handler->isStarted();
+        return $this->getHandler()->isStarted();
     }
 
     /**
@@ -154,6 +158,6 @@ class Session implements Countable
      */
     public function clear() : bool
     {
-        return $this->_handler->clear();
+        return $this->getHandler()->clear();
     }
 }

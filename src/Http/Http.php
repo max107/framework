@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: max
- * Date: 05.08.16
- * Time: 23:04
- */
 
 declare(strict_types = 1);
 
@@ -23,7 +17,6 @@ use Mindy\Http\Collection\GetParamCollection;
 use Mindy\Http\Collection\PostParamCollection;
 use Mindy\Http\Response\Response;
 use Mindy\Middleware\MiddlewareManager;
-use Mindy\Session\Adapter\PdoSessionAdapter;
 use Mindy\Session\Flash;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -31,6 +24,7 @@ use Psr\Http\Message\ServerRequestInterface;
 /**
  * Class Http
  * @package Mindy\Http
+ * @property \Mindy\Session\Adapter\SessionAdapterInterface $session The session component.
  */
 class Http
 {
@@ -92,19 +86,12 @@ class Http
     public function __construct(array $config = [])
     {
         if (!isset($config['session'])) {
-            $config['session'] = array(
+            $config['session'] = [
                 'class' => '\Mindy\Session\Session',
-//                'handler' => Creator::createObject([
-//                    'class' => '\Mindy\Session\Adapter\RedisSessionAdapter'
-//                ])
-                'handler' => Creator::createObject([
+                'handler' => [
                     'class' => '\Mindy\Session\Adapter\NativeSessionAdapter'
-                ])
-//                'handler' => new PdoSessionAdapter(new \PDO('mysql:host=localhost;dbname=test;charset=utf8', 'root', '', array(
-//                    \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
-//                    \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC
-//                )))
-            );
+                ]
+            ];
         }
 
         $this->configure($config);
