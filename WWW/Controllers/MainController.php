@@ -8,14 +8,12 @@
 
 namespace WWW\Controllers;
 
-use function Mindy\app;
 use Mindy\Controller\BaseController;
 
 class MainController extends BaseController
 {
-    public function getIndex($fistName = '?', $lastName = '?')
+    public function getIndex()
     {
-        $request = app()->request;
-        d($request->session);
+
     }
 }
