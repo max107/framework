@@ -3,6 +3,7 @@
 namespace Mindy\Session;
 
 use Countable;
+use Exception;
 use Mindy\Session\Adapter\SessionAdapterInterface;
 
 /**
@@ -28,6 +29,10 @@ class Session implements Countable
     {
         $this->configure($config);
 
+        if (isset($config['handler']) === false) {
+            register_shutdown_function([$this, 'close']);
+        }
+
         if ($this->autoStart) {
             $this->start();
         }
@@ -49,10 +54,15 @@ class Session implements Countable
 
     /**
      * @param SessionAdapterInterface $handler
+     * @throws Exception
      */
     public function setHandler(SessionAdapterInterface $handler)
     {
         $this->_handler = $handler;
+
+        if (session_set_save_handler($handler, true) === false) {
+            throw new Exception("Failed to set custom session handlers");
+        }
     }
 
     /**
@@ -61,22 +71,6 @@ class Session implements Countable
     public function getHandler() : SessionAdapterInterface
     {
         return $this->_handler;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isStarted() : bool
-    {
-        return $this->_handler->isStarted();
-    }
-
-    /**
-     * @return bool
-     */
-    public function isClosed() : bool
-    {
-        return $this->_handler->isClosed();
     }
 
     /**
@@ -122,14 +116,6 @@ class Session implements Countable
     }
 
     /**
-     * @return bool
-     */
-    public function clear() : bool
-    {
-        return $this->_handler->clear();
-    }
-
-    /**
      * @return array
      */
     public function all() : array
@@ -143,5 +129,31 @@ class Session implements Countable
     public function getId() : string
     {
         return $this->_handler->getId();
+    }
+
+    /**
+     * Ends the current session and store session data.
+     */
+    public function close()
+    {
+        if ($this->isStarted()) {
+            session_write_close();
+        }
+    }
+
+    /**
+     * @return boolean whether the session has started
+     */
+    public function isStarted() : bool
+    {
+        return $this->_handler->isStarted();
+    }
+
+    /**
+     * @return bool
+     */
+    public function clear() : bool
+    {
+        return $this->_handler->clear();
     }
 }

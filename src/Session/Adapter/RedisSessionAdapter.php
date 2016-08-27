@@ -12,13 +12,21 @@ namespace Mindy\Session\Adapter;
 
 class RedisSessionAdapter extends NativeSessionAdapter
 {
-    public function __construct()
-    {
-        parent::__construct();
+    public $servers = [
+        "tcp://127.0.0.1:6379"
+    ];
 
+    public function __construct(array $config = [])
+    {
+        parent::__construct($config);
         $this->setIniOptions([
             'save_handler' => 'redis',
-            'save_path' => "tcp://127.0.0.1:6379"
+            'save_path' => $this->getServerString()
         ]);
+    }
+
+    public function getServerString()
+    {
+        return implode(', ', $this->servers);
     }
 }

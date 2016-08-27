@@ -10,15 +10,23 @@ declare(strict_types = 1);
 
 namespace Mindy\Session\Adapter;
 
-class MemcachedSessionAdapter extends NativeSessionAdapter
+class MemcachedSessionAdapter extends BaseSessionAdapter
 {
-    public function __construct()
-    {
-        parent::__construct();
+    public $servers = [
+        "127.0.0.1:11211?persistent=1&weight=1&timeout=1&retry_interval=15"
+    ];
 
+    public function __construct(array $config = [])
+    {
+        parent::__construct($config);
         $this->setIniOptions([
             'save_handler' => 'memcached',
-            'save_path' => "tcp://127.0.0.1:11211?persistent=1&weight=1&timeout=1&retry_interval=15"
+            'save_path' => $this->getServerString()
         ]);
+    }
+
+    public function getServerString()
+    {
+        return implode(', ', $this->servers);
     }
 }

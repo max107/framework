@@ -11,18 +11,14 @@ declare(strict_types = 1);
 namespace Mindy\Session\Adapter;
 
 use Countable;
+use SessionHandlerInterface;
 
-interface SessionAdapterInterface extends Countable
+interface SessionAdapterInterface extends Countable, SessionHandlerInterface
 {
     /**
      * @return bool
      */
     public function isStarted() : bool;
-
-    /**
-     * @return bool
-     */
-    public function isClosed() : bool;
 
     /**
      * @return SessionAdapterInterface
@@ -40,11 +36,6 @@ interface SessionAdapterInterface extends Countable
      * @return mixed
      */
     public function get($name, $defaultValue = null);
-
-    /**
-     * @return bool
-     */
-    public function clear() : bool;
 
     /**
      * @return array
@@ -78,4 +69,9 @@ interface SessionAdapterInterface extends Countable
      * @return bool
      */
     public function regenerateID(bool $removeOld = false) : bool;
+
+    /**
+     * @return bool
+     */
+    public function clear() : bool;
 }

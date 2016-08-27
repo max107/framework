@@ -8,24 +8,22 @@
 
 namespace Mindy\Session\Adapter;
 
-use Mindy\Base\Mindy;
+use Exception;
 use PDO;
 
 class PdoSessionAdapter extends NativeSessionAdapter
 {
-    public $key;
-    public $encrypt = false;
     /**
      * @var PDO
      */
     protected $pdo;
 
-    public function __construct(PDO $pdo)
+    /**
+     * @param PDO $pdo
+     */
+    public function setPdo(PDO $pdo)
     {
-        parent::__construct();
-
         $this->pdo = $pdo;
-        $this->key = Mindy::getVersion();
     }
 
     /**
@@ -56,11 +54,10 @@ class PdoSessionAdapter extends NativeSessionAdapter
      */
     public function read($session_id)
     {
-        $statement = $this->pdo->query("SELECT * FROM session WHERE expire>=:expire AND id=:id");
-        $statement->bindParam(':expire', time(), PDO::PARAM_INT);
-        $statement->bindParam(':id', time(), PDO::PARAM_STR);
-        $object = $statement->fetchObject(PDO::FETCH_OBJ);
-        return $object->data;
+        $statement = $this->pdo->prepare("SELECT * FROM session WHERE expire>=:expire AND id=:id");
+        $statement->execute([':expire' => time(), ':id' => $session_id]);
+        $session = $statement->fetchObject();
+        return $session ? $session->data : null;
     }
 
     /**
@@ -77,21 +74,20 @@ class PdoSessionAdapter extends NativeSessionAdapter
         // http://us.php.net/manual/en/function.session-set-save-handler.php
         $expire = time() + (int)ini_get('session.gc_maxlifetime');
 
-        $session = Session::objects()->get(['id' => $session_id]);
-        if ($session === null) {
-            $session = new Session([
-                'id' => $session_id,
-                'data' => $session_data,
-                'expire' => $expire,
-            ]);
-            if ($session->save() === false) {
-                throw new Exception("Can't create session");
+        $statement = $this->pdo->prepare("SELECT * FROM session WHERE id>=:id");
+        $statement->execute([':id' => time()]);
+        $session = $statement->fetchObject();
+
+        if (!$session) {
+            $stmt = $this->pdo->prepare("INSERT INTO session (id, data, expire) VALUES (:id, :data, :expire)");
+            if ($stmt->execute([':id' => $session_id, ':data' => $session_data, ':expire' => $expire]) === false) {
+                throw new Exception("Failed to create session");
             }
         } else {
-            Session::objects()->filter(['id' => $session_id])->update([
-                'data' => $session_data,
-                'expire' => $expire
-            ]);
+            $stmt = $this->pdo->prepare("UPDATE session SET data=:data, expire=:expire WHERE id=:id");
+            if ($stmt->execute([':data' => $session_data, ':expire' => $expire, ':id' => $session_id]) === false) {
+                throw new Exception("Failed to update session");
+            }
         }
         return true;
     }
@@ -104,8 +100,8 @@ class PdoSessionAdapter extends NativeSessionAdapter
      */
     public function destroy($session_id)
     {
-        Session::objects()->filter(['id' => $session_id])->delete();
-        return true;
+        $stmt = $this->pdo->prepare("DELETE FROM session WHERE id=:id");
+        return $stmt->execute([':id' => $session_id]);
     }
 
     /**
@@ -116,7 +112,7 @@ class PdoSessionAdapter extends NativeSessionAdapter
      */
     public function gc($maxlifetime)
     {
-        Session::objects()->filter(['expire__lt' => time()])->delete();
-        return true;
+        $stmt = $this->pdo->prepare("DELETE FROM session WHERE expire<=:expire");
+        return $stmt->execute([':expire' => time()]);
     }
 }
