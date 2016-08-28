@@ -9,8 +9,6 @@
       "src/functions.php"
     ],
     "psr-4": {
-      "WWW\\": "WWW/",
-      "Modules\\": "WWW/Modules/",
       "Mindy\\": "src/"
     }
   },
@@ -21,6 +19,7 @@
       "src/functions.php"
     ],
     "psr-4": {
+      "Mindy\\": "src/",
       "Mindy\\Tests\\": "test/"
     }
   },
