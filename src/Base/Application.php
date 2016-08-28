@@ -189,6 +189,23 @@ class Application extends BaseApplication
     }
 
     /**
+     * @param $category
+     * @param $message
+     * @param array $params
+     * @param null $language
+     * @return mixed
+     */
+    public function t($category, $message, $params = [], $language = null) : string
+    {
+        if ($this->hasComponent('locale')) {
+            $locale = $this->getComponent('locale');
+            return $locale->t($category, $message, $params, $language);
+        } else {
+            return strtr($message, $params);
+        }
+    }
+
+    /**
      * Init system aliases
      *
      * Defines the root aliases.
