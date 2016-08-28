@@ -111,6 +111,11 @@ class Http
         }
     }
 
+    public function setResponse(ResponseInterface $response)
+    {
+        $this->response = $response;
+    }
+
     public function getSession()
     {
         return $this->_session;

@@ -420,7 +420,7 @@ class Application extends BaseApplication
             'urlManager' => [
                 'class' => '\Mindy\Router\UrlManager'
             ],
-            'request' => [
+            'http' => [
                 'class' => '\Mindy\Http\Http',
             ],
             'signal' => [

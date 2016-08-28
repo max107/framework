@@ -9,6 +9,7 @@
 namespace Mindy\Http;
 
 use GuzzleHttp\Psr7\UploadedFile;
+use Mindy\Http\Response\Response;
 
 class HttpTest extends \PHPUnit_Framework_TestCase
 {
@@ -31,5 +32,21 @@ class HttpTest extends \PHPUnit_Framework_TestCase
         $file = $http->files->get('music');
         $this->assertInstanceOf(UploadedFile::class, $file);
         $this->assertEquals(123, $file->getSize());
+    }
+
+    public function testCookie()
+    {
+        $response = new Response();
+        $response = $response->withCookie([
+            'name' => 'test',
+            'value' => 'test'
+        ]);
+        $cookie = $response->getCookies()['test'];
+        $this->assertEquals('test', $cookie->getName());
+        $this->assertEquals('test', $cookie->getValue());
+        $response = $response->withoutCookie('test');
+        $this->assertEquals(1, count($response->getCookies()));
+        $cookie = $response->getCookies()['test'];
+        $this->assertEquals(0, $cookie->getExpires());
     }
 }

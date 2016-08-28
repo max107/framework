@@ -6,9 +6,20 @@
  * Time: 13:03
  */
 
+declare(strict_types = 1);
+
 namespace Mindy\Auth;
 
+/**
+ * Interface IUser
+ * @package Mindy\Auth
+ * @property string $password
+ * @property string $hash_type
+ */
 interface IUser
 {
-
+    /**
+     * @return bool
+     */
+    public function isGuest() : bool;
 }
