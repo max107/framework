@@ -64,6 +64,10 @@ class SessionTest extends \PHPUnit_Framework_TestCase
      */
     public function testRedisSession()
     {
+        if (!extension_loaded('php_redis')) {
+            $this->markTestSkipped('Failed to connect to redis');
+        }
+
         $handler = new RedisSessionAdapter();
         $this->sessionTesting($handler);
         $this->assertEquals(ini_get('session.save_path'), $handler->getServerString());
