@@ -14,8 +14,11 @@ namespace Mindy\Auth;
  * Interface IUser
  * @package Mindy\Auth
  * @property int|string $id
+ * @property int|string $pk
  * @property string $password
  * @property string $hash_type
+ * @property array $groups
+ * @property bool $is_superuser
  */
 interface IUser
 {

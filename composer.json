@@ -36,7 +36,8 @@
     "symfony/polyfill-mbstring": "^1.2",
     "filp/whoops": "^2.1",
     "league/flysystem-cached-adapter": "^1.0",
-    "league/flysystem": "^1.0"
+    "league/flysystem": "^1.0",
+    "symfony/expression-language": "^3.1"
   },
   "require-dev": {
     "phpunit/phpunit": "*",
