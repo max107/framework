@@ -2,7 +2,7 @@
 
 namespace Mindy\Helper\Traits;
 
-use Mindy\Mindy;
+use function Mindy\app;
 
 /**
  * Class RenderTrait
@@ -12,7 +12,7 @@ trait RenderTrait
 {
     public function renderString($source, array $data = [])
     {
-        return Mindy::app()->getComponent('template')->renderString($source, $this->mergeData($data));
+        return app()->template->renderString($source, $this->mergeData($data));
     }
 
     protected static function mergeData($data)
@@ -20,16 +20,16 @@ trait RenderTrait
         if (is_array($data) === false) {
             $data = [];
         }
-        $app = Mindy::app();
+        $app = app();
         return array_merge($data, [
-            'request' => $app->getComponent('request'),
-            'user' => $app->getUser()
+            'request' => $app->request,
+            'user' => $app->user
         ]);
     }
 
     public static function renderTemplate($view, array $data = [])
     {
-        return Mindy::app()->getComponent('template')->render($view, self::mergeData($data));
+        return app()->getComponent('template')->render($view, self::mergeData($data));
     }
 
     /**

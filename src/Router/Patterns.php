@@ -49,6 +49,7 @@ class Patterns
                 $patterns = [];
             }
 
+
             if (!is_array($patterns)) {
                 throw new Exception("Patterns must be a an array or alias to routes file: $patterns");
             }

@@ -39,6 +39,8 @@ use RuntimeException;
  * @property \Mindy\ErrorHandler\ErrorHandler $errorHandler The error handler application component.
  * @property \Mindy\Security\Security $securityManager The security manager application component.
  * @property \Mindy\Http\Http $request The request component.
+ * @property \Mindy\Auth\IUser $user The user component.
+ * @property \Mindy\Template\Renderer $template The template component.
  * @property \Mindy\Router\UrlManager $urlManager The URL manager component.
  * @property \Mindy\Controller\BaseController $controller The currently active controller. Null is returned in this base class.
  * @property string $baseUrl The relative URL for the application.
@@ -100,12 +102,12 @@ class Application extends BaseApplication
         } else {
             throw new Exception('Unknown basePath');
         }
+        $this->initAliases($config);
 
         if (!is_array($config)) {
             throw new Exception('Unknown config type');
         }
 
-        $this->initAliases($config);
         $this->registerCoreComponents();
         $this->preinit();
         $this->configure($config);
@@ -415,18 +417,21 @@ class Application extends BaseApplication
         $request = $this->request->getRequest();
         $response = $this->urlManager->dispatch($request->getMethod(), $request->getRequestTarget());
         if ($response === false) {
-            throw new HttpException(404);
+            throw new HttpException(404, 'Page not found');
         }
         return $response;
     }
 
     /**
      * @throws \Mindy\Exception\Exception
-     * @return \Modules\User\Models\User instance the user session information
+     * @return \Mindy\Auth\IUser instance the user session information
      */
     public function getUser()
     {
-        return $this->auth->getModel();
+        if ($this->hasComponent('auth')) {
+            return $this->auth->getUser();
+        }
+        return null;
     }
 
     //////////////////

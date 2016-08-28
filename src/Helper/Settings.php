@@ -12,7 +12,11 @@ class Settings
     {
         foreach ($settings as $key => $item) {
             foreach ($item as $k => $value) {
-                $original[$key][$k] = $value;
+                if (is_array($value)) {
+                    $original[$key][$k] = array_merge($original[$key][$k], $value);
+                } else {
+                    $original[$key][$k] = $value;
+                }
             }
         }
         return $original;
