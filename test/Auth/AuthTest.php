@@ -21,12 +21,26 @@ class UserExample implements IUser
         $this->attrs = $attributes;
     }
 
+    public function __get($name)
+    {
+        return $this->attrs[$name];
+    }
+
+    public function __set($name, $value)
+    {
+        $this->attrs[$name] = $value;
+    }
+
     /**
      * @return bool
      */
     public function isGuest() : bool
     {
-        return $this->attrs['id'] === null;
+        if (isset($this->attrs['id'])) {
+            return $this->attrs['id'] === null;
+        }
+
+        return true;
     }
 }
 
@@ -48,6 +62,11 @@ class AuthTest extends \PHPUnit_Framework_TestCase
         ]);
     }
 
+    public function tearDown()
+    {
+        Mindy::setApplication(null);
+    }
+
     public function testLogin()
     {
         $auth = new MockAuthProvider;
@@ -55,6 +74,10 @@ class AuthTest extends \PHPUnit_Framework_TestCase
         $auth->setUser($user);
         $this->assertInstanceOf(IUser::class, $auth->getUser());
 
+        $this->assertTrue($user->isGuest());
+        $this->assertFalse($auth->login($user));
+        $user->id = 1;
+        $this->assertFalse($user->isGuest());
         $this->assertTrue($auth->login($user));
 
         $this->assertTrue($auth->logout());

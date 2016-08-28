@@ -13,6 +13,7 @@ namespace Mindy\Auth;
 /**
  * Interface IUser
  * @package Mindy\Auth
+ * @property int|string $id
  * @property string $password
  * @property string $hash_type
  */

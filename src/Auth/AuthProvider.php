@@ -37,6 +37,10 @@ class AuthProvider extends BaseAuthProvider
      */
     public function login(IUser $user) : bool
     {
+        if ($user->isGuest()) {
+            return false;
+        }
+
         return true;
     }
 
