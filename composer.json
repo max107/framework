@@ -34,7 +34,9 @@
     "monolog/monolog": "^1.21",
     "symfony/console": "^3.1",
     "symfony/polyfill-mbstring": "^1.2",
-    "filp/whoops": "^2.1"
+    "filp/whoops": "^2.1",
+    "league/flysystem-cached-adapter": "^1.0",
+    "league/flysystem": "^1.0"
   },
   "require-dev": {
     "phpunit/phpunit": "*",
