@@ -13,7 +13,7 @@ use Mindy\Controller\Action\ClosureAction;
 use Mindy\Controller\Action\IAction;
 use Mindy\Controller\Action\InlineAction;
 use Mindy\Helper\HttpError;
-use Mindy\Http\Response;
+use Mindy\Http\Response\Response;
 use Mindy\Exception\HttpException;
 use Mindy\Helper\Creator;
 use Mindy\Helper\Traits\Accessors;
@@ -27,6 +27,8 @@ use ReflectionClass;
 class BaseController
 {
     use Configurator, Accessors;
+
+    private $_module;
 
     /**
      * @return Application
@@ -51,7 +53,7 @@ class BaseController
 
     protected function getRequest()
     {
-        return Mindy::app()->request;
+        return Mindy::app()->http;
     }
 
     /**

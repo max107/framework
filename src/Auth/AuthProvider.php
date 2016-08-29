@@ -26,10 +26,6 @@ class AuthProvider extends BaseAuthProvider
      * @var bool
      */
     public $destroySessionAfterLogout = false;
-    /**
-     * @var string
-     */
-    public $userClass;
 
     /**
      * @param IUser $user
@@ -60,15 +56,5 @@ class AuthProvider extends BaseAuthProvider
 
         $this->setUser($this->getGuestUser());
         return true;
-    }
-
-    protected function getGuestUser() : IUser
-    {
-        if ($this->userClass === null) {
-            throw new Exception('userClass is null');
-        }
-        return Creator::createObject([
-            'class' => $this->userClass
-        ]);
     }
 }

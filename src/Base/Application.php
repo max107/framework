@@ -15,7 +15,6 @@ declare(strict_types = 1);
 
 namespace Mindy\Base;
 
-use function GuzzleHttp\Psr7\stream_for;
 use Mindy\Console\ConsoleApplication;
 use Mindy\Di\ServiceLocator;
 use Mindy\Exception\Exception;
@@ -25,8 +24,6 @@ use Mindy\Helper\Traits\Accessors;
 use Mindy\Helper\Traits\Configurator;
 use Mindy\Middleware\MiddlewareManager;
 use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use Psr7Middlewares\Middleware;
 use RuntimeException;
 
 /**
@@ -38,7 +35,7 @@ use RuntimeException;
  * @property \Mindy\Event\EventManager $signal The event system component.
  * @property \Mindy\ErrorHandler\ErrorHandler $errorHandler The error handler application component.
  * @property \Mindy\Security\Security $securityManager The security manager application component.
- * @property \Mindy\Http\Http $request The request component.
+ * @property \Mindy\Http\Http $http The request component.
  * @property \Mindy\Auth\IUser $user The user component.
  * @property \Mindy\Template\Renderer $template The template component.
  * @property \Mindy\Router\UrlManager $urlManager The URL manager component.
@@ -60,10 +57,6 @@ class Application extends BaseApplication
      */
     public $admins = [];
     /**
-     * @var array
-     */
-    public $locale = [];
-    /**
      * @var string
      */
     private $_homeUrl;
@@ -75,10 +68,6 @@ class Application extends BaseApplication
      * @var ServiceLocator
      */
     private $_moduleLocator;
-    /**
-     * @var MiddlewareManager
-     */
-    private $_middleware;
 
     /**
      * Constructor.
@@ -110,6 +99,14 @@ class Application extends BaseApplication
 
         $this->registerCoreComponents();
         $this->preinit();
+        if (isset($config['components'])) {
+            $this->setComponents($config['components']);
+            unset($config['components']);
+        }
+        if (isset($config['modules'])) {
+            $this->setModules($config['modules']);
+            unset($config['modules']);
+        }
         $this->configure($config);
 
         /**
@@ -373,11 +370,11 @@ class Application extends BaseApplication
         $output = $this->parseRoute();
         $html = ob_get_clean();
         if (!empty($html)) {
-            $response = $html instanceof ResponseInterface ? $html : $this->request->html($html);
+            $response = $html instanceof ResponseInterface ? $html : $this->http->html($html);
         } else {
-            $response = $output instanceof ResponseInterface ? $output : $this->request->html($output);
+            $response = $output instanceof ResponseInterface ? $output : $this->http->html($output);
         }
-        $this->request->send($response);
+        $this->http->send($response);
     }
 
     /**
@@ -431,7 +428,7 @@ class Application extends BaseApplication
 
     public function parseRoute()
     {
-        $request = $this->request->getRequest();
+        $request = $this->http->getRequest();
         $response = $this->urlManager->dispatch($request->getMethod(), $request->getRequestTarget());
         if ($response === false) {
             throw new HttpException(404, 'Page not found');

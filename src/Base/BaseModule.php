@@ -15,6 +15,7 @@
 namespace Mindy\Base;
 
 use Exception;
+use function Mindy\app;
 use Mindy\Di\ServiceLocator;
 use Mindy\Helper\Collection;
 use Mindy\Helper\Traits\Accessors;
@@ -240,7 +241,7 @@ abstract class BaseModule
      */
     public static function t($str, $params = [], $dic = 'main')
     {
-        return Mindy::app()->translate->t(get_called_class() . "." . $dic, $str, $params);
+        return app()->t(get_called_class() . "." . $dic, $str, $params);
     }
 
     /**
@@ -248,6 +249,6 @@ abstract class BaseModule
      */
     public function getParams()
     {
-        return Mindy::app()->getParam($this->getId());
+        return app()->getParam($this->getId());
     }
 }
