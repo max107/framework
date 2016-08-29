@@ -15,7 +15,6 @@ declare(strict_types = 1);
 
 namespace Mindy\Base;
 
-use function GuzzleHttp\Psr7\stream_for;
 use Mindy\Console\ConsoleApplication;
 use Mindy\Di\ServiceLocator;
 use Mindy\Exception\Exception;
@@ -25,8 +24,6 @@ use Mindy\Helper\Traits\Accessors;
 use Mindy\Helper\Traits\Configurator;
 use Mindy\Middleware\MiddlewareManager;
 use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use Psr7Middlewares\Middleware;
 use RuntimeException;
 
 /**
@@ -60,10 +57,6 @@ class Application extends BaseApplication
      */
     public $admins = [];
     /**
-     * @var array
-     */
-    public $locale = [];
-    /**
      * @var string
      */
     private $_homeUrl;
@@ -75,10 +68,6 @@ class Application extends BaseApplication
      * @var ServiceLocator
      */
     private $_moduleLocator;
-    /**
-     * @var MiddlewareManager
-     */
-    private $_middleware;
 
     /**
      * Constructor.
