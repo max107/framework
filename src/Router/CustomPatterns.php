@@ -6,7 +6,7 @@ namespace Mindy\Router;
  * Class CustomPatterns
  * @package Mindy\Router
  */
-class CustomPatterns
+class CustomPatterns extends BasePatterns
 {
     public function __construct($namespace = '')
     {

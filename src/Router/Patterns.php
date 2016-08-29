@@ -9,7 +9,7 @@ use Mindy\Helper\Alias;
  * Class Patterns
  * @package Mindy\Router
  */
-class Patterns
+class Patterns extends BasePatterns
 {
     /**
      * @var array
@@ -23,10 +23,6 @@ class Patterns
      * @var string
      */
     protected $parentPrefix;
-    /**
-     * @var string
-     */
-    private $namespaceDelimeter = ':';
 
     /**
      * @param $patterns
@@ -48,7 +44,6 @@ class Patterns
             } else {
                 $patterns = [];
             }
-
 
             if (!is_array($patterns)) {
                 throw new Exception("Patterns must be a an array or alias to routes file: $patterns");
@@ -92,29 +87,25 @@ class Patterns
     public function parse(RouteCollector $collector, array $patterns, $parentPrefix = '')
     {
         foreach ($patterns as $urlPrefix => $params) {
-            if ($params instanceof Patterns || $params instanceof CustomPatterns) {
+            if ($params instanceof IPatterns) {
                 $params->parse($collector, $params->getPatterns(), trim($parentPrefix, '/') . $urlPrefix);
             } else {
                 $urlPrefix = $params['route'];
-                $method = Dispatcher::ANY;
+
+                $method = isset($params['method']) ? $params['method'] : Dispatcher::ANY;
+                if (in_array(strtoupper($method), $collector->getValidMethods()) === false) {
+                    throw new Exception('Unknown route method');
+                }
+
                 if (is_callable($params)) {
                     $collector->addRoute($method, trim($parentPrefix, '/') . $urlPrefix, $params);
                 } else if (is_array($params)) {
-                    if (array_key_exists('callback', $params) === false && array_key_exists('restful', $params) === false) {
-                        throw new Exception('Missing callback or controller key in: ' . print_r($params, true));
-                    }
-
-                    if (isset($params['handler'])) {
-                        $params['callback'] = $params['handler'];
-                    }
-                    if (isset($params['callback'])) {
-                        $callback = $this->fetchCallback($params['callback']);
+                    
+                    if (array_key_exists('callback', $params) || array_key_exists('handler', $params)) {
+                        $handler = isset($params['handler']) ? $params['handler'] : $params['callback'];
+                        $callback = $this->fetchCallback($handler);
                         if ($callback === null) {
                             throw new Exception("Incorrect callback in rule" . print_r($params, true));
-                        }
-
-                        if (isset($params['method']) && in_array(strtoupper($params['method']), $collector->getValidMethods())) {
-                            $method = strtoupper($params['method']);
                         }
 
                         if (isset($params['name'])) {
@@ -129,8 +120,10 @@ class Patterns
                         }
 
                         $collector->addRoute($method, $route, $callback, isset($params['params']) ? $params['params'] : []);
-                    } else if (isset($params['restful'])) {
+                    } else if (array_key_exists('restful', $params) === false) {
                         $collector->restful($urlPrefix, $params['restful']);
+                    } else {
+                        throw new Exception('Missing "handler" or "restful" key in: ' . print_r($params, true));
                     }
                 }
             }
