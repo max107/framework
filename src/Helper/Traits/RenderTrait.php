@@ -22,7 +22,7 @@ trait RenderTrait
         }
         $app = app();
         return array_merge($data, [
-            'request' => $app->request,
+            'request' => $app->http,
             'user' => $app->user
         ]);
     }

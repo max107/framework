@@ -22,6 +22,10 @@ use Mindy\Helper\Creator;
 abstract class BaseAuthProvider implements IAuthProvider
 {
     /**
+     * @var string
+     */
+    public $userClass;
+    /**
      * @var IUser
      */
     private $_user;
@@ -60,7 +64,20 @@ abstract class BaseAuthProvider implements IAuthProvider
      */
     public function getUser() : IUser
     {
+        if ($this->_user === null) {
+            $this->_user = $this->getGuestUser();
+        }
         return $this->_user;
+    }
+
+    protected function getGuestUser() : IUser
+    {
+        if ($this->userClass === null) {
+            throw new Exception('userClass is null');
+        }
+        return Creator::createObject([
+            'class' => $this->userClass
+        ]);
     }
 
     /**
