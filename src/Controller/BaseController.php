@@ -180,7 +180,7 @@ class BaseController
             $module = $this->getApp()->getModule($module);
         }
         /** @var \Mindy\Controller\BaseController $controller */
-        $controller = Creator::createObject($controllerClass, time(), $module, $this->getRequest());
+        $controller = Creator::createObject($controllerClass);
         $controller->run($action, $params);
     }
 }

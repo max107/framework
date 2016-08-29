@@ -23,6 +23,10 @@ trait PermissionTrait
      */
     public function can(string $code, array $params = []) : bool
     {
-        return app()->permissions->can($this, $code, $params);
+        if (app()->hasComponent('permissions')) {
+            return app()->permissions->can($this, $code, $params);
+        }
+
+        return true;
     }
 }

@@ -31,24 +31,14 @@ class Patterns extends BasePatterns
      */
     public function __construct($patterns, $namespace = '')
     {
-        if (is_string($patterns)) {
-            $tmp = Alias::get($patterns);
-            if (!$tmp) {
-                $tmp = $patterns;
-            } else {
-                $tmp .= '.php';
-            }
-
-            if (is_file($tmp)) {
-                $patterns = require $tmp;
-            } else {
-                $patterns = [];
-            }
-
-            if (!is_array($patterns)) {
-                throw new Exception("Patterns must be a an array or alias to routes file: $patterns");
-            }
+        if (is_string($patterns) && is_file($patterns)) {
+            $patterns = include($patterns);
         }
+
+        if (is_array($patterns) === false) {
+            throw new Exception("Patterns must be a an array or alias to routes file: " . '?');
+        }
+
         $this->patterns = $patterns;
         $this->namespace = $namespace;
     }
@@ -90,14 +80,14 @@ class Patterns extends BasePatterns
             if ($params instanceof IPatterns) {
                 $params->parse($collector, $params->getPatterns(), trim($parentPrefix, '/') . $urlPrefix);
             } else {
-                $urlPrefix = $params['route'];
+                $route = trim($parentPrefix, '/') . $params['route'];
 
                 $method = isset($params['method']) ? $params['method'] : Dispatcher::ANY;
                 if (in_array(strtoupper($method), $collector->getValidMethods()) === false) {
                     throw new Exception('Unknown route method');
                 }
 
-                if (is_callable($params)) {
+                if ($params instanceof \Closure) {
                     $collector->addRoute($method, trim($parentPrefix, '/') . $urlPrefix, $params);
                 } else if (is_array($params)) {
                     
@@ -114,9 +104,7 @@ class Patterns extends BasePatterns
                                 $name = $this->namespace . $this->namespaceDelimeter . $params['name'];
                             }
 
-                            $route = [trim($parentPrefix, '/') . $urlPrefix, $name];
-                        } else {
-                            $route = trim($parentPrefix, '/') . $urlPrefix;
+                            $route = [$route, $name];
                         }
 
                         $collector->addRoute($method, $route, $callback, isset($params['params']) ? $params['params'] : []);
