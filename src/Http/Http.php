@@ -30,6 +30,7 @@ class Http
 {
     use Configurator;
     use Accessors;
+    use Legacy;
 
     /**
      * @var array

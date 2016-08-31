@@ -19,7 +19,7 @@ trait Legacy
      */
     public function getIsPost()
     {
-        return strtoupper($this->getMethod()) === 'POST';
+        return strtoupper($this->getRequest()->getMethod()) === 'POST';
     }
 
     /**

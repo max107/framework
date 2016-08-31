@@ -16,8 +16,6 @@ use GuzzleHttp\Psr7\ServerRequest as ServerRequestGuzzle;
 
 class Request extends ServerRequestGuzzle
 {
-    use Legacy;
-
     /**
      * Return a ServerRequest populated with superglobals:
      * $_GET
