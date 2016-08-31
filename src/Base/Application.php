@@ -299,11 +299,20 @@ class Application extends BaseApplication
 
     /**
      * Returns the configuration of the currently installed modules.
-     * @return array the configuration of the currently installed modules (module ID => configuration)
+     * @param bool $returnInstances
+     * @return array|Module[] the configuration of the currently installed modules (module ID => configuration)
      */
-    public function getModules()
+    public function getModules($returnInstances = false)
     {
-        return $this->getModuleLocator()->getComponents();
+        $modules = $this->getModuleLocator()->getComponents();
+        if ($returnInstances === false) {
+            return $modules;
+        }
+        $instances = [];
+        foreach ($modules as $name => $config) {
+            $instances[$name] = $this->getModuleLocator()->get($name);
+        }
+        return $instances;
     }
 
     public function __call($name, $args)

@@ -57,6 +57,12 @@ class ConsoleApplication extends Application
     public function createCommandFromFile(SplFileInfo $fileInfo)
     {
         $className = $this->getClassFromCode($fileInfo);
+
+        $reflectionClass = new \ReflectionClass($className);
+        if ($reflectionClass->isAbstract()) {
+            return null;
+        }
+
         $command = new $className;
         if ($command instanceof ConsoleCommand) {
             return $command;

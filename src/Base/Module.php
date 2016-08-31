@@ -2,6 +2,7 @@
 
 namespace Mindy\Base;
 
+use function Mindy\app;
 use Mindy\Helper\Alias;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -76,5 +77,15 @@ class Module extends BaseModule
         }
 
         return $models;
+    }
+
+    public function reverse($route, $data = null)
+    {
+        return app()->urlManager->reverse($route, $data);
+    }
+
+    public function getAdminMenu()
+    {
+        return [];
     }
 }
