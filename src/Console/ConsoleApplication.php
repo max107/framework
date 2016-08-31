@@ -26,13 +26,23 @@ class ConsoleApplication extends Application
         $commands = [];
         foreach ($modules as $id => $module) {
             $finder = new Finder();
+
+            $dir = $module->getBasePath() . DIRECTORY_SEPARATOR . 'Commands';
+            if (is_dir($dir) === false) {
+                continue;
+            }
+
             $files = $finder
                 ->ignoreUnreadableDirs()
-                ->files()->in($module->getBasePath() . DIRECTORY_SEPARATOR . 'Commands')->name('*Command.php');
+                ->files()
+                ->in($dir)
+                ->name('*Command.php');
             foreach ($files as $fileInfo) {
                 if ($command = $this->createCommandFromFile($fileInfo)) {
                     $command->setModuleId(Text::toUnderscore($id));
                     $commands[] = $command;
+                } else {
+                    echo 'Skip: ' . $fileInfo->getFilename() . PHP_EOL;
                 }
             }
         }

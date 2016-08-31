@@ -249,6 +249,7 @@ class Http
     /**
      * Send response with application/json headers
      * @param $data
+     * @return ResponseInterface
      */
     public function json($data, $status = 200) : ResponseInterface
     {
@@ -278,5 +279,13 @@ class Http
     public function isXhr() : bool
     {
         return $this->getRequest()->isXhr();
+    }
+
+    /**
+     * @return string
+     */
+    public function getPath() : string
+    {
+        return $this->getRequest()->getRequestTarget();
     }
 }

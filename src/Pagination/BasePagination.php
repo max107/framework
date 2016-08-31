@@ -174,20 +174,9 @@ abstract class BasePagination implements Serializable
 
     protected function fetchPage($key = null)
     {
-        if (class_exists('\Mindy\Http\Request')) {
-            $page = (int)Mindy::app()->request->get->get($key, 1);
-            if (empty($page)) {
-                $page = 1;
-            }
-        } else {
-            if (isset($_GET[$key])) {
-                $page = (int)$_GET[$key];
-                if (empty($page)) {
-                    $page = 1;
-                }
-            } else {
-                $page = 1;
-            }
+        $page = (int)Mindy::app()->http->get->get($key, 1);
+        if (empty($page)) {
+            $page = 1;
         }
 
         if ($page <= 0) {

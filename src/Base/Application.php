@@ -340,7 +340,11 @@ class Application extends BaseApplication
      */
     protected function runInternal()
     {
-        php_sapi_name() === 'cli' ? $this->runCli() : $this->runWeb();
+        if (php_sapi_name() === 'cli') {
+            $this->runCli();
+        } else {
+            $this->runWeb();
+        }
     }
 
     /**

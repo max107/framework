@@ -47,7 +47,10 @@ class Module extends BaseModule
         }
 
         $finder = new Finder();
-        $files = $finder->files()->ignoreUnreadableDirs()->in($modelsPath)->name('*.php');
+        $files = $finder->ignoreUnreadableDirs()->files()->in($modelsPath)->name('*.php');
+        if (count($files) === 0) {
+            return [];
+        }
 
         $classes = [];
         foreach ($files as $fileInfo) {
@@ -57,7 +60,7 @@ class Module extends BaseModule
 
         $models = [];
         foreach ($classes as $cls) {
-            if (is_a($cls, '\Mindy\Orm\Base') === false) {
+            if (is_a($cls, '\Mindy\Orm\Model', true) === false) {
                 continue;
             }
 
@@ -66,8 +69,9 @@ class Module extends BaseModule
                 continue;
             }
 
-            if (call_user_func([$cls, 'tableName'])) {
-                $models[$cls] = new $cls;
+            $model = new $cls;
+            if ($model instanceof \Mindy\Orm\Model && $model->tableName()) {
+                $models[$cls] = $model;
             }
         }
 
