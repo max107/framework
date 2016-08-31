@@ -31,11 +31,30 @@ class UrlManager extends Dispatcher
         $this->init();
     }
 
+    protected function parseRoutes(RouteCollector $collector, array $patterns)
+    {
+        foreach ($patterns as $prefix => $params) {
+            if (is_string($prefix) && is_array($params)) {
+                if (isset($params['routes'])) {
+                    $collector->group($prefix, $params['routes'], $params['namespace']);
+                }
+            } else if (is_string($prefix) && is_callable($params)) {
+                $collector->addRoute(Dispatcher::ANY, $prefix, $params);
+            } else {
+                $collector->group('', $params);
+            }
+        }
+    }
+
     /**
      * @return RouteCollector
      */
     protected function fetchRoutes()
     {
+        $collector = new RouteCollector(new RouteParser);
+        $this->parseRoutes($collector, $this->patterns);
+        return $collector;
+        /*
         if (class_exists('\Mindy\Base\Mindy') && \Mindy\Base\Mindy::app() && \Mindy\Base\Mindy::app()->hasComponent('cache')) {
             $cacheKey = 'routes';
 
@@ -51,6 +70,7 @@ class UrlManager extends Dispatcher
             $patterns = new Patterns(empty($this->patterns) ? $this->urlsAlias : $this->patterns);
             return $patterns->getRouteCollector();
         }
+        */
     }
 
     public function init()

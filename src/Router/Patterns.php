@@ -80,6 +80,9 @@ class Patterns extends BasePatterns
             if ($params instanceof IPatterns) {
                 $params->parse($collector, $params->getPatterns(), trim($parentPrefix, '/') . $urlPrefix);
             } else {
+                if (!isset($params['route'])) {
+                    d($params);
+                }
                 $route = trim($parentPrefix, '/') . $params['route'];
 
                 $method = isset($params['method']) ? $params['method'] : Dispatcher::ANY;

@@ -104,6 +104,11 @@ abstract class MindyBase
 //        }
     }
 
+    public static function t($category, $message, $params = [], $language = null)
+    {
+        return self::$_app->t($category, $message, $params, $language);
+    }
+
     /**
      * Creates an application of the specified class.
      * @param string $class the application class name

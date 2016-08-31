@@ -22,15 +22,21 @@ class HandlerResolver
         if ($handler instanceof \Closure) {
             $method = new ReflectionFunction($handler);
             return $method->invokeArgs($this->parseParams($method, $vars));
-        } else if (is_array($handler)) {
+        }
+
+        if (is_string($handler)) {
+            $handler = explode(':', $handler);
+        }
+
+        if (is_array($handler)) {
             list($handler, $actionName) = $handler;
             $handlerInstance = new $handler;
 
             $method = new ReflectionMethod($handlerInstance, $actionName);
             return $method->invokeArgs($handlerInstance, $this->parseParams($method, $vars));
-        } else {
-            throw new Exception('Unknown handler type');
         }
+
+        throw new Exception('Unknown handler type');
     }
 
     /**

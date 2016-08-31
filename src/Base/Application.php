@@ -38,6 +38,7 @@ use RuntimeException;
  * @property \Mindy\Http\Http $http The request component.
  * @property \Mindy\Auth\IUser $user The user component.
  * @property \Mindy\Template\Renderer $template The template component.
+ * @property \Mindy\Finder\Finder $finder The template finder component.
  * @property \Mindy\Router\UrlManager $urlManager The URL manager component.
  * @property \Mindy\Controller\BaseController $controller The currently active controller. Null is returned in this base class.
  * @property string $baseUrl The relative URL for the application.
