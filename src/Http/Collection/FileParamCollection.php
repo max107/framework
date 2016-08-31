@@ -19,4 +19,12 @@ class FileParamCollection extends ParamCollection
     {
         return $this->request->getUploadedFile($name);
     }
+
+    /**
+     * @return array
+     */
+    public function all() : array
+    {
+        return $this->request->getUploadedFiles();
+    }
 }

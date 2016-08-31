@@ -19,4 +19,12 @@ class PostParamCollection extends ParamCollection
     {
         return $this->request->getParsedBodyParam($name, $defaultValue);
     }
+
+    /**
+     * @return array
+     */
+    public function all() : array
+    {
+        return $this->request->getParsedBody();
+    }
 }

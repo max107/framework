@@ -19,4 +19,12 @@ class CookieParamCollection extends ParamCollection
     {
         return $this->request->getCookieParam($name, $defaultValue);
     }
+
+    /**
+     * @return array
+     */
+    public function all() : array
+    {
+        return $this->request->getCookieParams();
+    }
 }

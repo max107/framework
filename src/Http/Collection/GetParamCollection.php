@@ -19,4 +19,12 @@ class GetParamCollection extends ParamCollection
     {
         return $this->request->getQueryParam($name, $defaultValue);
     }
+
+    /**
+     * @return array
+     */
+    public function all() : array
+    {
+        return $this->request->getQueryParams();
+    }
 }
