@@ -63,11 +63,16 @@ class RouteCollector
         foreach ($this->reverse[$name] as $part) {
             if (!$part['variable']) {
                 $url[] = $part['value'];
-            } elseif (isset($replacements[$variable])) {
+            } else if (isset($replacements[$variable])) {
                 if ($part['optional']) {
                     $url[] = '/';
                 }
-                $url[] = $replacements[$variable++];
+
+                if (isset($args[$part['name']])) {
+                    $url[] = $args[$part['name']];
+                } else {
+                    $url[] = $replacements[$variable++];
+                }
             } elseif (!$part['optional']) {
                 throw new BadRouteException("Expecting route variable '{$part['name']}'");
             }
@@ -154,6 +159,7 @@ class RouteCollector
         }
 
         $this->regexToRoutesMap[$regex][$httpMethod] = [$handler, $variables, $params];
+
     }
 
     /**
