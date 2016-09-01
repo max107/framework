@@ -11,6 +11,7 @@ namespace Mindy\Auth;
 use Exception;
 use function Mindy\app;
 use Mindy\Helper\Creator;
+use Mindy\Http\Cookie;
 use Modules\User\Models\Session;
 
 class AuthProvider extends BaseAuthProvider
@@ -54,21 +55,26 @@ class AuthProvider extends BaseAuthProvider
         }
 
         $this->setUser($user);
-        $session = app()->http->session;
+        $http = app()->http;
+        $session = $http->session;
 
 //        $model->last_login = $model->getDb()->getAdapter()->getDateTime();
 //        $model->save(['last_login']);
-//        $this->saveToCookie($user, $this->authTimeout);
-//        $session->set($this->getStateKeyPrefix(), 1);
+        $response = $http->getResponse();
+
+        $http->setResponse($response->withCookie(new Cookie('__user', serialize($user->getSafeAttributes()), [
+            'expire' => $this->authTimeout
+        ])));
+        $session->set('__user', $user->getSafeAttributes());
 //        if ($this->absoluteAuthTimeout) {
 //            $this->getStorage()->add(self::AUTH_ABSOLUTE_TIMEOUT_VAR, time() + $this->absoluteAuthTimeout);
 //        }
 
-        $session = Session::objects()->get(['id' => $session->getId()]);
-        if ($session) {
-            $session->user = $user;
-            $session->save(['user']);
-        }
+//        $session = Session::objects()->get(['id' => $session->getId()]);
+//        if ($session) {
+//            $session->user = $user;
+//            $session->save(['user']);
+//        }
 
         app()->signal->send($this, 'onAuth', $user);
 

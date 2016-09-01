@@ -155,7 +155,7 @@ abstract class BaseAuthProvider implements IAuthProvider
      * @param $name
      * @return \Mindy\Auth\Strategy\IAuthStrategy
      */
-    public function getStrategy($name) : IAuthStrategy
+    public function getStrategy(string $name) : IAuthStrategy
     {
         return $this->_strategies[$name];
     }
