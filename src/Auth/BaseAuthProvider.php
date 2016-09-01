@@ -11,6 +11,7 @@ declare(strict_types = 1);
 namespace Mindy\Auth;
 
 use Exception;
+use function Mindy\app;
 use Mindy\Auth\PasswordHasher\IPasswordHasher;
 use Mindy\Auth\Strategy\IAuthStrategy;
 use Mindy\Helper\Creator;
@@ -21,6 +22,14 @@ use Mindy\Helper\Creator;
  */
 abstract class BaseAuthProvider implements IAuthProvider
 {
+    /**
+     * @var string
+     */
+    public $cookieName = '__user';
+    /**
+     * @var string
+     */
+    public $defaultPasswordHasher = 'mindy';
     /**
      * @var string
      */
@@ -37,6 +46,24 @@ abstract class BaseAuthProvider implements IAuthProvider
      * @var array|\Mindy\Auth\Strategy\IAuthStrategy[]
      */
     private $_strategies = [];
+
+    /**
+     * BaseAuthProvider constructor.
+     * @param array $config
+     */
+    public function __construct(array $config = [])
+    {
+        foreach ($config as $key => $value) {
+            if (method_exists($this, 'set' . ucfirst($key))) {
+                $this->{'set' . ucfirst($key)}($value);
+            } else {
+                $this->{$key} = $value;
+            }
+        }
+        $this->setUser($this->getGuestUser());
+
+        app()->signal->handler($this, 'onAuth', [$this, 'onAuth']);
+    }
 
     /**
      * @param IUser $user
@@ -64,12 +91,13 @@ abstract class BaseAuthProvider implements IAuthProvider
      */
     public function getUser() : IUser
     {
-        if ($this->_user === null) {
-            $this->_user = $this->getGuestUser();
-        }
         return $this->_user;
     }
 
+    /**
+     * @return IUser
+     * @throws Exception
+     */
     protected function getGuestUser() : IUser
     {
         if ($this->userClass === null) {
@@ -87,7 +115,8 @@ abstract class BaseAuthProvider implements IAuthProvider
     public function authenticate(string $name, array $attributes) : array
     {
         $strategy = $this->getStrategy($name);
-        if ($strategy->process($this->getUser(), $attributes) && $this->login($strategy->getUser())) {
+        $state = $strategy->process($this->getUser(), $attributes);
+        if ($state && $this->login($strategy->getUser())) {
             return [];
         } else {
             return $strategy->getErrors();
@@ -101,10 +130,14 @@ abstract class BaseAuthProvider implements IAuthProvider
     public function setStrategies(array $strategies)
     {
         foreach ($strategies as $name => $strategy) {
+            if (is_string($strategy)) {
+                $strategy = ['class' => $strategy];
+            }
+
             if (is_array($strategy)) {
-                $this->_strategies[$name] = Creator::createObject($strategy);
+                $this->_strategies[$name] = Creator::createObject(array_merge($strategy, ['authProvider' => $this]));
             } else {
-                $this->_strategies[$name] = $strategy;
+                $this->_strategies[$name] = $strategy->setAuthProvider($this);
             }
         }
         return $this;
@@ -133,6 +166,9 @@ abstract class BaseAuthProvider implements IAuthProvider
     public function setPasswordHashers(array $hashers)
     {
         foreach ($hashers as $name => $config) {
+            if (is_string($config)) {
+                $config = ['class' => $config];
+            }
             $hasher = is_array($config) ? Creator::createObject($config) : $config;
             $this->_passwordHashers[$name] = $hasher;
         }
@@ -150,5 +186,13 @@ abstract class BaseAuthProvider implements IAuthProvider
         }
 
         throw new Exception('Unknown password hasher');
+    }
+
+    /**
+     * @param IUser $user
+     */
+    public function onAuth(IUser $user)
+    {
+
     }
 }
