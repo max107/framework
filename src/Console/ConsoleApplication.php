@@ -41,8 +41,6 @@ class ConsoleApplication extends Application
                 if ($command = $this->createCommandFromFile($fileInfo)) {
                     $command->setModuleId(Text::toUnderscore($id));
                     $commands[] = $command;
-                } else {
-                    echo 'Skip: ' . $fileInfo->getFilename() . PHP_EOL;
                 }
             }
         }
@@ -63,7 +61,12 @@ class ConsoleApplication extends Application
             return null;
         }
 
-        $command = new $className;
+        try {
+            $command = new $className;
+        } catch (\Exception $e) {
+            echo $fileInfo->getFilename() . ': ' . $e->getMessage() . PHP_EOL;
+            return null;
+        }
         if ($command instanceof ConsoleCommand) {
             return $command;
         }
