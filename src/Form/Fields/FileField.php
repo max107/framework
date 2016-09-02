@@ -2,6 +2,7 @@
 
 namespace Mindy\Form\Fields;
 
+use function Mindy\app;
 use Mindy\Locale\Translate;
 use Mindy\Orm\Fields\FileField as ModelFileField;
 use Mindy\Validation\FileValidator;
@@ -69,7 +70,7 @@ class FileField extends Field
 
     public function render()
     {
-        $t = Translate::getInstance();
+        $t = app();
         $label = $this->renderLabel();
 
         $input = strtr($this->template, [
