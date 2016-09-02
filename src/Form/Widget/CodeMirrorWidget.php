@@ -9,7 +9,7 @@
 namespace Mindy\Form\Widget;
 
 use Mindy\Form\Widget;
-use Mindy\Helper\JavaScript;
+use Mindy\Helper\Json;
 
 class CodeMirrorWidget extends Widget
 {
@@ -32,7 +32,7 @@ class CodeMirrorWidget extends Widget
     public function render()
     {
         $field = $this->getField();
-        $jsOptions = JavaScript::encode(array_merge($this->_defaultOptions, $this->options));
+        $jsOptions = Json::encode(array_merge($this->_defaultOptions, $this->options));
         $js = '<script type="text/javascript">
             var editor = CodeMirror.fromTextArea(document.getElementById("' . $field->getHtmlId() . '"), ' . $jsOptions . ');
         </script>';
