@@ -60,9 +60,29 @@ abstract class BaseAuthProvider implements IAuthProvider
                 $this->{$key} = $value;
             }
         }
-        $this->setUser($this->getGuestUser());
+
+        $user = $this->getUserFromSession();
+        if ($user === null) {
+            $user = $this->getGuestUser();
+        }
+        $this->setUser($user);
 
         app()->signal->handler($this, 'onAuth', [$this, 'onAuth']);
+    }
+
+    /**
+     * @return mixed|null
+     */
+    protected function getUserFromSession()
+    {
+        $user = app()->http->session->get($this->cookieName);
+        if (isset($user['id'])) {
+            $model = Creator::createObject(['class' => $this->userClass]);
+            if ($instance = $model->objects()->get(['id' => $user['id']])) {
+                return $instance;
+            }
+        }
+        return null;
     }
 
     /**

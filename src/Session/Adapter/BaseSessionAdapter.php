@@ -119,6 +119,9 @@ abstract class BaseSessionAdapter extends SessionHandler implements Countable, S
      */
     public function get($name, $defaultValue = null)
     {
+        if (!$this->isStarted()) {
+            $this->start();
+        }
         return isset($_SESSION[$name]) ? $_SESSION[$name] : $defaultValue;
     }
 
