@@ -14,7 +14,7 @@ use Mindy\Http\Cookie;
 class Response extends ResponseGuzzle
 {
     /**
-     * @var array
+     * @var array|Cookie[]
      */
     private $cookies = [];
 
@@ -24,6 +24,15 @@ class Response extends ResponseGuzzle
     public function getCookies()
     {
         return $this->cookies;
+    }
+
+    /**
+     * @param string $key
+     * @return Cookie|null
+     */
+    public function getCookie(string $key)
+    {
+        return array_key_exists($key, $this->cookies) ? $this->cookies[$key] : null;
     }
 
     /**

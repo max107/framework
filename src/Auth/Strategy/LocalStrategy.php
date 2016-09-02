@@ -39,6 +39,7 @@ class LocalStrategy extends BaseStrategy
             return false;
         } else if ($this->verifyPassword($instance, $password)) {
             if ($instance->is_active || !$instance->is_active && $this->allowInactive) {
+                $this->setUser($instance);
                 return true;
             } else {
                 $this->addError($attribute, app()->t('auth', 'Account is not verified'));

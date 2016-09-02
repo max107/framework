@@ -8,6 +8,7 @@
 
 namespace Mindy\Auth\Strategy;
 
+use Mindy\Auth\IAuthProvider;
 use Mindy\Auth\IUser;
 
 /**
@@ -27,6 +28,17 @@ interface IAuthStrategy
      * @return array
      */
     public function getErrors() : array;
+
+    /**
+     * @param IAuthProvider $provider
+     * @return mixed
+     */
+    public function setAuthProvider(IAuthProvider $provider);
+
+    /**
+     * @return IAuthProvider
+     */
+    public function getAuthProvider() : IAuthProvider;
 
     /**
      * @return IUser

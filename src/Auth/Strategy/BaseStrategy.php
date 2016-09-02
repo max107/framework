@@ -14,9 +14,8 @@ use Mindy\Auth\IUser;
 /**
  * Class BaseStrategy
  * @package Modules\Auth\Strategy
- * @method process \Modules\Auth\Strategy\BaseStrategy
  */
-abstract class BaseStrategy
+abstract class BaseStrategy implements IAuthStrategy
 {
     /**
      * @var array
@@ -32,6 +31,21 @@ abstract class BaseStrategy
     private $_user;
 
     /**
+     * BaseStrategy constructor.
+     * @param array $config
+     */
+    public function __construct(array $config = [])
+    {
+        foreach ($config as $key => $value) {
+            if (method_exists($this, 'set' . ucfirst($key))) {
+                $this->{'set' . ucfirst($key)}($value);
+            } else {
+                $this->{$key} = $value;
+            }
+        }
+    }
+
+    /**
      * @param IUser $user
      */
     protected function setUser(IUser $user)
@@ -43,7 +57,7 @@ abstract class BaseStrategy
      * @param IAuthProvider $authProvider
      * @return $this
      */
-    protected function setAuthProvider(IAuthProvider $authProvider)
+    public function setAuthProvider(IAuthProvider $authProvider)
     {
         $this->_auth = $authProvider;
         return $this;
@@ -52,7 +66,7 @@ abstract class BaseStrategy
     /**
      * @return IAuthProvider
      */
-    protected function getAuthProvider() : IAuthProvider
+    public function getAuthProvider() : IAuthProvider
     {
         return $this->_auth;
     }
@@ -85,8 +99,16 @@ abstract class BaseStrategy
     /**
      * @return array
      */
-    public function getErrors()
+    public function getErrors() : array
     {
         return $this->_errors;
+    }
+
+    /**
+     * @return IUser
+     */
+    public function getUser() : IUser
+    {
+        return $this->_user;
     }
 }

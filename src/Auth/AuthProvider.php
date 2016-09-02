@@ -11,6 +11,8 @@ namespace Mindy\Auth;
 use Exception;
 use function Mindy\app;
 use Mindy\Helper\Creator;
+use Mindy\Http\Cookie;
+use Modules\User\Models\Session;
 
 class AuthProvider extends BaseAuthProvider
 {
@@ -21,11 +23,26 @@ class AuthProvider extends BaseAuthProvider
     /**
      * @var bool
      */
-    public $allowAutoLogin = true;
+    public $autoLogin = true;
     /**
      * @var bool
      */
     public $destroySessionAfterLogout = false;
+    /**
+     * @var string
+     */
+    private $_keyPrefix;
+
+    /**
+     * @return string a prefix for the name of the session variables storing user session data.
+     */
+    public function getStateKeyPrefix()
+    {
+        if ($this->_keyPrefix === null) {
+            $this->_keyPrefix = md5(get_class($this) . '.' . app()->getId());
+        }
+        return $this->_keyPrefix;
+    }
 
     /**
      * @param IUser $user
@@ -37,6 +54,30 @@ class AuthProvider extends BaseAuthProvider
             return false;
         }
 
+        $this->setUser($user);
+        $http = app()->http;
+        $session = $http->session;
+
+//        $model->last_login = $model->getDb()->getAdapter()->getDateTime();
+//        $model->save(['last_login']);
+        $response = $http->getResponse();
+
+        $http->setResponse($response->withCookie(new Cookie('__user', serialize($user->getSafeAttributes()), [
+            'expire' => $this->authTimeout
+        ])));
+        $session->set('__user', $user->getSafeAttributes());
+//        if ($this->absoluteAuthTimeout) {
+//            $this->getStorage()->add(self::AUTH_ABSOLUTE_TIMEOUT_VAR, time() + $this->absoluteAuthTimeout);
+//        }
+
+//        $session = Session::objects()->get(['id' => $session->getId()]);
+//        if ($session) {
+//            $session->user = $user;
+//            $session->save(['user']);
+//        }
+
+        app()->signal->send($this, 'onAuth', $user);
+
         return true;
     }
 
@@ -45,13 +86,15 @@ class AuthProvider extends BaseAuthProvider
      */
     public function logout() : bool
     {
-        if ($this->allowAutoLogin) {
+        if ($this->autoLogin) {
             $http = app()->http;
-            $http->setResponse($http->getResponse()->withoutCookie('__user'));
+            $response = $http->getResponse()->withoutCookie($this->cookieName);
+            $http->setResponse($response);
         }
 
         if ($this->destroySessionAfterLogout) {
-            app()->http->session->destroy();
+            $session = app()->http->session;
+            $session->destroy($session->getId());
         }
 
         $this->setUser($this->getGuestUser());

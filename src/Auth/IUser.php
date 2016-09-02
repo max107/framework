@@ -26,4 +26,9 @@ interface IUser
      * @return bool
      */
     public function isGuest() : bool;
+
+    /**
+     * @return array
+     */
+    public function getSafeAttributes() : array;
 }

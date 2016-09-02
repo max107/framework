@@ -17,17 +17,15 @@ class RouteGroupTest extends \PHPUnit_Framework_TestCase
     public function testGroupConfig()
     {
         $collector = new RouteCollector(new RouteParser());
-        $collector->groupConfig('/blog//', function () {
-            return [
-                [
-                    'route' => 'view/{id:i}',
-                    'name' => 'blog:view',
-                    'handler' => function ($id) {
-                        return 'foo';
-                    }
-                ]
-            ];
-        });
+        $collector->group('/blog//', [
+            [
+                'route' => 'view/{id:i}',
+                'name' => 'blog:view',
+                'handler' => function ($id) {
+                    return 'foo';
+                }
+            ]
+        ]);
         $dispatcher = new Dispatcher($collector);
         $this->assertEquals('foo', $dispatcher->dispatch('GET', '/blog/view/1'));
         $this->assertEquals('/blog/view/1', $dispatcher->reverse('blog:view', ['id' => 1]));
