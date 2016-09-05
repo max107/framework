@@ -58,9 +58,9 @@ abstract class Field implements IValidateField
      */
     public $type = 'text';
     /**
-     * @var string
+     * @var array
      */
-    public $html = '';
+    public $html = [];
     /**
      * @var array
      */
@@ -80,7 +80,7 @@ abstract class Field implements IValidateField
     /**
      * @var string
      */
-    public $errorClass = 'error';
+    public $errorClass = 'form-input-errors';
     /**
      * @var bool
      */
@@ -226,7 +226,7 @@ abstract class Field implements IValidateField
                 '{id}' => $this->getHtmlId(),
                 '{name}' => $this->getHtmlName(),
                 '{value}' => $this->escape ? htmlspecialchars($value, ENT_QUOTES) : $value,
-                '{html}' => empty($attributes) ? '' : ' ' . $attributes
+                '{html}' => empty($attributes) ? '' : ' ' . $attributes,
             ]);
 
             return $input;
@@ -259,29 +259,33 @@ abstract class Field implements IValidateField
 
     public function getHtmlAttributes()
     {
-        if (is_array($this->html)) {
-            $html = [];
-            foreach ($this->html as $name => $value) {
-                if ($name === 'id') {
-                    continue;
-                }
-
-                if ($value === true) {
-                    $value = 'true';
-                } else if ($value === false) {
-                    $value = 'false';
-                }
-
-                if (is_numeric($name)) {
-                    $html[] = $value;
-                } else {
-                    $html[] = $name . "='" . $value . "'";
-                }
+        if ($this->hasErrors()) {
+            if (isset($this->html['class'])) {
+                $this->html['class'] = $this->html['class'] . ' error';
+            } else {
+                $this->html['class'] = 'error';
             }
-            return trim(implode(' ', $html));
-        } else {
-            return trim($this->html);
         }
+
+        $html = [];
+        foreach ($this->html as $name => $value) {
+            if ($name === 'id') {
+                continue;
+            }
+
+            if ($value === true) {
+                $value = 'true';
+            } else if ($value === false) {
+                $value = 'false';
+            }
+
+            if (is_numeric($name)) {
+                $html[] = $value;
+            } else {
+                $html[] = $name . "='" . $value . "'";
+            }
+        }
+        return trim(implode(' ', $html));
     }
 
     public function setValue($value)
