@@ -112,6 +112,22 @@ class Http
         }
     }
 
+    /**
+     * @param ServerRequestInterface $request
+     * @return $this
+     */
+    public function setRequest(ServerRequestInterface $request)
+    {
+        $this->request = $request;
+
+        $this->cookies = new CookieParamCollection($this->request);
+        $this->get = new GetParamCollection($this->request);
+        $this->post = new PostParamCollection($this->request);
+        $this->files = new FileParamCollection($this->request);
+
+        return $this;
+    }
+
     public function setResponse(ResponseInterface $response)
     {
         $this->response = $response;
@@ -218,7 +234,7 @@ class Http
     {
         if (is_object($url) && method_exists($url, 'getAbsoluteUrl')) {
             $url = $url->getAbsoluteUrl();
-        } else if (is_string($url) && strpos($url, ':') !== false) {
+        } else if (is_string($url) && strpos($url, 'http') === false && strpos($url, ':') !== false) {
             $url = $this->resolveRoute($url, $data);
         }
 
@@ -264,9 +280,9 @@ class Http
     /**
      * Shortcut for text/html response
      * @param $html
-     * @return ResponseInterface
+     * @return Response
      */
-    public function html($html, $status = 200) : ResponseInterface
+    public function html($html, $status = 200) : Response
     {
         return $this->getResponse()
             ->withStatus($status)

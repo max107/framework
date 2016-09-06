@@ -9,6 +9,7 @@
 namespace Mindy\Router;
 
 use Exception;
+use function Mindy\app;
 use ReflectionFunction;
 use ReflectionFunctionAbstract;
 use ReflectionMethod;
@@ -18,6 +19,9 @@ class HandlerResolver
     public function resolve($data)
     {
         list($handler, $vars, $params) = $data;
+
+        $request = app()->http->getRequest();
+        app()->http->setRequest($request->withQueryParams(array_merge($request->getQueryParams(), $vars)));
 
         if ($handler instanceof \Closure) {
             $method = new ReflectionFunction($handler);

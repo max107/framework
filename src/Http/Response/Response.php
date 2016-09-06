@@ -9,10 +9,13 @@
 namespace Mindy\Http\Response;
 
 use GuzzleHttp\Psr7\Response as ResponseGuzzle;
+use Mindy\Http\CacheTrait;
 use Mindy\Http\Cookie;
 
 class Response extends ResponseGuzzle
 {
+    use CacheTrait;
+
     /**
      * @var array|Cookie[]
      */
