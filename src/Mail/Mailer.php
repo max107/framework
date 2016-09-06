@@ -93,27 +93,9 @@ class Mailer implements MailerInterface
      */
     public $messageConfig = [];
     /**
-     * @var boolean whether to save email messages as files under [[fileTransportPath]] instead of sending them
-     * to the actual recipients. This is usually used during development for debugging purpose.
-     * @see fileTransportPath
+     * @var bool whether to save email messages as files under Swift_SpoolTransport
      */
-    public $useFileTransport = false;
-    /**
-     * @var string the directory where the email messages are saved when [[useFileTransport]] is true.
-     */
-    public $fileTransportPath = 'application.runtime.mail';
-    /**
-     * @var callable a PHP callback that will be called by [[send()]] when [[useFileTransport]] is true.
-     * The callback should return a file name which will be used to save the email message.
-     * If not set, the file name will be generated based on the current timestamp.
-     *
-     * The signature of the callback is:
-     *
-     * ~~~
-     * function ($mailer, $message)
-     * ~~~
-     */
-    public $fileTransportCallback;
+    public $useSpoolTransport = true;
     /**
      * @var string message default class name.
      */
@@ -126,8 +108,10 @@ class Mailer implements MailerInterface
      * @var \Swift_Transport|array Swift transport instance or its array configuration.
      */
     private $_transport = [];
-
-    public $defaultFrom;
+    /**
+     * @var \Swift_SpoolTransport|array Swift transport instance or its array configuration.
+     */
+    private $_spool_transport = [];
 
     /**
      * @var \Mindy\Mail\Message[] Outcoming messages
@@ -139,7 +123,7 @@ class Mailer implements MailerInterface
      */
     public function getSwiftMailer()
     {
-        if (!is_object($this->_swiftMailer)) {
+        if ($this->_swiftMailer === null) {
             $this->_swiftMailer = $this->createSwiftMailer();
         }
         return $this->_swiftMailer;
@@ -151,7 +135,9 @@ class Mailer implements MailerInterface
      */
     public function setTransport($transport)
     {
-        if (!is_array($transport) && !is_object($transport)) {
+        if ($transport instanceof \Closure) {
+            $transport = $transport();
+        } else if (!is_array($transport) && !is_object($transport)) {
             throw new InvalidConfigException('"' . get_class($this) . '::transport" should be either object or array, "' . gettype($transport) . '" given.');
         }
         $this->_transport = $transport;
@@ -170,16 +156,44 @@ class Mailer implements MailerInterface
     }
 
     /**
-     * @param $message Message
+     * @param array|\Swift_Transport $transport
+     * @throws InvalidConfigException on invalid argument.
+     */
+    public function setSpoolTransport($transport)
+    {
+        if ($transport instanceof \Closure) {
+            $transport = $transport();
+        } else if (!is_array($transport) && !is_object($transport)) {
+            throw new InvalidConfigException('"' . get_class($this) . '::transport" should be either object or array, "' . gettype($transport) . '" given.');
+        }
+        $this->_spool_transport = $transport;
+    }
+
+    /**
+     * @return array|\Swift_Transport
+     */
+    public function getSpoolTransport()
+    {
+        if (!is_object($this->_spool_transport)) {
+            $this->_spool_transport = $this->createTransport($this->_spool_transport);
+        }
+
+        return $this->_spool_transport;
+    }
+
+    /**
+     * @param $message MessageInterface|Message
      * @return bool
      */
     protected function sendMessage($message)
     {
+        /*
         $address = $message->getTo();
         if (is_array($address)) {
             $address = implode(', ', array_keys($address));
         }
         $this->getLogger()->info('Sending email "' . $message->getSubject() . '" to "' . $address . '"', [], __METHOD__);
+        */
         $this->out[] = $message;
         return $this->getSwiftMailer()->send($message->getSwiftMessage()) > 0;
     }
@@ -190,7 +204,8 @@ class Mailer implements MailerInterface
      */
     protected function createSwiftMailer()
     {
-        return new \Swift_Mailer($this->getTransport());
+        $transport = $this->useSpoolTransport ? $this->getSpoolTransport() : $this->getTransport();
+        return new \Swift_Mailer($transport);
     }
 
     /**
@@ -314,9 +329,6 @@ class Mailer implements MailerInterface
                 $message->setTextBody(strip_tags($html));
             }
         }
-        if ($this->defaultFrom) {
-            $message->setFrom($this->defaultFrom);
-        }
         return $message;
     }
 
@@ -343,39 +355,24 @@ class Mailer implements MailerInterface
      * If [[useFileTransport]] is true, it will save the email as a file under [[fileTransportPath]].
      * Otherwise, it will call [[sendMessage()]] to send the email to its recipient(s).
      * Child classes should implement [[sendMessage()]] with the actual email sending logic.
-     * @param MessageInterface $message email message instance to be sent
-     * @return boolean whether the message has been sent successfully
-     */
-    public function send($message)
-    {
-        $address = $message->getTo();
-        if (is_array($address)) {
-            $address = implode(', ', array_keys($address));
-        }
-        $this->getLogger()->info('Sending email "' . $message->getSubject() . '" to "' . $address . '"', [], __METHOD__);
-        return $this->useFileTransport ? $this->saveMessage($message) : $this->sendMessage($message);
-    }
-
-    public function getLogger()
-    {
-        return \Mindy\Base\Mindy::app()->logger;
-    }
-
-    /**
-     * Sends multiple messages at once.
      *
+     * Sends multiple messages at once.
      * The default implementation simply calls [[send()]] multiple times.
      * Child classes may override this method to implement more efficient way of
      * sending multiple messages.
      *
-     * @param array $messages list of email messages, which should be sent.
+     * @param MessageInterface|MessageInterface[]|array $messages email message instance to be sent or list of email messages, which should be sent.
      * @return integer number of messages that are successfully sent.
      */
-    public function sendMultiple(array $messages)
+    public function send($messages)
     {
+        if (!is_array($messages)) {
+            $messages = [$messages];
+        }
+
         $successCount = 0;
         foreach ($messages as $message) {
-            if ($this->send($message)) {
+            if ($this->sendMessage($message)) {
                 $successCount++;
             }
         }
@@ -384,33 +381,24 @@ class Mailer implements MailerInterface
     }
 
     /**
-     * Saves the message as a file under [[fileTransportPath]].
-     * @param MessageInterface $message
-     * @return boolean whether the message is saved successfully
+     * @param null $recoverTimeout
+     * @return int
      */
-    protected function saveMessage($message)
+    public function sendSpool($recoverTimeout = null)
     {
-        $path = Alias::get($this->fileTransportPath);
-        if ($path && !is_dir(($path))) {
-            mkdir($path, 0777, true);
+        $transport = $this->getSpoolTransport();
+        if ($transport instanceof \Swift_Transport_SpoolTransport) {
+            $spool = $transport->getSpool();
+            if ($spool instanceof \Swift_FileSpool) {
+                if ($recoverTimeout) {
+                    $spool->recover($recoverTimeout);
+                } else {
+                    $spool->recover();
+                }
+            }
+            return $spool->flushQueue($this->getTransport());
         }
-        if ($this->fileTransportCallback !== null) {
-            $file = $path . '/' . call_user_func($this->fileTransportCallback, $this, $message);
-        } else {
-            $file = $path . '/' . $this->generateMessageFileName();
-        }
-        file_put_contents($file, $message->toString());
 
-        return true;
-    }
-
-    /**
-     * @return string the file name for saving the message when [[useFileTransport]] is true.
-     */
-    public function generateMessageFileName()
-    {
-        $time = microtime(true);
-
-        return date('Ymd-His-', $time) . sprintf('%04d', (int)(($time - (int)$time) * 10000)) . '-' . sprintf('%04d', mt_rand(0, 10000)) . '.eml';
+        return 0;
     }
 }

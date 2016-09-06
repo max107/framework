@@ -19,7 +19,7 @@ use Mindy\Helper\Traits\Configurator;
  * @since 2.0
  * @package Mindy\Mail
  */
-class Message
+class Message implements MessageInterface
 {
     use Accessors, Configurator;
 

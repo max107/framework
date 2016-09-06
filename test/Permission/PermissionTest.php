@@ -56,6 +56,14 @@ class UserPerm implements IUser
 
         return true;
     }
+
+    /**
+     * @return array
+     */
+    public function getSafeAttributes() : array
+    {
+        return $this->attrs;
+    }
 }
 
 class PermissionTest extends \PHPUnit_Framework_TestCase

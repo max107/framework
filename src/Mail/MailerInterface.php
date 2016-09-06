@@ -47,14 +47,4 @@ interface MailerInterface
      * @return boolean whether the message has been sent successfully
      */
     public function send($message);
-
-    /**
-     * Sends multiple messages at once.
-     *
-     * This method may be implemented by some mailers which support more efficient way of sending multiple messages in the same batch.
-     *
-     * @param array $messages list of email messages, which should be sent.
-     * @return integer number of messages that are successfully sent.
-     */
-    public function sendMultiple(array $messages);
 }
