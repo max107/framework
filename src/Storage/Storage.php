@@ -9,54 +9,70 @@
 
 namespace Mindy\Storage;
 
-use League\Flysystem\Filesystem;
+use Exception;
+use League\Flysystem\FilesystemInterface;
 use League\Flysystem\MountManager;
-use Mindy\Helper\Traits\Accessors;
-use Mindy\Helper\Traits\Configurator;
+use LogicException;
 
-class Storage
+class Storage extends MountManager
 {
-    use Configurator, Accessors;
-
     /**
      * @var string
      */
     public $baseUrl = '/media/';
     /**
-     * @var array
-     */
-    public $adapters = [];
-    /**
      * @var string
      */
-    public $defaultAdapter = 'default';
-    /**
-     * @var MountManager
-     */
-    private $_fs;
+    public $defaultFileSystem = 'default';
+
 
     /**
      * Initialize adapters
      */
-    public function init()
+    public function __construct(array $config = [])
     {
-        $fs = [];
-        foreach ($this->adapters as $name => $adapter) {
-            $fs[$name] = new Filesystem($adapter instanceof \Closure ? $adapter->__invoke() : $adapter);
+        foreach ($config as $key => $value) {
+            $this->{$key} = $value;
         }
-        $this->_fs = new MountManager($fs);
     }
 
     /**
-     * @param null $name
-     * @return \League\Flysystem\FilesystemInterface
+     * Mount filesystems.
+     * @param string $prefix
+     * @param FilesystemInterface $filesystem
+     * @return $this
+     * @throws Exception
      */
-    public function getFileSystem($name = null)
+    public function mountFilesystem($prefix, FilesystemInterface $filesystem)
     {
-        if (!$name) {
-            $name = $this->defaultAdapter;
+        if (!is_string($prefix)) {
+            $prefix = $this->defaultFileSystem;
         }
-        return $this->_fs->getFilesystem($name);
+
+        if (!isset($this->filesystems[$prefix])) {
+            throw new LogicException('Unknown filesystem: ' . $prefix);
+        }
+
+        $filesystem->addPlugin(new CloudPlugin($this->baseUrl));
+        $this->filesystems[$prefix] = $filesystem;
+        return $this;
+    }
+
+    /**
+     * Get the filesystem with the corresponding prefix.
+     * @param string $prefix
+     * @throws LogicException
+     * @return FilesystemInterface
+     */
+    public function getFilesystem($prefix = null)
+    {
+        if (!is_string($prefix)) {
+            $prefix = $this->defaultFileSystem;
+        }
+        if (!isset($this->filesystems[$prefix])) {
+            throw new LogicException('No filesystem mounted with prefix ' . $prefix);
+        }
+        return $this->filesystems[$prefix];
     }
 
     /**
@@ -66,6 +82,6 @@ class Storage
      */
     public function url($name)
     {
-        return $this->baseUrl . str_replace('\\', '/', $name);
+        return $this->getFilesystem()->url($name);
     }
 }
