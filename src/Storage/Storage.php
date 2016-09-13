@@ -10,6 +10,7 @@
 namespace Mindy\Storage;
 
 use Exception;
+use League\Flysystem\Filesystem;
 use League\Flysystem\FilesystemInterface;
 use League\Flysystem\MountManager;
 use LogicException;
@@ -31,9 +32,17 @@ class Storage extends MountManager
      */
     public function __construct(array $config = [])
     {
+        $filesystems = $config['filesystems'];
+        unset($config['filesystems']);
         foreach ($config as $key => $value) {
             $this->{$key} = $value;
         }
+
+        $data = [];
+        foreach ($filesystems as $prefix => $adapter) {
+            $data[$prefix] = new Filesystem($adapter);
+        }
+        parent::__construct($data);
     }
 
     /**
@@ -47,10 +56,6 @@ class Storage extends MountManager
     {
         if (!is_string($prefix)) {
             $prefix = $this->defaultFileSystem;
-        }
-
-        if (!isset($this->filesystems[$prefix])) {
-            throw new LogicException('Unknown filesystem: ' . $prefix);
         }
 
         $filesystem->addPlugin(new CloudPlugin($this->baseUrl));
