@@ -30,6 +30,10 @@ class NewField
      * @var ConstraintViolationListInterface
      */
     protected $errors = [];
+    /**
+     * @var array
+     */
+    protected $validators = [];
 
     /**
      * NewField constructor.
@@ -85,7 +89,8 @@ class NewField
      */
     public function isValid() : bool
     {
-        $errors = $this->getValidator()->validate($this->getValue(), $this->getValidationConstraints());
+        $constraints = array_merge($this->getValidationConstraints(), $this->validators);
+        $errors = $this->getValidator()->validate($this->getValue(), $constraints);
         $this->setErrors($errors);
         return count($errors) === 0;
     }

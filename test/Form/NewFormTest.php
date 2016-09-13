@@ -8,12 +8,26 @@
 
 namespace Mindy\Tests\Form;
 
+use Mindy\Form\Fields\CharField;
 use Mindy\Form\Fields\EmailField;
 use Mindy\Form\Fields\NewField;
 use Mindy\Tests\Form\Forms\FooForm;
+use Symfony\Component\Validator\Constraints as Assert;
 
 class NewFormTest extends \PHPUnit_Framework_TestCase
 {
+    public function testCustomValidators()
+    {
+        $field = new CharField([
+            'required' => false,
+            'validators' => [
+                new Assert\NotBlank()
+            ]
+        ]);
+        $this->assertFalse($field->isValid());
+        $this->assertEquals(['This value should not be blank.'], $field->getErrors());
+    }
+
     public function testEmailField()
     {
         $field = new EmailField(['required' => true]);
