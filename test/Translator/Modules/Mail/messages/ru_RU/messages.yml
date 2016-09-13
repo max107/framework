@@ -1,0 +1,2 @@
+yaml_mail: yaml test
+plural_apple: одно яблоко|%count% яблока|%count% яблок
