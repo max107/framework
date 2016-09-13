@@ -8,16 +8,17 @@
 
 namespace Mindy\Form\Widget;
 
+use Mindy\Form\FieldInterface;
 use Mindy\Form\Widget;
 
 class TinymceWidget extends Widget
 {
     /**
+     * @param FieldInterface $field
      * @return string
      */
-    public function render()
+    public function render(FieldInterface $field) : string
     {
-        $field = $this->getField();
         $js = "<script type='text/javascript'>
         tinyMCE.init({
             mode: 'exact',
@@ -47,6 +48,6 @@ class TinymceWidget extends Widget
             skin_variant : 'silver'
         });
         </script>";
-        return $field->renderInput() . $js;
+        return $field->render() . $js;
     }
 }

@@ -6,27 +6,14 @@ namespace Mindy\Form\Fields;
  * Class RadioField
  * @package Mindy\Form
  */
-class RadioField extends CharField
+class RadioField extends Field
 {
-    public $template = "<input type='{type}' id='{id}' value='{value}' name='{name}'{html}/>";
+    /**
+     * @var string
+     */
+    public $template = "<input type='radio' id='{id}' value='{value}' name='{name}'{html}/>";
 
-    public $type = "radio";
-
-    public function render()
-    {
-        $label = $this->renderLabel();
-        $input = $this->renderInput();
-        $hint = $this->hint ? $this->renderHint() : '';
-        $errors = $this->renderErrors();
-
-        if (empty($this->choices)) {
-            return implode("\n", [$input, $label, $hint, $errors]);
-        } else {
-            return implode("\n", [$label, $input, $hint, $errors]);
-        }
-    }
-
-    public function renderInput()
+    public function renderInput() : string
     {
         if (!empty($this->choices)) {
             $inputs = [];
@@ -75,7 +62,6 @@ class RadioField extends CharField
     protected function renderInputInternal($id, $value, $html = '')
     {
         return strtr($this->template, [
-            '{type}' => $this->type,
             '{id}' => $id,
             '{name}' => $this->getHtmlName(),
             '{value}' => $value,

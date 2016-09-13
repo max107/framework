@@ -6,7 +6,10 @@ namespace Mindy\Form\Fields;
  * Class PasswordField
  * @package Mindy\Form
  */
-class PasswordField extends CharField
+class PasswordField extends Field
 {
-    public $type = 'password';
+    /**
+     * @var string
+     */
+    public $template = "<input type='password' value='{value}' id='{id}' name='{name}'{html}/>";
 }

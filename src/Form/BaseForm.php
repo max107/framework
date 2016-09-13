@@ -1,35 +1,30 @@
 <?php
+/**
+ * Created by PhpStorm.
+ * User: max
+ * Date: 13/09/16
+ * Time: 20:09
+ */
 
 declare(strict_types = 1);
 
 namespace Mindy\Form;
 
-use ArrayAccess;
 use ArrayIterator;
 use Countable;
-use Exception;
 use IteratorAggregate;
-use Mindy\Helper\Collection;
+use LogicException;
 use Mindy\Helper\Creator;
-use Mindy\Helper\Traits\Accessors;
-use Mindy\Helper\Traits\Configurator;
-use Mindy\Helper\Traits\RenderTrait;
-use Mindy\Validation\Interfaces\IValidateObject;
-use Mindy\Validation\Traits\ValidateObject;
+use ReflectionClass;
+use ArrayAccess;
+use Traversable;
 
-/**
- * Class BaseForm
- * @package Mindy\Form
- */
-abstract class BaseForm implements FormInterface, IteratorAggregate, Countable, ArrayAccess, IValidateObject
+class BaseForm implements FormInterface, ArrayAccess, IteratorAggregate, Countable
 {
-    use Accessors, Configurator, ValidateObject, RenderTrait;
-
-    public $usePrefix = true;
     /**
-     * @var string
+     * @var array
      */
-    private $_prefix;
+    public static $ids = [];
     /**
      * @var int
      */
@@ -37,95 +32,140 @@ abstract class BaseForm implements FormInterface, IteratorAggregate, Countable, 
     /**
      * @var array
      */
-    public static $ids = [];
+    protected $errors = [];
     /**
-     * @var bool
+     * @var FieldInterface[]
      */
-    public $enableCreateButton = false;
-    /**
-     * @var \Mindy\Form\Fields\Field[]
-     */
-    protected $_fields = [];
-    /**
-     * @var array
-     */
-    protected $_renderFields = [];
-    /**
-     * @var array
-     */
-    private $_exclude = [];
-    /**
-     * @var bool
-     */
-    private $_renderErrors = true;
+    protected $fields = [];
 
-    public function __construct(array $config = [])
+    /**
+     * NewBaseForm constructor
+     */
+    public function __construct()
     {
-        if (array_key_exists('exclude', $config)) {
-            $this->_exclude = $config['exclude'];
-            unset($config['exclude']);
+        foreach ($this->getFields() as $name => $config) {
+            $field = Creator::createObject($config);
+            $field->setForm($this);
+            $field->setName($name);
+            $this->fields[$name] = $field;
         }
-        foreach ($config as $key => $value) {
-            $this->{$key} = $value;
-        }
-        $this->initFields();
-        $this->setRenderFields(array_keys($this->getFieldsInit()));
     }
 
     /**
-     * @param $prefix
-     * @return array
+     * @param $name
+     * @return FieldInterface
      */
-    public function setPrefix($prefix)
-    {
-        $this->_prefix = $prefix;
-    }
-
-    /**
-     * @return array
-     */
-    public function getPrefix()
-    {
-        return $this->_prefix;
-    }
-
-    public function getName()
-    {
-        return $this->classNameShort();
-    }
-
-    public function getFieldsets()
-    {
-        return [];
-    }
-
     public function __get($name)
     {
         if ($this->hasField($name)) {
             return $this->getField($name);
         } else {
-            return $this->__getInternal($name);
+            return $this->{$name};
         }
     }
 
+    /**
+     * Clone magic method
+     */
     public function __clone()
     {
         $this->_id = null;
 
-        foreach ($this->_fields as $name => $field) {
-            $newField = clone $field;
-            $newField->setForm($this);
-            $this->_fields[$name] = $newField;
+        foreach ($this->fields as $name => $field) {
+            $this->fields[$name] = clone $field;
         }
     }
 
+    /**
+     * @param $name
+     * @param $value
+     */
     public function __set($name, $value)
     {
         if ($this->hasField($name)) {
             $this->getField($name)->setValue($value);
-        } else {
-            $this->__setInternal($name, $value);
         }
+    }
+
+    /**
+     * @return bool
+     */
+    public function isValid() : bool
+    {
+        $errors = [];
+        foreach ($this->fields as $name => $field) {
+            if ($field->isValid() === false) {
+                $errors[$name] = $field->getErrors();
+            }
+        }
+        $this->setErrors($errors);
+        return count($errors) == 0;
+    }
+
+    /**
+     * @param array $errors
+     * @return $this
+     */
+    protected function setErrors(array $errors)
+    {
+        $this->errors = $errors;
+        return $this;
+    }
+
+    /**
+     * @return array
+     */
+    public function getErrors() : array
+    {
+        return $this->errors;
+    }
+
+    /**
+     * @param array $data
+     * @param array $files
+     * @return $this
+     */
+    public function populate(array $data, array $files = [])
+    {
+        $name = $this->classNameShort();
+        if (isset($data[$name])) {
+            $this->setAttributes($data[$name]);
+        }
+        if (isset($files[$name])) {
+            $this->setAttributes($files[$name]);
+        }
+        return $this;
+    }
+
+    /**
+     * @param array $attributes
+     * @return $this
+     */
+    public function setAttributes(array $attributes)
+    {
+        foreach ($attributes as $key => $value) {
+            if (array_key_exists($key, $this->fields)) {
+                $this->fields[$key]->setValue($value);
+            }
+        }
+        return $this;
+    }
+
+    public function getAttributes()
+    {
+        $attributes = [];
+        foreach ($this->fields as $name => $field) {
+            $attributes[$name] = $field->getValue();
+        }
+        return $attributes;
+    }
+
+    /**
+     * @return array
+     */
+    public function getFields() : array
+    {
+        return [];
     }
 
     /**
@@ -134,12 +174,11 @@ abstract class BaseForm implements FormInterface, IteratorAggregate, Countable, 
     public function getId() : int
     {
         if ($this->_id === null) {
-            if (array_key_exists(self::class, self::$ids)) {
-                self::$ids[self::class]++;
-            } else {
+            if (!array_key_exists(self::class, self::$ids)) {
                 self::$ids[self::class] = 0;
             }
 
+            self::$ids[self::class]++;
             $this->_id = self::$ids[self::class];
         }
 
@@ -147,357 +186,116 @@ abstract class BaseForm implements FormInterface, IteratorAggregate, Countable, 
     }
 
     /**
-     * Initialize fields
-     * @void
-     */
-    public function initFields()
-    {
-        $prefix = $this->getPrefix();
-        $fields = $this->getFields();
-        foreach ($fields as $name => $config) {
-            if (in_array($name, $this->_exclude)) {
-                continue;
-            }
-
-            if (!is_array($config)) {
-                $config = ['class' => $config];
-            }
-
-            $this->_fields[$name] = Creator::createObject(array_merge([
-                'name' => $name,
-                'form' => $this,
-                'prefix' => $prefix,
-                'enableCreateButton' => $this->enableCreateButton
-            ], $config));
-        }
-    }
-
-    /**
-     * @return array
-     */
-    public function getFields()
-    {
-        return [];
-    }
-
-    /**
-     * Please avoid this method for render form
      * @return string
      */
-    public function __toString()
+    public function classNameShort() : string
     {
-        try {
-            return (string)$this->render();
-        } catch (Exception $e) {
-            return (string)$e;
-        }
-    }
-
-    public function setTemplate($template)
-    {
-        $this->template = $template;
-        return $this;
+        return (new ReflectionClass(get_called_class()))->getShortName();
     }
 
     /**
-     * @param $value
-     * @return $this
-     */
-    public function setRenderErrors($value)
-    {
-        $this->_renderErrors = $value;
-        return $this;
-    }
-
-    /**
-     * @param string $template
-     * @return string
-     */
-    public function render($template = 'core/form/block.html')
-    {
-        return $this->renderTemplate($template, [
-            'form' => $this,
-            'errors' => $this->_renderErrors ? $this->getErrors() : []
-        ]);
-    }
-
-    /**
-     * Set fields for render
-     * @param array $fields
-     * @throws \Exception
-     * @return $this
-     */
-    public function setRenderFields(array $fields = [])
-    {
-        if (empty($fields)) {
-            $fields = array_keys($this->getFieldsInit());
-        }
-        $this->_renderFields = [];
-        foreach ($fields as $name) {
-            if ($this->hasField($name)) {
-                $this->_renderFields[] = $name;
-            } else {
-                throw new Exception("Field $name not found");
-            }
-        }
-        return $this;
-    }
-
-    /**
-     * @return array|mixed
-     */
-    protected function getExclude()
-    {
-        return $this->_exclude;
-    }
-
-    /**
-     * @return array
-     */
-    public function getRenderFields()
-    {
-        $fields = [];
-        foreach ($this->getFieldsInit() as $name => $field) {
-            if (in_array($name, $this->_renderFields)) {
-                $fields[$name] = $field;
-            }
-        }
-        return $fields;
-    }
-
-    /**
-     * Return initialized fields
-     * @return \Mindy\Form\Fields\Field[]
-     */
-    public function getFieldsInit()
-    {
-        return $this->_fields;
-    }
-
-    /**
-     * @param string $attribute
+     * @param $name
      * @return bool
      */
-    public function hasField($attribute)
+    public function hasField($name) : bool
     {
-        return array_key_exists($attribute, $this->_fields);
+        return array_key_exists($name, $this->fields);
     }
 
     /**
-     * @return bool
+     * @param string $name
+     * @return FieldInterface
      */
-    public function isValid()
+    public function getField(string $name) : FieldInterface
     {
-        $this->isValidInternal();
-        return $this->hasErrors() === false;
+        return $this->fields[$name];
     }
 
     /**
-     * @param $attribute
-     * @return \Mindy\Form\Fields\Field
+     * Whether a offset exists
+     * @link http://php.net/manual/en/arrayaccess.offsetexists.php
+     * @param mixed $offset <p>
+     * An offset to check for.
+     * </p>
+     * @return boolean true on success or false on failure.
+     * </p>
+     * <p>
+     * The return value will be casted to boolean if non-boolean was returned.
+     * @since 5.0.0
      */
-    public function getField($attribute)
-    {
-        return $this->_fields[$attribute];
-    }
-
-    public function prepare(array $data, array $files = [], $fixFiles = true)
-    {
-        return $this->merge($fixFiles ? $this->reformatFilesArray($files) : $files, $data, true);
-    }
-
-    public function merge(array $a, array $b, $preserveNumericKeys = false)
-    {
-        foreach ($b as $key => $value) {
-            if (array_key_exists($key, $a)) {
-                if (is_int($key) && !$preserveNumericKeys) {
-                    $a[] = $value;
-                } elseif (is_array($value) && is_array($a[$key])) {
-                    $a[$key] = static::merge($a[$key], $value, $preserveNumericKeys);
-                } else {
-                    $a[$key] = $value;
-                }
-            } else {
-                $a[$key] = $value;
-            }
-        }
-
-        return $a;
-    }
-
-    /**
-     * Fix broken $_FILES array
-     * @param $data
-     * @return array
-     */
-    public function reformatFilesArray($data)
-    {
-        $n = [];
-        foreach ($data as $baseName => $params) {
-            foreach ($params as $innerKey => $value) {
-                foreach ($value as $inlineName => $item) {
-                    if (is_array($item)) {
-                        foreach ($item as $index => $t) {
-                            $key = key($t);
-                            $n[$baseName][$inlineName][$index][$key][$innerKey] = $t[$key];
-                        }
-                    } else {
-                        $n[$baseName][$inlineName][$innerKey] = $item;
-                    }
-                }
-            }
-        }
-        return $n;
-    }
-
-    /**
-     * @param array|Collection $data
-     * @param array|Collection $files
-     * @return $this
-     * @throws Exception
-     */
-    public function populate($data, $files = [])
-    {
-        if ($data instanceof Collection) {
-            $data = $data->all();
-        } else if (!is_array($data)) {
-            throw new Exception('$data must be a array');
-        }
-
-        $fixFiles = true;
-        if ($files instanceof Collection) {
-            $fixFiles = false;
-            $files = $files->all();
-        }
-
-        $tmp = empty($files) ? $data : $this->prepare($data, $files, $fixFiles);
-
-        if ($this->usePrefix) {
-            if (!isset($tmp[$this->classNameShort()])) {
-                return $this;
-            }
-
-            $data = $tmp[$this->classNameShort()];
-            $this->setAttributes($data);
-        } else {
-            $this->setAttributes($tmp);
-        }
-        return $this;
-    }
-
-    /**
-     * @param \Mindy\Form\BaseForm|\Mindy\Form\ModelForm $owner
-     * @param array $attributes
-     * @return array
-     */
-    public function beforeSetAttributes($owner, array $attributes)
-    {
-        return $attributes;
-    }
-
-    public function afterOwnerSave($owner)
-    {
-    }
-
-    /**
-     * @param array $data
-     * @return $this
-     */
-    public function setAttributes(array $data)
-    {
-        $fields = $this->getFieldsInit();
-        if (empty($data)) {
-            foreach ($fields as $field) {
-                $field->setValue(null);
-            }
-        } else {
-            foreach ($data as $key => $value) {
-                if (array_key_exists($key, $fields)) {
-                    $fields[$key]->setValue($value);
-                }
-            }
-        }
-        return $this;
-    }
-
-    /**
-     * Removes errors for all attributes or a single attribute.
-     * @param string $attribute attribute name. Use null to remove errors for all attribute.
-     */
-    public function clearErrors($attribute = null)
-    {
-        $this->clearErrorsInternal($attribute);
-    }
-
-    /**
-     * (PHP 5 &gt;= 5.0.0)<br/>
-     * Retrieve an external iterator
-     * @link http://php.net/manual/en/iteratoraggregate.getiterator.php
-     * @return \Traversable An instance of an object implementing <b>Iterator</b> or
-     * <b>Traversable</b>
-     */
-    public function getIterator()
-    {
-        return new ArrayIterator($this->getFieldsInit());
-    }
-
-    public function count()
-    {
-        return count($this->getFieldsInit());
-    }
-
-    public function offsetSet($offset, $value)
-    {
-        if ($this->hasField($offset)) {
-            $this->getField($offset)->setValue($value);
-        } else {
-            throw new Exception('Field isnt exists');
-        }
-    }
-
-    public function offsetExists($offset)
+    public function offsetExists($offset) : bool
     {
         return $this->hasField($offset);
     }
 
+    /**
+     * Offset to retrieve
+     * @link http://php.net/manual/en/arrayaccess.offsetget.php
+     * @param mixed $offset <p>
+     * The offset to retrieve.
+     * </p>
+     * @return FieldInterface
+     * @since 5.0.0
+     */
+    public function offsetGet($offset) : FieldInterface
+    {
+        return $this->getField($offset);
+    }
+
+    /**
+     * Offset to set
+     * @link http://php.net/manual/en/arrayaccess.offsetset.php
+     * @param mixed $offset <p>
+     * The offset to assign the value to.
+     * </p>
+     * @param mixed $value <p>
+     * The value to set.
+     * </p>
+     * @return void
+     * @since 5.0.0
+     */
+    public function offsetSet($offset, $value)
+    {
+        $this->getField($offset)->setValue($value);
+    }
+
+    /**
+     * Offset to unset
+     * @link http://php.net/manual/en/arrayaccess.offsetunset.php
+     * @param mixed $offset <p>
+     * The offset to unset.
+     * </p>
+     * @return void
+     * @since 5.0.0
+     */
     public function offsetUnset($offset)
     {
-        throw new Exception('Method not supported');
+        throw new LogicException('Method not supported on created forms');
     }
 
     /**
-     * @param mixed $offset
-     * @return Fields\Field
-     * @throws Exception
+     * Retrieve an external iterator
+     * @link http://php.net/manual/en/iteratoraggregate.getiterator.php
+     * @return Traversable An instance of an object implementing <b>Iterator</b> or
+     * <b>Traversable</b>
+     * @since 5.0.0
      */
-    public function offsetGet($offset)
+    public function getIterator()
     {
-        if ($this->hasField($offset)) {
-            return $this->getField($offset);
-        }
-
-        throw new Exception('Field isnt exists');
+        return new ArrayIterator($this->fields);
     }
 
     /**
-     * Return form attributes
-     * @return array
+     * Count elements of an object
+     * @link http://php.net/manual/en/countable.count.php
+     * @return int The custom count as an integer.
+     * </p>
+     * <p>
+     * The return value is cast to an integer.
+     * @since 5.1.0
      */
-    public function getAttributes()
+    public function count()
     {
-        $attributes = [];
-        foreach ($this->getFieldsInit() as $name => $field) {
-            $attributes[$name] = $field->getValue();
-        }
-        return $attributes;
-    }
-
-    public function getJsonErrors()
-    {
-        $data = [];
-        foreach ($this->getErrors() as $name => $errors) {
-            $data[$this->getField($name)->getHtmlName()] = $errors;
-        }
-        return $data;
+        return count($this->fields);
     }
 }

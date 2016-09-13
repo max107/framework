@@ -8,16 +8,17 @@
 
 namespace Mindy\Form\Widget;
 
+use Mindy\Form\FieldInterface;
 use Mindy\Form\Widget;
 
 class UEditorWidget extends Widget
 {
     /**
+     * @param FieldInterface $field
      * @return string
      */
-    public function render()
+    public function render(FieldInterface $field) : string
     {
-        $field = $this->getField();
         $js = "<script type='text/javascript'>var ue = UE.getEditor('{$field->getHtmlId()}');</script>";
         return $field->renderInput() . $js;
     }

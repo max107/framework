@@ -10,5 +10,19 @@ namespace Mindy\Form;
 
 interface FormInterface
 {
+    /**
+     * @return int
+     */
+    public function getId() : int;
 
+    /**
+     * @return string
+     */
+    public function classNameShort() : string;
+
+    /**
+     * @param string $name
+     * @return FieldInterface
+     */
+    public function getField(string $name) : FieldInterface;
 }

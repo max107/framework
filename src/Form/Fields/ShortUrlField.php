@@ -1,16 +1,19 @@
 <?php
+/**
+ * Created by PhpStorm.
+ * User: max
+ * Date: 13/09/16
+ * Time: 22:33
+ */
 
 namespace Mindy\Form\Fields;
 
 /**
  * Class ShortUrlField
- * @package Mindy\Form
+ * @package Mindy\Form\Fields
+ * @deprecated since 3.0
  */
-class ShortUrlField extends CharField
+class ShortUrlField extends SlugField
 {
-    public function getValue()
-    {
-        $slugs = explode('/', parent::getValue());
-        return end($slugs);
-    }
+
 }

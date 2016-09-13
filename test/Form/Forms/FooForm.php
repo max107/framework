@@ -8,16 +8,16 @@
 
 namespace Mindy\Tests\Form\Forms;
 
-use Mindy\Form\Fields\CharField;
-use Mindy\Form\NewForm;
+use Mindy\Form\Fields\TextField;
+use Mindy\Form\Form;
 
-class FooForm extends NewForm
+class FooForm extends Form
 {
-    public function getFields()
+    public function getFields() : array
     {
         return [
             'name' => [
-                'class' => CharField::class,
+                'class' => TextField::class,
                 'required' => true
             ],
         ];
