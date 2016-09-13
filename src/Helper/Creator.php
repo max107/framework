@@ -112,8 +112,8 @@ class Creator
             $obj = empty($config) ? new $class : new $class($config);
         }
 
-
-        return self::classUseTrait($obj, Configurator::class) ? $obj : self::configure($obj, $config);
+//        return self::classUseTrait($obj, Configurator::class) ? $obj : self::configure($obj, $config);
+        return $obj;
     }
 
     /**

@@ -30,6 +30,7 @@
     "psr/cache": "^1.0",
     "guzzlehttp/psr7": "1.*",
     "swiftmailer/swiftmailer": "@stable",
+    "symfony/translation": "^3.1",
     "symfony/finder": "^3.1",
     "monolog/monolog": "^1.21",
     "symfony/console": "^3.1",
@@ -37,7 +38,9 @@
     "filp/whoops": "^2.1",
     "league/flysystem-cached-adapter": "^1.0",
     "league/flysystem": "^1.0",
-    "symfony/expression-language": "^3.1"
+    "symfony/expression-language": "^3.1",
+    "symfony/var-dumper": "^3.1",
+    "symfony/validator": "^3.1"
   },
   "require-dev": {
     "phpunit/phpunit": "*",

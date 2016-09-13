@@ -4,6 +4,7 @@ namespace Mindy\Validation;
 
 use function Mindy\app;
 use Mindy\Exception\InvalidConfigException;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Class EmailValidator
@@ -45,17 +46,13 @@ class EmailValidator extends Validator
      */
     public $required = true;
 
-    public function __construct($required = true)
+    /**
+     * @param $value
+     * @return array
+     * @throws InvalidConfigException
+     */
+    public function __invoke($value)
     {
-        $this->required = $required;
-    }
-
-    public function validate($value)
-    {
-        if (!$this->required && (is_null($value) || $value === '')) {
-            return true;
-        }
-        // make sure string length is limited to avoid DOS attacks
         if (!is_string($value) || strlen($value) >= 320) {
             $valid = false;
         } elseif (!preg_match('/^(.*<?)(.*)@(.*)(>?)$/', $value, $matches)) {
@@ -75,10 +72,11 @@ class EmailValidator extends Validator
             }
         }
 
+        $errors = [];
         if (!$valid) {
-            $this->addError(app()->t('validation', "Is not a valid email address", []));
+            $errors[] = "Is not a valid email address";
         }
 
-        return $this->hasErrors() === false;
+        return $errors;
     }
 }

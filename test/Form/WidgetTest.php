@@ -1,8 +1,11 @@
 <?php
 
+namespace Mindy\Tests\Form;
+
 use Mindy\Form\Fields\CharField;
 use Mindy\Form\Widget\LicenseWidget;
 use Mindy\Form\Widget\RatingWidget;
+use PHPUnit_Framework_TestCase;
 
 /**
  * Created by PhpStorm.

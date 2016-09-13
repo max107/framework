@@ -1,5 +1,8 @@
 <?php
 
+namespace Mindy\Tests\Form;
+
+use Mindy\Base\Mindy;
 use Mindy\Form\Fields\CharField;
 use Mindy\Validation\RequiredValidator;
 
@@ -11,6 +14,17 @@ use Mindy\Validation\RequiredValidator;
  */
 class FieldTest extends \PHPUnit_Framework_TestCase
 {
+    public function setUp()
+    {
+        Mindy::setApplication(null);
+        Mindy::getInstance(['name' => 'myapp', 'basePath' => __DIR__]);
+    }
+
+    public function tearDown()
+    {
+        Mindy::setApplication(null);
+    }
+    
     public function testSetValue()
     {
         $field = new CharField;
@@ -67,9 +81,6 @@ class FieldTest extends \PHPUnit_Framework_TestCase
 
         $field = new CharField(['html' => ['checked']]);
         $this->assertEquals("checked", $field->getHtmlAttributes());
-
-        $field = new CharField(['html' => 'foo=bar']);
-        $this->assertEquals("foo=bar", $field->getHtmlAttributes());
     }
 
     public function testHint()
@@ -89,6 +100,6 @@ class FieldTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("<input type='text' value='' id='qwe' name=''/>", $field->renderInput());
         $this->assertEquals("<label for='qwe'>Bar <span class='required'>*</span></label>", $field->renderLabel());
         $field->isValid();
-        $this->assertEquals('<ul class="error" id="qwe_errors"><li>Cannot be empty</li></ul>', $field->renderErrors());
+        $this->assertEquals('<ul class="form-input-errors" id="qwe_errors"><li>Cannot be empty</li></ul>', $field->renderErrors());
     }
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Mindy\Form;
 
 use ArrayAccess;
@@ -19,15 +21,11 @@ use Mindy\Validation\Traits\ValidateObject;
  * Class BaseForm
  * @package Mindy\Form
  */
-abstract class BaseForm implements IteratorAggregate, Countable, ArrayAccess, IValidateObject
+abstract class BaseForm implements FormInterface, IteratorAggregate, Countable, ArrayAccess, IValidateObject
 {
     use Accessors, Configurator, ValidateObject, RenderTrait;
 
     public $usePrefix = true;
-    /**
-     * @var string
-     */
-    public $template = 'core/form/block.html';
     /**
      * @var string
      */
@@ -130,7 +128,10 @@ abstract class BaseForm implements IteratorAggregate, Countable, ArrayAccess, IV
         }
     }
 
-    public function getId()
+    /**
+     * @return int
+     */
+    public function getId() : int
     {
         if ($this->_id === null) {
             if (array_key_exists(self::class, self::$ids)) {
@@ -209,14 +210,11 @@ abstract class BaseForm implements IteratorAggregate, Countable, ArrayAccess, IV
     }
 
     /**
-     * @param null $template
+     * @param string $template
      * @return string
      */
-    public function render($template = null)
+    public function render($template = 'core/form/block.html')
     {
-        if (empty($template)) {
-            $template = $this->template;
-        }
         return $this->renderTemplate($template, [
             'form' => $this,
             'errors' => $this->_renderErrors ? $this->getErrors() : []
@@ -339,7 +337,7 @@ abstract class BaseForm implements IteratorAggregate, Countable, ArrayAccess, IV
             foreach ($params as $innerKey => $value) {
                 foreach ($value as $inlineName => $item) {
                     if (is_array($item)) {
-                        foreach($item as $index => $t) {
+                        foreach ($item as $index => $t) {
                             $key = key($t);
                             $n[$baseName][$inlineName][$index][$key][$innerKey] = $t[$key];
                         }

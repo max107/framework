@@ -1,43 +1,47 @@
 <?php
 
+namespace Mindy\Tests\Form;
+
 use Mindy\Form\Fields\TextField;
 use Mindy\Form\ModelForm;
-use Mindy\Orm\Fields\CharField;
-use Mindy\Orm\Model;
+use PHPUnit_Framework_TestCase;
 
-class Test extends Model
-{
-    public static function getFields()
-    {
-        return [
-            'name' => [
-                'class' => CharField::class
-            ],
-        ];
-    }
-
-    public static function getModule()
-    {
-        return null;
-    }
-}
-
-class TestModelForm extends ModelForm
-{
-    public function getFields()
-    {
-        return [
-            'content' => [
-                'class' => TextField::class,
-            ]
-        ];
-    }
-
-    public function getModel()
-    {
-        return new Test;
-    }
-}
+//use Mindy\Orm\Fields\CharField;
+//use Mindy\Orm\Model;
+//
+//class Test extends Model
+//{
+//    public static function getFields()
+//    {
+//        return [
+//            'name' => [
+//                'class' => CharField::class
+//            ],
+//        ];
+//    }
+//
+//    public static function getModule()
+//    {
+//        return null;
+//    }
+//}
+//
+//class TestModelForm extends ModelForm
+//{
+//    public function getFields()
+//    {
+//        return [
+//            'content' => [
+//                'class' => TextField::class,
+//            ]
+//        ];
+//    }
+//
+//    public function getModel()
+//    {
+//        return new Test;
+//    }
+//}
 
 /**
  * Created by PhpStorm.
@@ -47,6 +51,13 @@ class TestModelForm extends ModelForm
  */
 class ModelFormTest extends PHPUnit_Framework_TestCase
 {
+    public function setUp()
+    {
+        if (!class_exists('\Mindy\Orm\Model')) {
+            $this->markTestSkipped('Missing orm dep');
+        }
+    }
+
     public function testInit()
     {
         $form = new TestModelForm();

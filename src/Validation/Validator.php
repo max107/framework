@@ -2,6 +2,10 @@
 
 namespace Mindy\Validation;
 
+use Symfony\Component\Validator\Mapping\ClassMetadata;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\ValidatorBuilder;
+
 /**
  * Class Validator
  * @package Mindy\Validation
@@ -9,61 +13,32 @@ namespace Mindy\Validation;
 abstract class Validator
 {
     /**
-     * @var string
+     * @var
      */
-    protected $name;
+    public $message;
     /**
-     * @var \Mindy\Orm\Model|string
+     * @var
      */
-    protected $model;
-    /**
-     * @var array
-     */
-    private $_errors = [];
+    public $translateDomain;
 
     /**
-     * @param $value
-     * @return mixed
+     * Validator constructor.
+     * @param array $config
      */
-    abstract public function validate($value);
-
-    protected function addError($error)
+    public function __construct(array $config = [])
     {
-        $this->_errors[] = $error;
+        foreach ($config as $key => $value) {
+            $this->{$key} = $value;
+        }
     }
 
-    public function clearErrors()
+    public static function loadValidatorMetadata(ClassMetadata $metadata)
     {
-        $this->_errors = [];
-    }
+        $validator = new ValidatorBuilder();
 
-    public function getErrors()
-    {
-        return $this->_errors;
-    }
-
-    public function hasErrors()
-    {
-        return !empty($this->_errors);
-    }
-
-    public function setName($name)
-    {
-        $this->name = $name;
-    }
-
-    public function getName()
-    {
-        return $this->name;
-    }
-
-    public function setModel($model)
-    {
-        $this->model = $model;
-    }
-
-    public function getModel()
-    {
-        return $this->model;
+        $metadata->addPropertyConstraint('email', new Assert\Email([
+            'message' => 'The email "{{ value }}" is not a valid email.',
+            'checkMX' => true,
+        ]));
     }
 }

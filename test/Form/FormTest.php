@@ -12,29 +12,12 @@
  * @date 20/10/14.10.2014 16:34
  */
 
+namespace Mindy\Tests\Form;
+
 use Mindy\Form\Fields\CharField;
 use Mindy\Form\Fields\Field;
 use Mindy\Form\Fields\TextField;
 use Mindy\Form\Form;
-
-function d()
-{
-    $debug = debug_backtrace();
-    $args = func_get_args();
-    $data = array(
-        'data' => $args,
-        'debug' => array(
-            'file' => $debug[0]['file'],
-            'line' => $debug[0]['line'],
-        )
-    );
-    if (class_exists('Mindy\Helper\Dumper')) {
-        Mindy\Helper\Dumper::dump($data, 10);
-    } else {
-        var_dump($data);
-    }
-    die();
-}
 
 class TestForm extends Form
 {
@@ -92,6 +75,10 @@ class FormTest extends \PHPUnit_Framework_TestCase
 
     public function testArrayAccess()
     {
+        $form = new TestForm();
+        $form->setAttributes(['name' => 'foo']);
+        $this->assertEquals('foo', $form['name']->getValue());
+
         $form = new TestForm(['attributes' => ['name' => 'foo']]);
         $this->assertEquals('foo', $form['name']->getValue());
 

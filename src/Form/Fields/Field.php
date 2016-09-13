@@ -4,6 +4,7 @@ namespace Mindy\Form\Fields;
 
 use Closure;
 use Exception;
+use LogicException;
 use Mindy\Form\BaseForm;
 use Mindy\Form\ModelForm;
 use Mindy\Helper\Creator;
@@ -259,6 +260,10 @@ abstract class Field implements IValidateField
 
     public function getHtmlAttributes()
     {
+        if (is_string($this->html)) {
+            throw new LogicException('html property must be array');
+        }
+
         if ($this->hasErrors()) {
             if (isset($this->html['class'])) {
                 $this->html['class'] = $this->html['class'] . ' error';
