@@ -1,8 +1,7 @@
 <?php
 
 namespace Mindy\Storage\Files;
-
-use Mindy\Helper\File as FileHelper;
+use Exception;
 
 /**
  * Class LocalFile
@@ -13,11 +12,11 @@ class LocalFile extends File
     public function __construct($path)
     {
         if (!is_file($path)) {
-            throw new \Mindy\Exception\Exception("File {$path} not found");
+            throw new Exception("File {$path} not found");
         }
 
         $this->path = $path;
-        $this->name = FileHelper::mbBasename($path);
+        $this->name = basename($path);
         $this->size = filesize($path);
 
         if (function_exists("finfo_file")) {
@@ -27,7 +26,7 @@ class LocalFile extends File
         } else if (function_exists("mime_content_type")) {
             $mime = mime_content_type($path);
         } else {
-            throw new \Mindy\Exception\Exception("Unknown file extension");
+            throw new Exception("Unknown file extension");
         }
         $this->type = $mime;
     }

@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Mindy\Base;
 
 use Exception;
+use League\Container\ContainerAwareTrait;
 use Mindy\Base\Traits\ParamsTrait;
 use Mindy\Base\Traits\StatePersisterTrait;
 use Monolog\Handler\RotatingFileHandler;
@@ -15,6 +16,7 @@ abstract class BaseApplication implements IApplication
 {
     use StatePersisterTrait;
     use ParamsTrait;
+    use ContainerAwareTrait;
 
     /**
      * @var string the application name. Defaults to 'My Application'.

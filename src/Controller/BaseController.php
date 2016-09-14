@@ -177,6 +177,7 @@ class BaseController
     public function forward($controllerClass, $action, $params, $module)
     {
         if (($module instanceof Module) == false) {
+            // TODO
             $module = $this->getApp()->getModule($module);
         }
         /** @var \Mindy\Controller\BaseController $controller */

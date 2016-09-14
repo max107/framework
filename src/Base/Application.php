@@ -15,14 +15,24 @@ declare(strict_types = 1);
 
 namespace Mindy\Base;
 
+use Closure;
+use League\Container\Container;
+use League\Container\ContainerAwareInterface;
+use League\Container\ContainerAwareTrait;
+use League\Container\ContainerInterface;
 use Mindy\Console\ConsoleApplication;
+use Mindy\Di\ModuleContainer;
 use Mindy\Di\ServiceLocator;
+use Mindy\Event\EventManager;
 use Mindy\Exception\Exception;
 use Mindy\Exception\HttpException;
 use Mindy\Helper\Alias;
 use Mindy\Helper\Traits\Accessors;
 use Mindy\Helper\Traits\Configurator;
+use Mindy\Http\Http;
 use Mindy\Middleware\MiddlewareManager;
+use Mindy\Router\UrlManager;
+use Mindy\Security\Security;
 use Psr\Http\Message\ResponseInterface;
 use RuntimeException;
 
@@ -44,12 +54,13 @@ use RuntimeException;
  * @property \Mindy\Storage\Storage $storage The storage component.
  * @property \Mindy\Controller\BaseController $controller The currently active controller. Null is returned in this base class.
  * @property string $baseUrl The relative URL for the application.
- * @property string $homeUrl The homepage URL.
  */
-class Application extends BaseApplication
+class Application extends BaseApplication implements ModulesAwareInterface
 {
     use Configurator;
     use Accessors;
+    use ModulesAwareTrait;
+    use DeprecatedMethodsTrait;
 
     /**
      * @var array
@@ -60,17 +71,13 @@ class Application extends BaseApplication
      */
     public $admins = [];
     /**
+     * @var string The homepage URL.
+     */
+    public $homeUrl;
+    /**
      * @var string
      */
-    private $_homeUrl;
-    /**
-     * @var ServiceLocator
-     */
-    private $_componentLocator;
-    /**
-     * @var ServiceLocator
-     */
-    private $_moduleLocator;
+    public $webPath;
 
     /**
      * Constructor.
@@ -80,13 +87,18 @@ class Application extends BaseApplication
      * Please make sure you specify the {@link getBasePath basePath} property in the configuration,
      * which should point to the directory containing all application logic, template and data.
      * If not, the directory will be defaulted to 'protected'.
-     * @throws \Mindy\Exception\Exception
+     * @param ContainerInterface $container
+     * @throws Exception
+     * @throws \Exception
      */
-    public function __construct($config = null)
+    public function __construct($config = null, ContainerInterface $container = null)
     {
         Mindy::setApplication($this);
 
         $config = $this->fetchConfig($config);
+        if (!is_array($config)) {
+            throw new Exception('Unknown config type');
+        }
 
         if (isset($config['basePath'])) {
             $this->setBasePath($config['basePath']);
@@ -94,102 +106,63 @@ class Application extends BaseApplication
         } else {
             throw new Exception('Unknown basePath');
         }
+
+        if (isset($config['webPath'])) {
+            $this->setWebPath($config['webPath']);
+            unset($config['webPath']);
+        }
+
         $this->initAliases($config);
-
-        if (!is_array($config)) {
-            throw new Exception('Unknown config type');
+        if (isset($config['aliases'])) {
+            unset($config['aliases']);
         }
 
-        $this->registerCoreComponents();
-        $this->preinit();
-        if (isset($config['components'])) {
-            $this->setComponents($config['components']);
-            unset($config['components']);
-        }
-
+        $modules = [];
         if (isset($config['modules'])) {
-            $this->setModules($config['modules']);
+            $modules = $config['modules'];
             unset($config['modules']);
         }
 
-        $this->configure($config);
+        $components = [];
+        if (isset($config['components'])) {
+            $components = $config['components'];
+            unset($config['components']);
+        }
 
-        /**
-         * Raise preConfigure method
-         * on every iterable module
-         */
+        foreach ($config as $name => $value) {
+            $this->{$name} = $value;
+        }
+
+        if ($container === null) {
+            $container = $this->getDefaultContainer();
+        }
+
+        if (!empty($components)) {
+            $componentServiceProvider = new LegacyComponentsServiceProvider($components);
+            $container->addServiceProvider($componentServiceProvider);
+        }
+
+        $this->setContainer($container);
+        $this->initModules($modules);
+
+        if (isset($config['modules'])) {
+            unset($config['modules']);
+        }
+
         $this->init();
     }
 
     /**
-     * return $this;
+     * @return ContainerInterface
      */
-    protected function registerCoreComponents()
+    protected function getDefaultContainer() : ContainerInterface
     {
-        foreach ($this->getCoreComponents() as $id => $config) {
-            $this->setComponent($id, $config);
-        }
-    }
-
-    /**
-     * @param array $components
-     * @return $this
-     */
-    public function setComponents(array $components) : self
-    {
-        $this->getComponentLocator()->setComponents($components);
-        return $this;
-    }
-
-    /**
-     * @param array $modules
-     * @return $this|Application
-     */
-    public function setModules(array $modules) : self
-    {
-        $modulesDefinitions = [];
-        foreach ($modules as $module => $config) {
-            if (is_numeric($module) && is_string($config)) {
-                $module = $config;
-                $className = $this->getDefaultModuleClassNamespace($config);
-                $config = ['class' => $className];
-            } else if (is_array($config)) {
-                if (isset($config['class'])) {
-                    $className = $config['class'];
-                } else {
-                    $className = $this->getDefaultModuleClassNamespace($module);
-                    $config['class'] = $className;
-                }
-            } else {
-                throw new RuntimeException('Unknown module config format');
-            }
-
-            Alias::set($module, $this->getModulePath() . DIRECTORY_SEPARATOR . $module);
-            $modulesDefinitions[$module] = array_merge($config, [
-                'class' => $className,
-                'id' => $module
-            ]);
-            call_user_func([$className, 'preConfigure']);
-        }
-
-        $this->getModuleLocator()->setComponents($modulesDefinitions);
-        return $this;
-    }
-
-    protected function getComponentLocator() : ServiceLocator
-    {
-        if ($this->_componentLocator === null) {
-            $this->_componentLocator = new ServiceLocator();
-        }
-        return $this->_componentLocator;
-    }
-
-    protected function getModuleLocator() : ServiceLocator
-    {
-        if ($this->_moduleLocator === null) {
-            $this->_moduleLocator = new ServiceLocator();
-        }
-        return $this->_moduleLocator;
+        $container = new Container;
+        $container->add('security', Security::class);
+        $container->add('urlManager', UrlManager::class);
+        $container->add('http', Http::class);
+        $container->add('signal', EventManager::class);
+        return $container;
     }
 
     /**
@@ -201,9 +174,9 @@ class Application extends BaseApplication
      */
     public function t($category, $message, $params = [], $language = null) : string
     {
-        if ($this->hasComponent('locale')) {
-            $locale = $this->getComponent('locale');
-            return $locale->t($category, $message, $params, $language);
+        $container = $this->getContainer();
+        if ($container && $container->has('locale')) {
+            return $container->get('locale')->t($category, $message, $params, $language);
         } else {
             return strtr($message, $params);
         }
@@ -227,113 +200,55 @@ class Application extends BaseApplication
      */
     protected function initAliases($config)
     {
-        Alias::set('App', $this->getBasePath());
-        Alias::set('app', $this->getBasePath());
-        Alias::set('application', $this->getBasePath());
-
-        Alias::set('Modules', $this->getModulePath());
-
-        if (isset($config['webPath'])) {
-            $path = realpath($config['webPath']);
-            if (!is_dir($path)) {
-                throw new Exception("Incorrent web path " . $config['webPath']);
-            }
-            Alias::set('www', $path);
-            unset($config['webPath']);
-        } else {
-            Alias::set('www', realpath(dirname($_SERVER['SCRIPT_FILENAME'])));
-        }
-
+        $aliases = [];
         if (isset($config['aliases'])) {
-            foreach ($config['aliases'] as $name => $alias) {
-                if (($path = Alias::get($alias)) !== false) {
-                    Alias::set($name, $path);
-                } else {
-                    Alias::set($name, $alias);
-                }
-            }
+            $aliases = $config['aliases'];
             unset($config['aliases']);
         }
+
+        Alias::fromMap(array_merge([
+            'App' => $this->getBasePath(),
+            'app' => $this->getBasePath(),
+            'application' => $this->getBasePath(),
+            'Modules' => $this->getModulePath(),
+            'www' => $this->getWebPath()
+        ], $aliases));
+    }
+
+    /**
+     * @param string $webPath
+     * @throws Exception
+     */
+    public function setWebPath(string $webPath)
+    {
+        $path = realpath($webPath);
+        if (!is_dir($path)) {
+            throw new Exception("Incorrent web path " . $webPath);
+        }
+        $this->webPath = $path;
+    }
+
+    /**
+     * @return string
+     */
+    public function getWebPath()
+    {
+        if ($this->webPath === null) {
+            $this->webPath = realpath(dirname($_SERVER['SCRIPT_FILENAME']));
+        }
+
+        return $this->webPath;
     }
 
     /**
      * @param $name
-     * @return string module namespace
+     * @return mixed
+     * @throws Exception
      */
-    protected function getDefaultModuleClassNamespace(string $name) : string
-    {
-        return '\\Modules\\' . ucfirst($name) . '\\' . ucfirst($name) . 'Module';
-    }
-
-    /**
-     * Preinitializes the module.
-     * This method is called at the beginning of the module constructor.
-     * You may override this method to do some customized preinitialization work.
-     * Note that at this moment, the module is not configured yet.
-     * @see init
-     */
-    protected function preinit()
-    {
-    }
-
-    /**
-     * Retrieves the named application module.
-     * The module has to be declared in {@link modules}. A new instance will be created
-     * when calling this method with the given ID for the first time.
-     * @param string $id application module ID (case-sensitive)
-     * @return Module the module instance, null if the module is disabled or does not exist.
-     */
-    public function getModule(string $id) : Module
-    {
-        return $this->getModuleLocator()->get($id);
-    }
-
-    /**
-     * Returns a value indicating whether the specified module is installed.
-     * @param string $id the module ID
-     * @return boolean whether the specified module is installed.
-     * @since 1.1.2
-     */
-    public function hasModule($id)
-    {
-        return $this->getModuleLocator()->has($id);
-    }
-
-    /**
-     * Returns the configuration of the currently installed modules.
-     * @param bool $returnInstances
-     * @return array|Module[] the configuration of the currently installed modules (module ID => configuration)
-     */
-    public function getModules($returnInstances = false)
-    {
-        $modules = $this->getModuleLocator()->getComponents();
-        if ($returnInstances === false) {
-            return $modules;
-        }
-        $instances = [];
-        foreach ($modules as $name => $config) {
-            $instances[$name] = $this->getModuleLocator()->get($name);
-        }
-        return $instances;
-    }
-
-    public function __call($name, $args)
-    {
-        if (empty($args) && strpos($name, 'get') === 0) {
-            $tmp = lcfirst(str_replace('get', '', $name));
-
-            if ($this->hasComponent($tmp)) {
-                return $this->getComponent($tmp);
-            }
-        }
-
-        return $this->__callInternal($name, $args);
-    }
-
     public function __get($name)
     {
-        if ($this->getComponentLocator()->has($name)) {
-            return $this->getComponentLocator()->get($name);
+        if ($this->getContainer()->has($name)) {
+            return $this->getContainer()->get($name);
         } else {
             $getter = 'get' . $name;
             if (method_exists($this, $getter)) {
@@ -407,43 +322,6 @@ class Application extends BaseApplication
         return $this->request->http->getBaseUrl($absolute);
     }
 
-    /**
-     * @return string the homepage URL
-     */
-    public function getHomeUrl()
-    {
-        return $this->_homeUrl === null ? '/' : $this->_homeUrl;
-    }
-
-    /**
-     * @param string $value the homepage URL
-     */
-    public function setHomeUrl($value)
-    {
-        $this->_homeUrl = $value;
-    }
-
-    /**
-     * Registers the core application components.
-     */
-    protected function getCoreComponents()
-    {
-        return [
-            'security' => [
-                'class' => '\Mindy\Security\Security',
-            ],
-            'urlManager' => [
-                'class' => '\Mindy\Router\UrlManager'
-            ],
-            'http' => [
-                'class' => '\Mindy\Http\Http',
-            ],
-            'signal' => [
-                'class' => '\Mindy\Event\EventManager',
-            ],
-        ];
-    }
-
     public function parseRoute()
     {
         $request = $this->http->getRequest();
@@ -460,50 +338,20 @@ class Application extends BaseApplication
      */
     public function getUser()
     {
-        if ($this->hasComponent('auth')) {
+        if ($this->getContainer()->has('auth')) {
             return $this->auth->getUser();
         }
         return null;
     }
 
-    //////////////////
-    // DEPRECATED
-    //////////////////
-
     /**
-     * @param $id
-     * @return object|null
+     * Create di container for modules
+     * @param array $modules
      */
-    public function getComponent($id)
+    protected function initModules(array $modules)
     {
-        return $this->getComponentLocator()->get($id);
-    }
-
-    /**
-     * @param $id
-     * @return bool
-     */
-    public function hasComponent($id)
-    {
-        return $this->getComponentLocator()->has($id);
-    }
-
-    /**
-     * @param $id
-     * @param $config
-     * @void
-     */
-    public function setComponent($id, $config)
-    {
-        $this->getComponentLocator()->set($id, $config);
-    }
-
-    /**
-     * @param bool $definitions
-     * @return array
-     */
-    public function getComponents($definitions = true)
-    {
-        return $this->getComponentLocator()->getComponents($definitions);
+        $moduleContainer = new ModuleContainer;
+        $moduleContainer->addServiceProvider(new ModuleServiceProvider($modules, $this->getModulePath()));
+        $this->setModulesContainer($moduleContainer);
     }
 }

@@ -14,9 +14,10 @@
 
 namespace Mindy\Base;
 
-use Exception;
+use League\Container\Container;
+use League\Container\ContainerAwareTrait;
+use League\Container\ServiceProvider\BootableServiceProviderInterface;
 use function Mindy\app;
-use Mindy\Di\ServiceLocator;
 use Mindy\Helper\Collection;
 use Mindy\Helper\Traits\Accessors;
 use Mindy\Helper\Traits\Configurator;
@@ -33,38 +34,70 @@ use ReflectionClass;
  * @property array $import List of aliases to be imported.
  * @property array $aliases List of aliases to be defined. The array keys are root aliases,
  */
-abstract class BaseModule
+abstract class BaseModule implements ModuleInterface, BootableServiceProviderInterface
 {
-    use Configurator, Accessors;
+    use Configurator;
+    use Accessors;
+    use ContainerAwareTrait;
+    use DeprecatedMethodsTrait;
 
-    /**
-     * @var array the IDs of the application components that should be preloaded.
-     */
-    public $preload = [];
     /**
      * @var string
      */
-    private $_id;
+    protected $id;
     /**
      * @var string
      */
-    private $_basePath;
+    protected $basePath;
     /**
-     * @var \Mindy\Di\ServiceLocator
+     * @var array
      */
-    private $_locator;
+    protected $provides = [];
 
     /**
-     * Constructor.
-     * @param mixed $config the module configuration. It can be either an array or
-     * the path of a PHP file returning the configuration array.
+     * BaseModule constructor.
+     * @param array $config
      */
     public function __construct(array $config = [])
     {
-        $this->preinit();
+        $this->setContainer(new Container);
         $this->configure($config);
-        $this->preloadComponents();
         $this->init();
+    }
+
+    /**
+     * Method will be invoked on registration of a service provider implementing
+     * this interface. Provides ability for eager loading of Service Providers.
+     *
+     * @return void
+     */
+    public function boot()
+    {
+
+    }
+
+    /**
+     * Returns a boolean if checking whether this provider provides a specific
+     * service or returns an array of provided services if no argument passed.
+     *
+     * @param  string $service
+     * @return boolean|array
+     */
+    public function provides($service = null)
+    {
+        return array_key_exists($service, $this->provides);
+    }
+
+    /**
+     * Use the register method to register items with the container via the
+     * protected $this->container property or the `getContainer` method
+     * from the ContainerAwareTrait.
+     *
+     * @return void
+     */
+    public function register()
+    {
+
     }
 
     /**
@@ -76,8 +109,8 @@ abstract class BaseModule
      */
     public function __get($name)
     {
-        if ($this->hasComponent($name)) {
-            return $this->getComponent($name);
+        if ($this->getContainer()->has($name)) {
+            return $this->getContainer()->get($name);
         } else {
             return $this->__getInternal($name);
         }
@@ -92,13 +125,16 @@ abstract class BaseModule
      */
     public function __isset($name)
     {
-        if ($this->hasComponent($name)) {
-            return $this->getComponent($name) !== null;
+        if ($this->getContainer()->has($name)) {
+            return true;
         } else {
             return $this->__issetInternal($name);
         }
     }
 
+    /**
+     * Configure module or application before call constructor
+     */
     public static function preConfigure()
     {
 
@@ -110,7 +146,7 @@ abstract class BaseModule
      */
     public function getId()
     {
-        return $this->_id;
+        return $this->id;
     }
 
     /**
@@ -122,115 +158,16 @@ abstract class BaseModule
     }
 
     /**
-     * @return string
-     */
-    public function getDescription()
-    {
-        return '';
-    }
-
-    /**
-     * Sets the module ID.
-     * @param string $id the module ID
-     */
-    public function setId($id)
-    {
-        $this->_id = $id;
-    }
-
-    /**
      * Returns the root directory of the module.
      * @return string the root directory of the module. Defaults to the directory containing the module class.
      */
     public function getBasePath()
     {
-        if ($this->_basePath === null) {
+        if ($this->basePath === null) {
             $class = new ReflectionClass(get_class($this));
-            $this->_basePath = dirname($class->getFileName());
+            $this->basePath = dirname($class->getFileName());
         }
-        return $this->_basePath;
-    }
-
-    /**
-     * @return ServiceLocator
-     */
-    public function getLocator()
-    {
-        if ($this->_locator === null) {
-            $this->_locator = new ServiceLocator();
-        }
-        return $this->_locator;
-    }
-
-    /**
-     * Checks whether the named component exists.
-     * @param string $id application component ID
-     * @return boolean whether the named application component exists (including both loaded and disabled.)
-     */
-    public function hasComponent($id)
-    {
-        if (!is_string($id)) {
-            $id = array_shift($id);
-        }
-        return $this->getLocator()->has($id);
-    }
-
-    /**
-     * @param $id
-     * @return null|object
-     * @throws Exception
-     */
-    public function getComponent($id)
-    {
-        return $this->getLocator()->get($id);
-    }
-
-    /**
-     * @param $id
-     * @param $component
-     * @throws Exception
-     */
-    public function setComponent($id, $component)
-    {
-        $this->getLocator()->set($id, $component);
-    }
-
-    /**
-     * @param bool $definitions
-     * @return array
-     */
-    public function getComponents($definitions = true)
-    {
-        return $this->getLocator()->getComponents($definitions);
-    }
-
-    /**
-     * @param $components
-     */
-    public function setComponents($components)
-    {
-        $this->getLocator()->setComponents($components);
-    }
-
-    /**
-     * Loads static application components.
-     */
-    protected function preloadComponents()
-    {
-        foreach ($this->preload as $id) {
-            $this->getLocator()->get($id);
-        }
-    }
-
-    /**
-     * Preinitializes the module.
-     * This method is called at the beginning of the module constructor.
-     * You may override this method to do some customized preinitialization work.
-     * Note that at this moment, the module is not configured yet.
-     * @see init
-     */
-    protected function preinit()
-    {
+        return $this->basePath;
     }
 
     /**

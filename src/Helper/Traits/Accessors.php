@@ -59,7 +59,9 @@ trait Accessors
     public function __setInternal($name, $value)
     {
         $setter = 'set' . $name;
-        if (method_exists($this, $setter)) {
+        if (property_exists($this, $name)) {
+            $this->{$name} = $value;
+        } else if (method_exists($this, $setter)) {
             $this->$setter($value);
         } elseif (method_exists($this, 'get' . $name)) {
             throw new InvalidCallException('Setting read-only property: ' . get_class($this) . '::' . $name);

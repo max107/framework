@@ -2,8 +2,20 @@
 
 namespace Mindy\Tests\Base;
 
+use League\Container\Container;
 use Mindy\Base\Mindy;
+use Mindy\Base\Module;
+use Mindy\Event\EventManager;
+use Mindy\Helper\Alias;
+use Mindy\Http\Http;
+use Mindy\Router\UrlManager;
+use Mindy\Security\Security;
 use Monolog\Logger;
+
+class FooBarModule extends Module
+{
+    public $host = 'example.com';
+}
 
 class ApplicationTest extends \PHPUnit_Framework_TestCase
 {
@@ -52,5 +64,70 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
         foreach ($files as $file) {
             unlink($file);
         }
+    }
+
+    public function testDi()
+    {
+        $container = new Container;
+        $container->add('security', Security::class);
+        $container->add('urlManager', UrlManager::class);
+        $container->add('http', Http::class);
+        $container->add('signal', EventManager::class);
+
+        $app = new TestApplication([
+            'basePath' => __DIR__ . '/app'
+        ], $container);
+
+        $this->assertInstanceOf(Container::class, $app->getContainer());
+        $this->assertInstanceOf(Http::class, $app->getContainer()->get('http'));
+        $this->assertInstanceOf(Security::class, $app->getContainer()->get('security'));
+        $this->assertInstanceOf(UrlManager::class, $app->getContainer()->get('urlManager'));
+        $this->assertInstanceOf(EventManager::class, $app->getContainer()->get('signal'));
+    }
+
+    public function testDiCoreComponents()
+    {
+        $app = new TestApplication([
+            'basePath' => __DIR__ . '/app'
+        ]);
+
+        $this->assertInstanceOf(Container::class, $app->getContainer());
+        $this->assertInstanceOf(Http::class, $app->getContainer()->get('http'));
+        $this->assertInstanceOf(Security::class, $app->getContainer()->get('security'));
+        $this->assertInstanceOf(UrlManager::class, $app->getContainer()->get('urlManager'));
+        $this->assertInstanceOf(EventManager::class, $app->getContainer()->get('signal'));
+    }
+
+    public function testModules()
+    {
+        $app = new TestApplication([
+            'basePath' => __DIR__ . '/app',
+            'modules' => [
+                'Foo' => [
+                    'class' => FooBarModule::class,
+                    'host' => 'domain.super'
+                ],
+                'Bar' => FooBarModule::class
+            ]
+        ]);
+        $this->assertInstanceOf(FooBarModule::class, $app->getModule('Foo'));
+        $this->assertEquals('domain.super', $app->getModule('Foo')->host);
+
+        $this->assertInstanceOf(FooBarModule::class, $app->getModule('Bar'));
+        $this->assertEquals('example.com', $app->getModule('Bar')->host);
+
+        $this->assertEquals(__DIR__ . '/app/Modules/Foo', Alias::get('Foo'));
+        $this->assertEquals(__DIR__ . '/app/Modules/Bar', Alias::get('Bar'));
+    }
+
+    public function testAliases()
+    {
+        $app = new TestApplication([
+            'basePath' => __DIR__ . '/app',
+            'aliases' => [
+                'foo' => __DIR__
+            ]
+        ]);
+        $this->assertEquals(__DIR__, Alias::get('foo'));
     }
 }

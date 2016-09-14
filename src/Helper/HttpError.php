@@ -8,19 +8,13 @@
 
 namespace Mindy\Helper;
 
-use Mindy\Base\Mindy;
+use function Mindy\app;
 
 class HttpError
 {
     public static function errorMessage($code)
     {
-        $message = isset(self::$httpCodes[$code]) ? self::$httpCodes[$code] : 'Unknown error';
-
-        if (Mindy::app() && Mindy::app()->hasComponent('locale')) {
-            return Mindy::app()->locale->t('main', $message);
-        } else {
-            return $message;
-        }
+        return app()->t('main', isset(self::$httpCodes[$code]) ? self::$httpCodes[$code] : 'Unknown error');
     }
 
     public static $httpCodes = [

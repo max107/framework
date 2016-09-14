@@ -13,7 +13,7 @@ use Mindy\Query\Query;
  * @site http://studio107.ru
  * @date 17/04/14.04.2014 16:45
  */
-class PaginationTest extends TestCase
+class PaginationTest extends PHPUnit_Framework_TestCase
 {
     public function provider()
     {
@@ -61,7 +61,8 @@ class PaginationTest extends TestCase
             'objects' => [1, 2],
             'meta' => [
                 'page' => 1,
-                'pageSize' => 2,
+                'pages_count' => 5,
+                'page_size' => 2,
                 'total' => 10
             ]
         ], $pager->toJson());
@@ -69,6 +70,10 @@ class PaginationTest extends TestCase
 
     public function testPaginateQuery()
     {
+        // TODO
+        if (class_exists('\Mindy\QueryBuilder\QueryBuilder') === false) {
+            $this->markTestSkipped('Missing QueryBuilder');
+        }
         $connection = new \Mindy\Query\Connection([
             'dsn' => 'sqlite::memory:'
         ]);
@@ -79,11 +84,8 @@ class PaginationTest extends TestCase
         $cmd->insert('test', ['id' => 3])->execute();
         $cmd->insert('test', ['id' => 4])->execute();
 
-        $query = new Query();
-        $query->db = $connection;
-
-        $query->select(['id'])->from('test');
-        $pager = new Pagination($query, [
+        $qb = $connection->getQueryBuilder()->select(['id'])->from('test');
+        $pager = new Pagination($qb, [
             'pageSize' => 1
         ]);
         $this->assertEquals([['id' => 1]], $pager->paginate());

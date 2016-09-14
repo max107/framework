@@ -3,9 +3,7 @@
 namespace Mindy\Base;
 
 use function Mindy\app;
-use Mindy\Helper\Alias;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
+use Mindy\Router\ReverseAwareInterface;
 use ReflectionClass;
 use Symfony\Component\Finder\Finder;
 
@@ -13,7 +11,7 @@ use Symfony\Component\Finder\Finder;
  * Class Module
  * @package Mindy\Base
  */
-class Module extends BaseModule
+class Module extends BaseModule implements ReverseAwareInterface
 {
     public function getVersion()
     {
@@ -21,26 +19,10 @@ class Module extends BaseModule
     }
 
     /**
-     * @return array
-     */
-    public function getMenu()
-    {
-        return [];
-    }
-
-    /**
-     * Return array of mail templates and his variables
-     * @return array
-     */
-    public function getMailTemplates()
-    {
-        return [];
-    }
-
-    /**
+     * TODO
      * @return \Mindy\Orm\Model[]
      */
-    public function getModels()
+    public function getModels() : array
     {
         $modelsPath = $this->getBasePath() . DIRECTORY_SEPARATOR . 'Models';
         if (is_dir($modelsPath) === false) {
@@ -79,12 +61,28 @@ class Module extends BaseModule
         return $models;
     }
 
-    public function reverse($route, $data = null)
+    /**
+     * @return string
+     */
+    public function getDescription() : string
+    {
+        return '';
+    }
+
+    /**
+     * @param $route
+     * @param null $data
+     * @return string
+     */
+    public function reverse($route, $data = null) : string
     {
         return app()->urlManager->reverse($route, $data);
     }
 
-    public function getAdminMenu()
+    /**
+     * @return array
+     */
+    public function getAdminMenu() : array
     {
         return [];
     }

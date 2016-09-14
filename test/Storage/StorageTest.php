@@ -24,19 +24,12 @@ class StorageTest extends \PHPUnit_Framework_TestCase
     public function testStorage()
     {
         $s = new Storage([
-            'adapters' => [
-                'default' => function () {
-                    // Create the adapter
-                    $localAdapter = new Local(__DIR__ . '/../www/media');
-                    // Create the cache store
-                    $cacheStore = new CacheStore();
-                    // Decorate the adapter
-                    return new CachedAdapter($localAdapter, $cacheStore);
-                }
+            'filesystems' => [
+                'default' => new CachedAdapter(new Local(__DIR__ . '/media'), new CacheStore())
             ]
         ]);
 
-        $fs = $s->getFileSystem();
+        $fs = $s->getFilesystem();
         $this->assertTrue($fs->has('.gitkeep'));
         $stream = fopen(__FILE__, 'r+');
         $state = $fs->writeStream('test.txt', $stream);
@@ -49,6 +42,6 @@ class StorageTest extends \PHPUnit_Framework_TestCase
 
     protected function tearDown()
     {
-        @unlink(__DIR__ . '/../www/media/test.txt');
+        @unlink(__DIR__ . '/media/test.txt');
     }
 }

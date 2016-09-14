@@ -2,15 +2,11 @@
 
 namespace Mindy\Pagination;
 
-use Mindy\Base\Mindy;
 use Mindy\Exception\Exception;
 use Mindy\Helper\Creator;
 use Mindy\Helper\Traits\Accessors;
 use Mindy\Helper\Traits\Configurator;
-use Mindy\Orm\Manager;
-use Mindy\Orm\QuerySet;
 use Mindy\Pagination\Interfaces\IPagination;
-use Mindy\Query\Query;
 use Serializable;
 
 /**
@@ -174,7 +170,7 @@ abstract class BasePagination implements Serializable
 
     protected function fetchPage($key = null)
     {
-        $page = (int)Mindy::app()->http->get->get($key, 1);
+        $page = isset($_GET[$key]) ? (int)$_GET[$key] : 1;
         if (empty($page)) {
             $page = 1;
         }
@@ -210,17 +206,20 @@ abstract class BasePagination implements Serializable
     {
         if (is_array($this->source)) {
             return $this->applyLimitArray();
-        } else if ($this->source instanceof Manager) {
-            $this->source = $this->source->getQuerySet();
-            return $this->applyLimitQuerySet();
-        } else if ($this->source instanceof QuerySet) {
-            return $this->applyLimitQuerySet();
-        } else if ($this->source instanceof Query) {
-            return $this->applyLimitQuery();
-        } else if ($this->source instanceof IPagination) {
-            return $this->applyLimitByInterface();
         } else {
-            throw new Exception("Unknown source");
+            if ($this->source instanceof \Mindy\Orm\Manager) {
+                $this->source = $this->source->getQuerySet();
+            }
+
+            if ($this->source instanceof \Mindy\Orm\QuerySet) {
+                return $this->applyLimitQuerySet();
+            } else if ($this->source instanceof \Mindy\QueryBuilder\QueryBuilder) {
+                return $this->applyLimitQueryBuilder();
+            } else if ($this->source instanceof IPagination) {
+                return $this->applyLimitByInterface();
+            } else {
+                throw new Exception("Unknown source");
+            }
         }
     }
 
@@ -239,13 +238,10 @@ abstract class BasePagination implements Serializable
     /**
      * @return array
      */
-    protected function applyLimitQuery()
+    protected function applyLimitQueryBuilder()
     {
         $this->total = $this->source->count();
-        $page = $this->getPage();
-        $pageSize = $this->fetchPageSize();
-        $offset = $page > 1 ? $pageSize * ($page - 1) : 0;
-        $this->data = $this->source->limit($pageSize)->offset($offset)->all();
+        $this->data = $this->source->paginate($this->getPage(), $this->fetchPageSize())->all();
         return $this->data;
     }
 

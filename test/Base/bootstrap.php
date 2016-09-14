@@ -1,8 +1,8 @@
 <?php
 
-require(__DIR__ . '/../vendor/autoload.php');
+require(__DIR__ . '/../../vendor/autoload.php');
 
-use Mindy\Base\Tests\TestApplication;
+use Mindy\Tests\Base\TestApplication;
 
 defined('MINDY_ENABLE_EXCEPTION_HANDLER') or define('MINDY_ENABLE_EXCEPTION_HANDLER', false);
 defined('MINDY_ENABLE_ERROR_HANDLER') or define('MINDY_ENABLE_ERROR_HANDLER', false);

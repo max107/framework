@@ -15,7 +15,7 @@ class UrlManager extends Dispatcher
     /**
      * @var null
      */
-    public $patterns = null;
+    public $patterns = [];
 
     /**
      * UrlManager constructor.

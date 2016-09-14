@@ -32,7 +32,7 @@ class Storage extends MountManager
      */
     public function __construct(array $config = [])
     {
-        $filesystems = $config['filesystems'];
+        $filesystems = isset($config['filesystems']) ? $config['filesystems'] : [];
         unset($config['filesystems']);
         foreach ($config as $key => $value) {
             $this->{$key} = $value;

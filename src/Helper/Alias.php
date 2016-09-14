@@ -24,8 +24,28 @@ use InvalidArgumentException;
  */
 class Alias
 {
+    /**
+     * @var array
+     */
     private static $_aliases = [];
 
+    /**
+     * @param array $aliases
+     */
+    public static function fromMap(array $aliases)
+    {
+        foreach ($aliases as $name => $alias) {
+            if ($path = self::get($alias)) {
+                self::set($name, $path);
+            } else {
+                self::set($name, $alias);
+            }
+        }
+    }
+
+    /**
+     * @return array
+     */
     public static function all()
     {
         return self::$_aliases;
