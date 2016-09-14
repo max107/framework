@@ -11,7 +11,7 @@ declare(strict_types = 1);
 namespace Mindy\Permissions;
 
 use function Mindy\app;
-use Mindy\Auth\IUser;
+use Mindy\Auth\UserInterface;
 use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
 
 class PermissionManager
@@ -92,12 +92,12 @@ class PermissionManager
     }
 
     /**
-     * @param IUser $user
+     * @param UserInterface $user
      * @param string $code
      * @param array $params
      * @return bool
      */
-    public function canUser(IUser $user, string $code, array $params = []) : bool
+    public function canUser(UserInterface $user, string $code, array $params = []) : bool
     {
         if ($this->hasPermission($code)) {
             return $this->getPermission($code)->canUser($user->id, $params);
@@ -106,12 +106,12 @@ class PermissionManager
     }
 
     /**
-     * @param IUser $user
+     * @param UserInterface $user
      * @param string $code
      * @param array $params
      * @return bool
      */
-    public function canGroup(IUser $user, string $code, array $params = []) : bool
+    public function canGroup(UserInterface $user, string $code, array $params = []) : bool
     {
         if ($this->hasPermission($code)) {
             foreach ($user->groups as $group) {
@@ -127,12 +127,12 @@ class PermissionManager
 
     /**
      * Проверяем данную операцию для пользователя в кеше
-     * @param IUser $user
+     * @param UserInterface $user
      * @param string $code
      * @param array $params
      * @return bool
      */
-    public function can(IUser $user, string $code, array $params = []) : bool
+    public function can(UserInterface $user, string $code, array $params = []) : bool
     {
         /**
          * Пользователю суперадминистратор все разрешено по умолчанию

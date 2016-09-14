@@ -29,7 +29,7 @@ class MemoryUserProvider extends AbstractUserProvider
 
     /**
      * @param array $attributes
-     * @return null|\Mindy\Auth\IUser
+     * @return null|\Mindy\Auth\UserInterface
      */
     public function get(array $attributes)
     {

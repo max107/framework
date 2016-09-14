@@ -9,8 +9,12 @@
 namespace Mindy\Auth\Strategy;
 
 use function Mindy\app;
-use Mindy\Auth\IUser;
+use Mindy\Auth\UserInterface;
 
+/**
+ * Class LocalStrategy
+ * @package Mindy\Auth\Strategy
+ */
 class LocalStrategy extends BaseStrategy
 {
     /**
@@ -20,16 +24,17 @@ class LocalStrategy extends BaseStrategy
     public $allowInactive = true;
 
     /**
-     * @param IUser $user
+     * @param UserInterface $user
      * @param array $attributes
      * @return bool
      */
-    public function process(IUser $user, array $attributes) : bool
+    public function process(UserInterface $user, array $attributes) : bool
     {
         $name = $attributes['username'];
         $password = $attributes['password'];
 
         $attribute = strpos($name, "@") > -1 ? 'email' : 'username';
+        /** @var null|UserInterface $instance */
         $instance = $this->userProvider->get([$attribute => strtolower($name)]);
 
         if ($instance === null) {

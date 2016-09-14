@@ -9,7 +9,7 @@
 namespace Mindy\Auth\Strategy;
 
 use Mindy\Auth\AuthProviderInterface;
-use Mindy\Auth\IUser;
+use Mindy\Auth\UserInterface;
 
 /**
  * Interface IAuthStrategy
@@ -18,11 +18,11 @@ use Mindy\Auth\IUser;
 interface AuthStrategyInterface
 {
     /**
-     * @param IUser $user
+     * @param UserInterface $user
      * @param array $attributes
      * @return bool
      */
-    public function process(IUser $user, array $attributes);
+    public function process(UserInterface $user, array $attributes);
 
     /**
      * @return array
@@ -30,7 +30,7 @@ interface AuthStrategyInterface
     public function getErrors() : array;
 
     /**
-     * @return IUser
+     * @return UserInterface
      */
-    public function getUser() : IUser;
+    public function getUser() : UserInterface;
 }

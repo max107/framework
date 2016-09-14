@@ -9,7 +9,7 @@
 namespace Mindy\Auth\Strategy;
 
 use Mindy\Auth\AuthProviderInterface;
-use Mindy\Auth\IUser;
+use Mindy\Auth\UserInterface;
 use Mindy\Auth\UserProvider\UserProviderInterface;
 
 /**
@@ -23,7 +23,7 @@ abstract class BaseStrategy implements AuthStrategyInterface
      */
     private $_errors = [];
     /**
-     * @var IUser
+     * @var UserInterface
      */
     private $_user;
     /**
@@ -47,20 +47,20 @@ abstract class BaseStrategy implements AuthStrategyInterface
     }
 
     /**
-     * @param IUser $user
+     * @param UserInterface $user
      */
-    protected function setUser(IUser $user)
+    protected function setUser(UserInterface $user)
     {
         $this->_user = $user;
     }
 
     /**
-     * @param IUser $user
+     * @param UserInterface $user
      * @param string $password
      * @return string
      * @throws \Exception
      */
-    public function verifyPassword(IUser $user, $password)
+    public function verifyPassword(UserInterface $user, $password)
     {
         $hash = $user->password;
         return $this->authProvider
@@ -89,9 +89,9 @@ abstract class BaseStrategy implements AuthStrategyInterface
     }
 
     /**
-     * @return IUser
+     * @return UserInterface
      */
-    public function getUser() : IUser
+    public function getUser() : UserInterface
     {
         return $this->_user;
     }

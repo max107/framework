@@ -26,7 +26,7 @@ interface AuthProviderInterface
 
     /**
      * @param array $attributes
-     * @return IUser
+     * @return UserInterface
      */
-    public function createUser(array $attributes) : IUser;
+    public function createUser(array $attributes) : UserInterface;
 }

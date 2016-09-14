@@ -8,10 +8,10 @@
 
 namespace Mindy\Permissions;
 
-use Mindy\Auth\IGroup;
-use Mindy\Auth\IUser;
+use Mindy\Auth\GroupInterface;
+use Mindy\Auth\UserInterface;
 
-class GroupPerm implements IGroup
+class GroupInterfacePerm implements GroupInterface
 {
     protected $attrs = [];
 
@@ -26,7 +26,7 @@ class GroupPerm implements IGroup
     }
 }
 
-class UserPerm implements IUser
+class UserInterfacePerm implements UserInterface
 {
     protected $attrs = [];
 
@@ -69,7 +69,7 @@ class UserPerm implements IUser
      * @param array $attributes
      * @return mixed
      */
-    public static function create(array $attributes) : IUser
+    public static function create(array $attributes) : UserInterface
     {
         return new self($attributes);
     }
@@ -88,11 +88,11 @@ class PermissionTest extends \PHPUnit_Framework_TestCase
             'permissions' => $permissions
         ]);
 
-        $user = new UserPerm([
+        $user = new UserInterfacePerm([
             'id' => 1,
             'is_superuser' => false,
             'groups' => [
-                new GroupPerm(['id' => 2])
+                new GroupInterfacePerm(['id' => 2])
             ]
         ]);
 
@@ -102,11 +102,11 @@ class PermissionTest extends \PHPUnit_Framework_TestCase
         $this->assertFalse($permissions->can($user, 'foo_biz_rule', ['a' => 1, 'b' => 2]));
         $this->assertFalse($permissions->can($user, 'foo_biz_rule'));
 
-        $user = new UserPerm([
+        $user = new UserInterfacePerm([
             'id' => 2,
             'is_superuser' => false,
             'groups' => [
-                new GroupPerm(['id' => 2])
+                new GroupInterfacePerm(['id' => 2])
             ]
         ]);
         $this->assertTrue($permissions->can($user, 'foo'));
@@ -115,11 +115,11 @@ class PermissionTest extends \PHPUnit_Framework_TestCase
         $this->assertFalse($permissions->can($user, 'foo_biz_rule', ['a' => 1, 'b' => 2]));
         $this->assertFalse($permissions->can($user, 'foo_biz_rule'));
 
-        $user = new UserPerm([
+        $user = new UserInterfacePerm([
             'id' => 3,
             'is_superuser' => false,
             'groups' => [
-                new GroupPerm(['id' => 3])
+                new GroupInterfacePerm(['id' => 3])
             ]
         ]);
         $this->assertFalse($permissions->can($user, 'foo'));

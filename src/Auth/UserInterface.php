@@ -19,8 +19,9 @@ namespace Mindy\Auth;
  * @property string $hash_type
  * @property array $groups
  * @property bool $is_superuser
+ * @property bool $is_active
  */
-interface IUser
+interface UserInterface
 {
     /**
      * @return bool
@@ -36,5 +37,5 @@ interface IUser
      * @param array $attributes
      * @return mixed
      */
-    public static function create(array $attributes) : IUser;
+    public static function create(array $attributes) : UserInterface;
 }

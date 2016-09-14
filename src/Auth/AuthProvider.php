@@ -42,10 +42,10 @@ class AuthProvider extends BaseAuthProvider
     }
 
     /**
-     * @param IUser $user
+     * @param UserInterface $user
      * @return bool
      */
-    public function login(IUser $user) : bool
+    public function login(UserInterface $user) : bool
     {
         if ($user->isGuest()) {
             return false;
@@ -100,9 +100,9 @@ class AuthProvider extends BaseAuthProvider
 
     /**
      * @param array $attributes
-     * @return IUser
+     * @return UserInterface
      */
-    public function createUser(array $attributes) : IUser
+    public function createUser(array $attributes) : UserInterface
     {
         return call_user_func([$this->userClass, 'create'], $attributes);
     }

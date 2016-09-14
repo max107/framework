@@ -10,7 +10,7 @@ namespace Mindy\Tests\Auth;
 
 use Mindy\Auth\AuthProvider;
 use Mindy\Auth\AuthProviderInterface;
-use Mindy\Auth\IUser;
+use Mindy\Auth\UserInterface;
 use Mindy\Auth\PasswordHasher\NullPasswordHasher;
 use Mindy\Auth\Strategy\AuthStrategyInterface;
 use Mindy\Auth\Strategy\LocalStrategy;
@@ -23,7 +23,7 @@ use Mindy\Session\Adapter\MemorySessionAdapter;
 use Mindy\Session\Session;
 use Mindy\Tests\Base\TestApplication;
 
-class UserExample implements IUser
+class UserInterfaceExample implements UserInterface
 {
     protected $attrs = [];
 
@@ -66,7 +66,7 @@ class UserExample implements IUser
      * @param array $attributes
      * @return mixed
      */
-    public static function create(array $attributes) : IUser
+    public static function create(array $attributes) : UserInterface
     {
         return new self($attributes);
     }
@@ -79,11 +79,11 @@ class NullStrategyInterface implements AuthStrategyInterface
     private $_auth;
 
     /**
-     * @param IUser $user
+     * @param UserInterface $user
      * @param array $attributes
      * @return bool
      */
-    public function process(IUser $user, array $attributes)
+    public function process(UserInterface $user, array $attributes)
     {
         foreach ($attributes as $key => $value) {
             $user->{$key} = $value;
@@ -131,9 +131,9 @@ class NullStrategyInterface implements AuthStrategyInterface
     }
 
     /**
-     * @return IUser
+     * @return UserInterface
      */
-    public function getUser() : IUser
+    public function getUser() : UserInterface
     {
         return $this->user;
     }
@@ -159,7 +159,7 @@ class AuthTest extends \PHPUnit_Framework_TestCase
             'components' => [
                 'auth' => [
                     'class' => '\Mindy\Auth\AuthProvider',
-                    'userClass' => UserExample::class,
+                    'userClass' => UserInterfaceExample::class,
                     'strategies' => [
                         'local' => new NullStrategyInterface
                     ]
@@ -203,7 +203,7 @@ class AuthTest extends \PHPUnit_Framework_TestCase
         $auth = $this->app->auth;
         $user = $auth->getUser();
         $auth->setUser($user);
-        $this->assertInstanceOf(IUser::class, $auth->getUser());
+        $this->assertInstanceOf(UserInterface::class, $auth->getUser());
 
         $this->assertTrue($user->isGuest());
         $this->assertFalse($auth->login($user));
@@ -221,7 +221,7 @@ class AuthTest extends \PHPUnit_Framework_TestCase
 
         $auth = $this->app->auth;
         $user = $auth->getUser();
-        $this->assertInstanceOf(IUser::class, $user);
+        $this->assertInstanceOf(UserInterface::class, $user);
 
         $this->assertTrue($user->isGuest());
 
@@ -254,7 +254,7 @@ class AuthTest extends \PHPUnit_Framework_TestCase
     public function testLocalStrategy()
     {
         $authProvider = new AuthProvider([
-            'userClass' => UserExample::class,
+            'userClass' => UserInterfaceExample::class,
             'passwordHashers' => [
                 'null' => new NullPasswordHasher()
             ]

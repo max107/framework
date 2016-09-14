@@ -40,7 +40,7 @@ use Psr\Http\Message\ResponseInterface;
  * @property \Mindy\ErrorHandler\ErrorHandler $errorHandler The error handler application component.
  * @property \Mindy\Security\Security $securityManager The security manager application component.
  * @property \Mindy\Http\Http $http The request component.
- * @property \Mindy\Auth\IUser $user The user component.
+ * @property \Mindy\Auth\UserInterface $user The user component.
  * @property \Mindy\Template\Renderer $template The template component.
  * @property \Mindy\Finder\Finder $finder The template finder component.
  * @property \Mindy\Auth\AuthProvider $auth The auth component.
@@ -334,7 +334,7 @@ class Application extends BaseApplication implements ModulesAwareInterface
 
     /**
      * @throws \Mindy\Exception\Exception
-     * @return \Mindy\Auth\IUser instance the user session information
+     * @return \Mindy\Auth\UserInterface instance the user session information
      */
     public function getUser()
     {

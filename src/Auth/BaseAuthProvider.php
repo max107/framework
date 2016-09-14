@@ -35,7 +35,7 @@ abstract class BaseAuthProvider implements AuthProviderInterface
      */
     public $userClass;
     /**
-     * @var IUser
+     * @var UserInterface
      */
     private $_user;
     /**
@@ -86,10 +86,10 @@ abstract class BaseAuthProvider implements AuthProviderInterface
     }
 
     /**
-     * @param IUser $user
+     * @param UserInterface $user
      * @return bool
      */
-    abstract public function login(IUser $user) : bool;
+    abstract public function login(UserInterface $user) : bool;
 
     /**
      * @return bool
@@ -97,28 +97,28 @@ abstract class BaseAuthProvider implements AuthProviderInterface
     abstract public function logout() : bool;
 
     /**
-     * @param IUser $user
+     * @param UserInterface $user
      * @return $this
      */
-    public function setUser(IUser $user)
+    public function setUser(UserInterface $user)
     {
         $this->_user = $user;
         return $this;
     }
 
     /**
-     * @return IUser
+     * @return UserInterface
      */
-    public function getUser() : IUser
+    public function getUser() : UserInterface
     {
         return $this->_user;
     }
 
     /**
-     * @return IUser
+     * @return UserInterface
      * @throws Exception
      */
-    protected function getGuestUser() : IUser
+    protected function getGuestUser() : UserInterface
     {
         if ($this->userClass === null) {
             throw new Exception('userClass is null');
@@ -209,9 +209,9 @@ abstract class BaseAuthProvider implements AuthProviderInterface
     }
 
     /**
-     * @param IUser $user
+     * @param UserInterface $user
      */
-    public function onAuth(IUser $user)
+    public function onAuth(UserInterface $user)
     {
 
     }
