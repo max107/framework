@@ -890,16 +890,10 @@ abstract class Base implements ArrayAccess, Serializable
      * meaning all attributes that are loaded from DB will be saved.
      * @return integer|boolean the number of rows affected, or false if validation fails
      * or [[beforeSave()]] stops the updating process.
-     * @throws StaleObjectException if [[optimisticLock|optimistic locking]] is enabled and the data
-     * being updated is outdated.
      * @throws \Exception in case update failed.
      */
     public function update(array $fields = [])
     {
-        if (!empty($fields) && !$this->validate($fields)) {
-            // Yii::info('Model not updated due to validation error.', __METHOD__);
-            return false;
-        }
         $db = static::getDb();
 
         $this->onBeforeUpdateInternal();

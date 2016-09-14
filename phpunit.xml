@@ -4,12 +4,15 @@
         <!--<testsuite name="All">-->
             <!--<directory>test</directory>-->
         <!--</testsuite>-->
+        <!--<testsuite name="Query">-->
+            <!--<directory>test/Query</directory>-->
+        <!--</testsuite>-->
+        <testsuite name="QueryBuilder">
+            <directory>test/QueryBuilder</directory>
+        </testsuite>
         <!--<testsuite name="Orm">-->
             <!--<directory>test/Orm</directory>-->
         <!--</testsuite>-->
-        <testsuite name="Orm/Basic">
-            <directory>test/Orm/Basic</directory>
-        </testsuite>
         <!--<testsuite name="Form">-->
             <!--<directory>test/Form</directory>-->
         <!--</testsuite>-->

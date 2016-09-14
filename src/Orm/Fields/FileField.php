@@ -51,6 +51,7 @@ class FileField extends CharField
      */
     public $MD5Name = true;
 
+    /*
     public function init()
     {
         if (!$this->isRequired()) {
@@ -71,6 +72,7 @@ class FileField extends CharField
             ], $this->validators);
         }
     }
+    */
 
     public function __toString()
     {
@@ -249,8 +251,9 @@ class FileField extends CharField
         return $path;
     }
 
-    public function isValid()
+    public function isValid() : bool
     {
+        throw new \Exception('TODO');
         parent::isValid();
         if (isset($this->value['error']) && $this->value['error'] == UPLOAD_ERR_NO_FILE && $this->null == false) {
             $this->addErrors(app()->t('validation', 'Cannot be empty'));

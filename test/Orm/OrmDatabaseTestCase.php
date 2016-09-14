@@ -50,10 +50,16 @@ class OrmDatabaseTestCase extends \PHPUnit_Framework_TestCase
             'basePath' => __DIR__ . '/app/protected',
             'webPath' => __DIR__ . '/app',
             'components' => [
+                /*
                 'db' => [
                     'class' => \Mindy\Query\ConnectionManager::class,
                     'databases' => require(__DIR__ . (@getenv('TRAVIS') ? '/config_travis.php' : '/config_local.php'))
                 ],
+                */
+                'db' => function () {
+                    $databases = require(__DIR__ . (@getenv('TRAVIS') ? '/config_travis.php' : '/config_local.php'));
+                    return new ConnectionManager($databases);
+                },
                 'storage' => [
                     'class' => '\Mindy\Storage\Storage',
                     'adapters' => [
@@ -90,9 +96,9 @@ class OrmDatabaseTestCase extends \PHPUnit_Framework_TestCase
     protected function tearDown()
     {
         parent::tearDown();
+        $this->dropModels($this->getModels(), $this->getConnection());
         Mindy::setApplication(null);
         $this->app = null;
-        $this->dropModels($this->getModels(), $this->getConnection());
     }
 
     public function initModels(array $models, Connection $connection)

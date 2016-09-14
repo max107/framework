@@ -10,8 +10,9 @@ namespace Mindy\Tests\Orm\Basic;
 
 use Mindy\Base\Mindy;
 use Mindy\Query\Connection;
+use Mindy\Tests\Orm\OrmDatabaseTestCase;
 
-class ConnectionTest extends \PHPUnit_Framework_TestCase
+class ConnectionTest extends OrmDatabaseTestCase
 {
     public function testId()
     {

@@ -6,6 +6,7 @@ use Exception;
 use Mindy\Cache\Cache;
 use Mindy\Cache\TagDependency;
 use Mindy\Exception\InvalidCallException;
+use Mindy\Query\Connection;
 
 /**
  * Schema is the base class for concrete DBMS-specific schema classes.
@@ -87,6 +88,14 @@ abstract class Schema
     protected function createColumnSchema()
     {
         return new ColumnSchema;
+    }
+
+    /**
+     * @param Connection $connection
+     */
+    public function setConnection(Connection $connection)
+    {
+        $this->db = $connection;
     }
 
     /**
@@ -430,6 +439,10 @@ abstract class Schema
         return $this->adapter;
     }
 
+    /**
+     * @param $adapter
+     * @return $this
+     */
     public function setAdapter($adapter)
     {
         $this->adapter = $adapter;

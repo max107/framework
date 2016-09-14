@@ -648,10 +648,11 @@ class Connection implements LoggerAwareInterface
             $driver = $this->getDriverName();
             if (isset($this->schemaMap[$driver])) {
                 $config = !is_array($this->schemaMap[$driver]) ? ['class' => $this->schemaMap[$driver]] : $this->schemaMap[$driver];
-                return $this->_schema = Creator::createObject(array_merge($config, [
-                    'db' => $this,
-                    'adapter' => $this->getAdapter()
-                ]));
+                /** @var \Mindy\Query\Schema\Schema $schema */
+                $schema = Creator::createObject($config);
+                $schema->setConnection($this);
+                $schema->setAdapter($this->getAdapter());
+                return $this->_schema = $schema;
             } else {
                 throw new NotSupportedException("Connection does not support reading schema information for '$driver' DBMS.");
             }

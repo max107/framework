@@ -2,7 +2,7 @@
 
 namespace Mindy\Orm;
 
-use Mindy\Helper\Interfaces\Arrayable;
+use Mindy\Interfaces\Arrayable;
 use Mindy\Query\Connection;
 use Mindy\QueryBuilder\Expression;
 use Mindy\QueryBuilder\Q\QAndNot;

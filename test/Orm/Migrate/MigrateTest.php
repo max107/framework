@@ -14,7 +14,6 @@
 namespace Tests\Cases\Migration;
 
 use Mindy\Base\Mindy;
-use Mindy\Helper\File;
 use Mindy\Orm\Fields\CharField;
 use Mindy\Orm\Migration;
 use Mindy\Orm\Model;
@@ -72,7 +71,10 @@ class MigrateTest extends OrmDatabaseTestCase
 
         $this->migrationPath = Mindy::app()->basePath . DIRECTORY_SEPARATOR . 'migration';
         if (is_dir($this->migrationPath)) {
-            File::removeDirectory($this->migrationPath);
+            foreach (glob($this->migrationPath . '/*') as $file) {
+                unlink($file);
+            }
+            rmdir($this->migrationPath);
         }
         mkdir($this->migrationPath, 0777, true);
         $this->m = new Migration(new Test, $this->migrationPath);
