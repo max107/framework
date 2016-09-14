@@ -8,16 +8,19 @@
 
 namespace Mindy\Form\Fields;
 
+use Closure;
 use Mindy\Form\FieldInterface;
 use Mindy\Form\FormInterface;
 use Mindy\Form\WidgetInterface;
 use Mindy\Helper\Creator;
+use Mindy\Validation\ValidationAwareInterface;
+use Mindy\Validation\ValidationAwareTrait;
 use Symfony\Component\Validator\Constraints as Assert;
-use Symfony\Component\Validator\ConstraintViolationListInterface;
-use Symfony\Component\Validator\Validation;
 
-abstract class Field implements FieldInterface
+abstract class Field implements FieldInterface, ValidationAwareInterface
 {
+    use ValidationAwareTrait;
+
     /**
      * @var string html class for render hint
      */
@@ -50,10 +53,6 @@ abstract class Field implements FieldInterface
      * @var bool
      */
     protected $required = true;
-    /**
-     * @var ConstraintViolationListInterface
-     */
-    protected $errors = [];
     /**
      * @var array
      */
@@ -100,14 +99,6 @@ abstract class Field implements FieldInterface
     }
 
     /**
-     * @return \Symfony\Component\Validator\Validator\ValidatorInterface
-     */
-    protected function getValidator()
-    {
-        return Validation::createValidatorBuilder()->getValidator();
-    }
-
-    /**
      * @param $value
      * @return $this
      */
@@ -128,49 +119,18 @@ abstract class Field implements FieldInterface
     /**
      * @return array
      */
-    protected function getValidationConstraints() : array
+    public function getValidationConstraints() : array
     {
         $constraints = [];
         if ($this->required) {
             $constraints[] = new Assert\NotBlank();
         }
         if (!empty($this->choices)) {
-            $constraints[] = new Assert\Choice(['choices' => $this->choices]);
+            $constraints[] = new Assert\Choice([
+                'choices' => $this->choices instanceof Closure ? $this->choices->__invoke() : $this->choices
+            ]);
         }
-        return $constraints;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isValid() : bool
-    {
-        $constraints = array_merge($this->getValidationConstraints(), $this->validators);
-        $errors = $this->getValidator()->validate($this->getValue(), $constraints);
-        $this->setErrors($errors);
-        return count($errors) === 0;
-    }
-
-    /**
-     * @param ConstraintViolationListInterface $errors
-     * @return $this
-     */
-    protected function setErrors(ConstraintViolationListInterface $errors)
-    {
-        $this->errors = $errors;
-        return $this;
-    }
-
-    /**
-     * @return array
-     */
-    public function getErrors() : array
-    {
-        $errors = [];
-        foreach ($this->errors as $key => $error) {
-            $errors[] = $error->getMessage();
-        }
-        return $errors;
+        return array_merge($constraints, $this->validators);
     }
 
     /**

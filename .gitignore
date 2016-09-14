@@ -5,6 +5,7 @@ vendor
 coverage
 *.swp
 .DS_Store
+*.log
 
 WWW/runtime/*
 test/Base/state.bin

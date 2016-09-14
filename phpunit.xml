@@ -1,9 +1,18 @@
 <phpunit colors="true" strict="true" backupGlobals="false"
          bootstrap="vendor/autoload.php">
     <testsuites>
-        <testsuite name="All">
-            <directory>test</directory>
+        <!--<testsuite name="All">-->
+            <!--<directory>test</directory>-->
+        <!--</testsuite>-->
+        <!--<testsuite name="Orm">-->
+            <!--<directory>test/Orm</directory>-->
+        <!--</testsuite>-->
+        <testsuite name="Orm/Basic">
+            <directory>test/Orm/Basic</directory>
         </testsuite>
+        <!--<testsuite name="Form">-->
+            <!--<directory>test/Form</directory>-->
+        <!--</testsuite>-->
     </testsuites>
     <php>
         <ini name="error_reporting" value="32767"/>

@@ -12,7 +12,7 @@ class EmailField extends TextField
 {
     public $template = "<input type='email' value='{value}' id='{id}' name='{name}'{html}/>";
 
-    protected function getValidationConstraints() : array
+    public function getValidationConstraints() : array
     {
         $constraints = parent::getValidationConstraints();
         return array_merge($constraints, [
