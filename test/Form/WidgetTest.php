@@ -2,9 +2,10 @@
 
 namespace Mindy\Tests\Form;
 
-use Mindy\Form\Fields\CharField;
+use Mindy\Form\Fields\TextField;
+use Mindy\Form\Form;
 use Mindy\Form\Widget\LicenseWidget;
-use Mindy\Form\Widget\RatingWidget;
+use Mindy\Tests\Form\Forms\FooForm;
 use PHPUnit_Framework_TestCase;
 
 /**
@@ -15,27 +16,25 @@ use PHPUnit_Framework_TestCase;
  */
 class WidgetTest extends PHPUnit_Framework_TestCase
 {
+    public function setUp()
+    {
+        Form::$ids = [];
+    }
+
+    public function tearDown()
+    {
+        Form::$ids = [];
+    }
+
     public function testSimple()
     {
+        $form = new FooForm();
+        $field = new TextField([
+            'name' => 'foo'
+        ]);
+        $field->setForm($form);
         $widget = new LicenseWidget(['content' => 'foo bar']);
-        $this->assertEquals('foo bar', $widget->render());
-    }
-
-    public function testField()
-    {
-        $field = new CharField([
-            'name' => 'foo',
-            'widget' => new LicenseWidget(['content' => 'foo bar'])
-        ]);
-        $this->assertEquals("foo bar <input type='text' value='' id='foo' name=''/>", $field->renderInput());
-    }
-
-    public function testRating()
-    {
-        $field = new CharField([
-            'name' => 'foo',
-            'widget' => new RatingWidget(['content' => 'foo bar'])
-        ]);
-        $this->assertContains('raty', $field->renderInput());
+        $this->assertContains('foo bar', $widget->render($field));
+        $this->assertContains("<label for='FooForm_1_foo'>", $widget->render($field));
     }
 }

@@ -3,22 +3,27 @@
 namespace Mindy\Validation;
 
 use function Mindy\app;
-use Mindy\Interfaces\Arrayable;
+use Symfony\Component\Validator\Constraint;
+use Symfony\Component\Validator\ConstraintValidator;
 
 /**
  * Class JsonValidator
  * @package Mindy\Validation
  */
-class JsonValidator extends Validator
+class JsonValidator extends ConstraintValidator
 {
-    public function validate($value)
+    /**
+     * @param mixed $value
+     * @param Constraint $constraint
+     */
+    public function validate($value, Constraint $constraint)
     {
-        if (is_object($value) && !$value instanceof Arrayable) {
-            $this->addError(app()->t("validator", "Not json serialize object: {type}", [
-                '{type}' => gettype($value)
-            ]));
+        if (
+            is_object($value) &&
+            method_exists($value, 'toJson') === false &&
+            method_exists($value, 'toArray') === false
+        ) {
+            $this->context->addViolation($constraint->message, ['%type%' => gettype($value)]);
         }
-
-        return $this->hasErrors() === false;
     }
 }

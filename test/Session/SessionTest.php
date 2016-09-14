@@ -54,6 +54,9 @@ class SessionTest extends \PHPUnit_Framework_TestCase
      */
     public function testMemcachedSession()
     {
+        if (!extension_loaded('php_memcached')) {
+            $this->markTestSkipped('Failed to connect to memcached');
+        }
         $handler = new MemcachedSessionAdapter();
         $this->sessionTesting($handler);
         $this->assertEquals(ini_get('session.save_path'), $handler->getServerString());
