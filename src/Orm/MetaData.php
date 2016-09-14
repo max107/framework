@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Mindy\Orm;
 
 use Mindy\Helper\Creator;
@@ -67,9 +69,95 @@ class MetaData
      */
     protected $primaryKeys = null;
 
-    public function __construct($className)
+    /**
+     * MetaData constructor.
+     * @param string $className
+     */
+    final public function __construct(string $className)
     {
-        $this->modelClassName = $className;
+        $this->init($className);
+    }
+
+    /**
+     * @param string $className
+     */
+    public function init(string $className)
+    {
+        $missingPrimaryField = true;
+        $fkFields = [];
+        $m2mFields = [];
+
+        foreach (call_user_func([$className, 'getFields']) as $name => $config) {
+
+            if (is_string($config)) {
+                $config = ['class' => $config];
+            }
+
+            if (is_array($config)) {
+                $field = Creator::createObject($config);
+            } else {
+                $field = $config;
+            }
+
+            $field->setName($name);
+            $field->setModelClass($className);
+
+            if ($field->primary && ($field instanceof OneToOneField) === false) {
+                $missingPrimaryKey = false;
+                $primaryFields[] = $name;
+            }
+
+            if ($field instanceof FileField) {
+                $this->localFileFields[$name] = $field;
+
+            } else if ($field instanceof RelatedField) {
+                /* @var $field \Mindy\Orm\Fields\RelatedField */
+                if ($field instanceof ManyToManyField) {
+                    /* @var $field \Mindy\Orm\Fields\ManyToManyField */
+                    $this->manyToManyFields[$name] = $field;
+                    $m2mFields[$name] = $field;
+                } else if ($field instanceof HasManyField) {
+                    /* @var $field \Mindy\Orm\Fields\HasManyField */
+                    $this->hasManyFields[$name] = $field;
+                } else if ($field instanceof OneToOneField) {
+                    /* @var $field \Mindy\Orm\Fields\OneToOneField */
+                    if ($field->reversed) {
+                        $this->oneToOneFields[$name . '_id'] = $name;
+                    } else {
+                        $missingPrimaryField = false;
+                        $this->primaryKeys[] = $name . '_' . $field->getForeignPrimaryKey();
+                        $this->oneToOneFields[$name . '_' . $field->getForeignPrimaryKey()] = $name;
+                    }
+                } else if ($field instanceof ForeignField) {
+                    /* @var $field \Mindy\Orm\Fields\ForeignField */
+                    $fkFields[$name] = $field;
+                }
+            } else {
+                $this->localFields[$name] = $field;
+            }
+            $this->allFields[$name] = $field;
+        }
+
+        if ($missingPrimaryField) {
+            $pkName = 'id';
+            /* @var $autoField \Mindy\Orm\Fields\AutoField */
+            $autoField = new AutoField;
+            $autoField->setName($pkName);
+            $autoField->setModelClass($className);
+
+            $this->allFields = array_merge([$pkName => $autoField], $this->allFields);
+            $this->localFields = array_merge([$pkName => $autoField], $this->localFields);
+            $this->primaryKeys[] = $pkName;
+        }
+
+        foreach ($fkFields as $name => $field) {
+            // ForeignKey in self model
+            if ($field->modelClass == $className) {
+                $this->foreignFields[$name . '_' . $this->getPkName()] = $name;
+            } else {
+                $this->foreignFields[$name . '_' . $field->getForeignPrimaryKey()] = $name;
+            }
+        }
     }
 
     public function getPkName()
@@ -185,9 +273,8 @@ class MetaData
      */
     public static function getInstance($className)
     {
-        if (!isset(self::$instances[$className])) {
+        if (array_key_exists($className, self::$instances) === false) {
             self::$instances[$className] = new self($className);
-            self::$instances[$className]->initFields();
         }
 
         return self::$instances[$className];
@@ -227,99 +314,6 @@ class MetaData
             $this->attributes = $attributes;
         }
         return $this->attributes;
-    }
-
-    public function initFields(array $fields = [], $extra = false)
-    {
-        $className = $this->modelClassName;
-        if (empty($fields)) {
-            $fields = $className::getFields();
-        }
-
-        $needPk = !$extra;
-        $fkFields = [];
-        $m2mFields = [];
-
-        foreach ($fields as $name => $config) {
-            /* @var $field \Mindy\Orm\Fields\Field */
-
-            if (!is_object($config) && !$config instanceof Field) {
-                $field = Creator::createObject($config);
-                $field->setName($name);
-                $field->setModelClass($className);
-            } else {
-                $field = $config;
-            }
-            // $field->setModel($model);
-
-            if (is_a($field, AutoField::class) || ($field->primary && ($field instanceof OneToOneField) === false)) {
-                $needPk = false;
-                $this->primaryKeys[] = $name;
-            }
-
-            if (is_a($field, FileField::class)) {
-                $this->localFileFields[$name] = $field;
-            } else if (is_a($field, RelatedField::class)) {
-                /* @var $field \Mindy\Orm\Fields\RelatedField */
-                if (is_a($field, ManyToManyField::class)) {
-                    /* @var $field \Mindy\Orm\Fields\ManyToManyField */
-                    $this->manyToManyFields[$name] = $field;
-                    $m2mFields[$name] = $field;
-                } else if (is_a($field, HasManyField::class)) {
-                    /* @var $field \Mindy\Orm\Fields\HasManyField */
-                    $this->hasManyFields[$name] = $field;
-                } else if (is_a($field, OneToOneField::class)) {
-                    /* @var $field \Mindy\Orm\Fields\OneToOneField */
-                    if ($field->reversed) {
-                        $this->oneToOneFields[$name . '_id'] = $name;
-                    } else {
-                        $needPk = false;
-                        $this->primaryKeys[] = $name . '_' . $field->getForeignPrimaryKey();
-                        $this->oneToOneFields[$name . '_' . $field->getForeignPrimaryKey()] = $name;
-                    }
-                } elseif (is_a($field, ForeignField::class)) {
-                    /* @var $field \Mindy\Orm\Fields\ForeignField */
-                    $fkFields[$name] = $field;
-                }
-            } else {
-                $this->localFields[$name] = $field;
-            }
-            $this->allFields[$name] = $field;
-
-            if (!$extra) {
-                $extraFields = $field->getExtraFields();
-                if (!empty($extraFields)) {
-                    $extraFieldsInitialized = $this->initFields($extraFields, true);
-                    foreach ($extraFieldsInitialized as $key => $value) {
-                        $field->setExtraField($key, $this->allFields[$key]);
-                        $this->extFields[$name] = [$key => $this->allFields[$key]];
-                    }
-                }
-            }
-        }
-
-        if ($needPk) {
-            $pkName = 'id';
-            /* @var $autoField \Mindy\Orm\Fields\AutoField */
-            $autoField = new AutoField;
-            $autoField->setName($pkName);
-            // $autoField->setModel($model);
-
-            $this->allFields = array_merge([$pkName => $autoField], $this->allFields);
-            $this->localFields = array_merge([$pkName => $autoField], $this->localFields);
-            $this->primaryKeys[] = $pkName;
-        }
-
-        foreach ($fkFields as $name => $field) {
-            // ForeignKey in self model
-            if ($field->modelClass == $className) {
-                $this->foreignFields[$name . '_' . $this->getPkName()] = $name;
-            } else {
-                $this->foreignFields[$name . '_' . $field->getForeignPrimaryKey()] = $name;
-            }
-        }
-
-        return $fields;
     }
 
     public function getFieldsInit()
@@ -380,38 +374,55 @@ class MetaData
         return $this->getField($name);
     }
 
+    /**
+     * @return array|ForeignField[]
+     */
     public function getForeignFields()
     {
         return $this->foreignFields;
     }
 
+    /**
+     * @return array|OneToOneField[]
+     */
     public function getOneToOneFields()
     {
         return $this->oneToOneFields;
     }
 
+    /**
+     * @return array|ManyToManyField[]
+     */
     public function getManyFields()
     {
         return $this->manyToManyFields;
     }
 
+    /**
+     * @param $name
+     * @return mixed|null
+     */
     public function getManyToManyField($name)
     {
-        return $this->manyToManyFields[$name];
+        return $this->get($this->manyToManyFields, $name);
     }
 
+    /**
+     * @param $name
+     * @return mixed|null
+     */
     public function getHasManyField($name)
     {
-        return $this->manyToManyFields[$name];
+        return $this->get($this->hasManyFields, $name);
     }
 
-    public function hasExtraFields($name)
+    /**
+     * @param array $storage
+     * @param $key
+     * @return mixed|null
+     */
+    private function get(array $storage, $key)
     {
-        return array_key_exists($name, $this->extFields);
-    }
-
-    public function getExtraFields($name)
-    {
-        return $this->extFields[$name];
+        return isset($storage[$key]) ? $storage[$key] : null;
     }
 }

@@ -6,6 +6,6 @@ coverage
 *.swp
 .DS_Store
 *.log
-
+test/Orm/app/sqlite.db
 WWW/runtime/*
 test/Base/state.bin

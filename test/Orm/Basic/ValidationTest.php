@@ -23,17 +23,12 @@ class ValidationTest extends \PHPUnit_Framework_TestCase
     {
         $model = new User();
         $this->assertFalse($model->isValid());
-        $this->assertTrue($model->hasErrors());
-        $this->assertTrue($model->hasErrors('username'));
+        $this->assertEquals(1, count($model->getErrors()));
         $this->assertEquals(['username' => [
-            'Cannot be empty',
-            'Minimal length is 3',
+            'This value should not be blank.'
         ]], $model->getErrors());
-        $this->assertEquals([
-            'Cannot be empty',
-            'Minimal length is 3',
-        ], $model->getErrors('username'));
-        $model->clearErrors('username');
+        $model->username = '123456';
+        $model->isValid();
         $this->assertEquals([], $model->getErrors());
     }
 
@@ -42,11 +37,10 @@ class ValidationTest extends \PHPUnit_Framework_TestCase
         $model = new Product();
         $model->setAttributes(['name' => '12']);
         $this->assertFalse($model->isValid());
-        $this->assertTrue($model->hasErrors());
-        $this->assertTrue($model->hasErrors('name'));
-        $this->assertEquals(['name' => ['Minimal length < 3']], $model->getErrors());
-        $this->assertEquals(['Minimal length < 3'], $model->getErrors('name'));
-        $model->clearErrors('name');
+        $this->assertEquals(1, count($model->getErrors()));
+        $this->assertEquals(['name' => ['This value is too short. It should have 3 characters or more.']], $model->getErrors());
+        $model->setAttributes(['name' => '123']);
+        $this->assertTrue($model->isValid());
         $this->assertEquals([], $model->getErrors());
     }
 
@@ -57,20 +51,12 @@ class ValidationTest extends \PHPUnit_Framework_TestCase
         $this->assertFalse($model->isValid());
 
         $this->assertEquals(['username' => [
-            'Cannot be empty',
-            'Minimal length is 3',
+            'This value should not be blank.'
         ]], $model->getErrors());
 
         $nameField = $model->getField('username');
         $this->assertEquals([
-            'Cannot be empty',
-            'Minimal length is 3'
-        ], $nameField->getErrors());
-
-        $this->assertFalse($nameField->isValid());
-        $this->assertEquals([
-            'Cannot be empty',
-            'Minimal length is 3'
+            'This value should not be blank.'
         ], $nameField->getErrors());
 
         $model->username = 'hi';
@@ -80,8 +66,6 @@ class ValidationTest extends \PHPUnit_Framework_TestCase
 
         $model->username = 'This is very long name for bad validation example';
         $model->isValid();
-        $this->assertEquals(['username' => ['Maximum length is 20']], $model->getErrors());
-        $model->isValid();
-        $this->assertEquals(['username' => ['Maximum length is 20']], $model->getErrors());
+        $this->assertEquals(['username' => ['This value is too long. It should have 20 characters or less.']], $model->getErrors());
     }
 }

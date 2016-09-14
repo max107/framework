@@ -15,6 +15,7 @@ namespace Mindy\Orm;
 
 use ArrayAccess;
 use Exception;
+use function Mindy\app;
 use Mindy\Base\Mindy;
 use Mindy\Exception\InvalidConfigException;
 use Mindy\Exception\InvalidParamException;
@@ -22,14 +23,11 @@ use Mindy\Helper\Alias;
 use Mindy\Helper\Json;
 use Mindy\Helper\Traits\Accessors;
 use Mindy\Helper\Traits\Configurator;
+use Mindy\Orm\Fields\AutoField;
 use Mindy\Orm\Fields\ForeignField;
 use Mindy\Orm\Fields\JsonField;
 use Mindy\Orm\Fields\ManyToManyField;
 use Mindy\Query\Connection;
-use Mindy\Query\ConnectionManager;
-use Mindy\Query\Exception\StaleObjectException;
-use Mindy\Validation\Traits\ValidateObject;
-use ReflectionClass;
 use Serializable;
 
 /**
@@ -58,6 +56,10 @@ abstract class Base implements ArrayAccess, Serializable
      * This is a shortcut of the expression: OP_INSERT | OP_UPDATE | OP_DELETE.
      */
     const OP_ALL = 0x07;
+    /**
+     * @var array
+     */
+    protected $errors = [];
     /**
      * @var array attribute values indexed by attribute names
      */
@@ -97,18 +99,6 @@ abstract class Base implements ArrayAccess, Serializable
     public function __toString()
     {
         return $this->classNameShort();
-    }
-
-    protected function getLogger()
-    {
-        if ($this->_logger === null) {
-            if (class_exists('\Mindy\Base\Mindy')) {
-                $this->_logger = \Mindy\Base\Mindy::app()->getComponent('logger');
-            } else {
-                $this->_logger = new DummyObject();
-            }
-        }
-        return $this->_logger;
     }
 
     protected function getEventManager()
@@ -414,20 +404,6 @@ abstract class Base implements ArrayAccess, Serializable
                 $this->setIsNewRecord(true);
             }
 
-            $meta = static::getMeta();
-            if ($meta->hasField($name) && $meta->hasExtraFields($name)) {
-                $field = $meta->getField($name);
-                $field->setModel($this);
-                $field->setValue($value);
-
-                $extraFields = $meta->getExtraFields($name);
-                foreach ($extraFields as $extraName => $extraField) {
-                    if ($this->hasAttribute($extraName)) {
-                        $this->_attributes[$extraName] = $extraField->getValue();
-                    }
-                }
-            }
-
             $this->_attributes[$name] = $value;
         } else {
             throw new InvalidParamException(get_class($this) . ' has no attribute named "' . $name . '".');
@@ -543,46 +519,18 @@ abstract class Base implements ArrayAccess, Serializable
     {
         $className = get_called_class();
         $normalizeClass = rtrim(str_replace('\\', '/', $className), '/\\');
-        if (($pos = mb_strrpos($normalizeClass, '/')) !== false) {
-            $class = mb_substr($normalizeClass, $pos + 1);
+        if (($pos = strrpos($normalizeClass, '/')) !== false) {
+            $class = substr($normalizeClass, $pos + 1);
         } else {
             $class = $normalizeClass;
         }
 
-        $object = new ReflectionClass($className);
-        if (defined('MINDY_TEST') && MINDY_TEST) {
-            $tableName = self::normalizeTableName($class);
-        } else {
-            $modulesPath = Alias::get('Modules');
-            $tmp = str_replace([$modulesPath, 'Models'], '', dirname($object->getFilename()));
-            $nameString = str_replace(DIRECTORY_SEPARATOR, '', $tmp);
-            $tableName = self::normalizeTableName($nameString) . '_' . self::normalizeTableName($class);
-        }
-        return "{{%" . $tableName . "}}";
+        return strtr("{{%{tableName}}}", ['{tableName}' => self::normalizeTableName($class)]);
     }
 
     public static function normalizeTableName($name)
     {
         return trim(strtolower(preg_replace('/(?<![A-Z])[A-Z]/', '_\0', $name)), '_');
-    }
-
-    /**
-     * Return module name
-     * @return string
-     */
-    public static function getModuleName()
-    {
-        /** @var array $raw */
-        // See issue #105
-        // https://github.com/studio107/Mindy_Orm/issues/105
-        // $raw = explode('\\', get_called_class());
-        // return $raw[1];
-
-        $object = new ReflectionClass(get_called_class());
-        $modulesPath = Alias::get('Modules');
-        $tmp = explode(DIRECTORY_SEPARATOR, str_replace($modulesPath, '', dirname($object->getFilename())));
-        $clean = array_filter($tmp);
-        return array_shift($clean);
     }
 
     /**
@@ -592,8 +540,8 @@ abstract class Base implements ArrayAccess, Serializable
     public function using($db)
     {
         if (($db instanceof Connection) === false) {
-            // TODO refact, detach from Mindy::app()
-            $db = Mindy::app()->db->getDb($db);
+            // TODO refact, detach from app()
+            $db = app()->db->getDb($db);
         }
         $this->_db = $db;
         return $this;
@@ -605,8 +553,8 @@ abstract class Base implements ArrayAccess, Serializable
     public function getDb()
     {
         /** @var \Mindy\Query\ConnectionManager $cm */
-        if ($this->_db === null && Mindy::app()) {
-            $this->_db = Mindy::app()->db->getDb();
+        if ($this->_db === null && app()) {
+            $this->_db = app()->db->getDb();
         }
         return $this->_db;
     }
@@ -637,47 +585,12 @@ abstract class Base implements ArrayAccess, Serializable
     }
 
     /**
-     * Inserts a row into the associated database table using the attribute values of this record.
-     *
-     * This method performs the following steps in order:
-     *
-     * 1. call [[beforeValidate()]] when `$runValidation` is true. If validation
-     *    fails, it will skip the rest of the steps;
-     * 2. call [[afterValidate()]] when `$runValidation` is true.
-     * 3. call [[beforeSave()]]. If the method returns false, it will skip the
-     *    rest of the steps;
-     * 4. insert the record into database. If this fails, it will skip the rest of the steps;
-     * 5. call [[afterSave()]];
-     *
-     * In the above step 1, 2, 3 and 5, events [[EVENT_BEFORE_VALIDATE]],
-     * [[EVENT_BEFORE_INSERT]], [[EVENT_AFTER_INSERT]] and [[EVENT_AFTER_VALIDATE]]
-     * will be raised by the corresponding methods.
-     *
-     * Only the [[dirtyAttributes|changed attribute values]] will be inserted into database.
-     *
-     * If the table's primary key is auto-incremental and is null during insertion,
-     * it will be populated with the actual value after insertion.
-     *
-     * For example, to insert a customer record:
-     *
-     * ~~~
-     * $customer = new Customer;
-     * $customer->name = $name;
-     * $customer->email = $email;
-     * $customer->insert();
-     * ~~~
-     *
-     * @param array $fields list of attributes that need to be saved. Defaults to null,
-     * meaning all attributes that are loaded from DB will be saved.
-     * @return boolean whether the attributes are valid and the record is inserted successfully.
-     * @throws \Exception in case insert failed.
+     * @param array $fields
+     * @return bool
+     * @throws Exception
      */
     public function insert(array $fields = [])
     {
-        if (!empty($fields) && !$this->validate($fields)) {
-            $this->getLogger()->error("Model not inserted due to validation error.", ['method' => __METHOD__]);
-            return false;
-        }
         $db = static::getDb();
 
         $this->onBeforeInsertInternal();
@@ -1305,52 +1218,20 @@ abstract class Base implements ArrayAccess, Serializable
     }
 
     /**
-     * TODO
-     * @param array $attributeNames
      * @return bool
      */
-    public function validate(array $attributeNames = [])
+    public function isValid() : bool
     {
-        $meta = static::getMeta();
-
-        $this->clearErrors();
-
-        /* @var $field \Mindy\Orm\Fields\Field */
-        foreach ($attributeNames as $name) {
-            if ($this->getPkName() == $name || $meta->hasManyToManyField($name) || $meta->hasHasManyField($name)) {
-                continue;
-            }
-
-            $field = $this->getField($name);
-            $attrName = $name;
-            if ($field instanceof ForeignField) {
-                $attrName .= '_id';
-            }
-            $field->setValue($this->getAttribute($attrName));
-            if ($field->isValid() === false) {
-                foreach ($field->getErrors() as $error) {
-                    $this->addError($name, $error);
-                }
-            }
-        }
-
-        return $this->hasErrors() === false;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isValid()
-    {
-        $signal = $this->getEventManager();
-        $signal->send($this, 'beforeValidate', $this);
-
+        $errors = [];
         $meta = self::getMeta();
-        $this->clearErrors();
 
         /* @var $field \Mindy\Orm\Fields\Field */
         foreach ($this->getFieldsInit() as $name => $field) {
-            if ($this->getPkName() == $name || $meta->hasManyToManyField($name) || $meta->hasHasManyField($name)) {
+            if (
+                $field instanceof AutoField ||
+                $meta->hasManyToManyField($name) ||
+                $meta->hasHasManyField($name)
+            ) {
                 continue;
             }
 
@@ -1362,13 +1243,30 @@ abstract class Base implements ArrayAccess, Serializable
             $field->setModel($this);
             $field->setValue($value);
             if ($field->isValid() === false) {
-                foreach ($field->getErrors() as $error) {
-                    $this->addError($name, $error);
-                }
+                $errors[$name] = $field->getErrors();
             }
         }
-        $signal->send($this, 'afterValidate', $this);
-        return $this->hasErrors() === false;
+
+        $this->setErrors($errors);
+        return count($errors) == 0;
+    }
+
+    /**
+     * @param array $errors
+     * @return $this
+     */
+    protected function setErrors(array $errors)
+    {
+        $this->errors = $errors;
+        return $this;
+    }
+
+    /**
+     * @return array
+     */
+    public function getErrors() : array
+    {
+        return $this->errors;
     }
 
     /**

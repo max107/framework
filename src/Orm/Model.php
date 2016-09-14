@@ -2,7 +2,10 @@
 
 namespace Mindy\Orm;
 
+use function Mindy\app;
 use Mindy\Base\Mindy;
+use Mindy\Helper\Alias;
+use ReflectionClass;
 
 /**
  * Class Model
@@ -16,11 +19,34 @@ class Model extends Orm
     }
 
     /**
-     * @return \Mindy\Base\Module
+     * Return module name
+     * @return string
+     */
+    public static function getModuleName()
+    {
+        /** @var array $raw */
+        // See issue #105
+        // https://github.com/studio107/Mindy_Orm/issues/105
+        // $raw = explode('\\', get_called_class());
+        // return $raw[1];
+
+        $object = new ReflectionClass(get_called_class());
+        $modulesPath = Alias::get('Modules');
+        $tmp = explode(DIRECTORY_SEPARATOR, str_replace($modulesPath, '', dirname($object->getFilename())));
+        $clean = array_filter($tmp);
+        return array_shift($clean);
+    }
+
+    /**
+     * @return \Mindy\Base\ModuleInterface
      */
     public static function getModule()
     {
-        return Mindy::app()->getModule(self::getModuleName());
+        if (($name = self::getModuleName()) && app()->hasModule($name)) {
+            return app()->getModule(self::getModuleName());
+        }
+
+        return null;
     }
 
     public function getAdminNames($instance = null)
@@ -47,7 +73,7 @@ class Model extends Orm
 
     public function reverse($route, $data = null)
     {
-        return Mindy::app()->urlManager->reverse($route, $data);
+        return app()->urlManager->reverse($route, $data);
     }
 
     public static function t($str, $params = [], $dic = 'main')

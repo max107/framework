@@ -19,8 +19,7 @@ use Mindy\Orm\Fields\HasManyField;
 use Mindy\Orm\Fields\ManyToManyField;
 use Mindy\Orm\Fields\PasswordField;
 use Mindy\Orm\Model;
-use Mindy\Validation\MaxLengthValidator;
-use Mindy\Validation\MinLengthValidator;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Class User
@@ -35,9 +34,9 @@ class User extends Model
         return [
             'username' => [
                 'class' => CharField::class,
+                'required' => true,
                 'validators' => [
-                    new MinLengthValidator(3),
-                    new MaxLengthValidator(20),
+                    new Assert\Length(['min' => 3, 'max' => 20]),
                 ]
             ],
             'password' => [
