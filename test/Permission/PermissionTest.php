@@ -10,8 +10,9 @@ namespace Mindy\Permissions;
 
 use Mindy\Auth\GroupInterface;
 use Mindy\Auth\UserInterface;
+use Mindy\Permissions\PermissionProvider\ArrayPermissionProvider;
 
-class GroupInterfacePerm implements GroupInterface
+class GroupPerm implements GroupInterface
 {
     protected $attrs = [];
 
@@ -79,20 +80,18 @@ class PermissionTest extends \PHPUnit_Framework_TestCase
 {
     public function testPermissions()
     {
-        $permissions = [
+        $permissionProvider = new ArrayPermissionProvider([
             ['code' => 'foo', 'users' => [1], 'groups' => [2]],
             ['code' => 'foo_biz_rule', 'users' => [1], 'groups' => [2], 'biz_rule' => 'a == b']
-        ];
-
-        $permissions = new PermissionManager([
-            'permissions' => $permissions
         ]);
+
+        $permissions = new PermissionManager($permissionProvider);
 
         $user = new UserInterfacePerm([
             'id' => 1,
             'is_superuser' => false,
             'groups' => [
-                new GroupInterfacePerm(['id' => 2])
+                new GroupPerm(['id' => 2])
             ]
         ]);
 
@@ -106,7 +105,7 @@ class PermissionTest extends \PHPUnit_Framework_TestCase
             'id' => 2,
             'is_superuser' => false,
             'groups' => [
-                new GroupInterfacePerm(['id' => 2])
+                new GroupPerm(['id' => 2])
             ]
         ]);
         $this->assertTrue($permissions->can($user, 'foo'));
@@ -119,7 +118,7 @@ class PermissionTest extends \PHPUnit_Framework_TestCase
             'id' => 3,
             'is_superuser' => false,
             'groups' => [
-                new GroupInterfacePerm(['id' => 3])
+                new GroupPerm(['id' => 3])
             ]
         ]);
         $this->assertFalse($permissions->can($user, 'foo'));

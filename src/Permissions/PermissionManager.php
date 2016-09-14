@@ -12,6 +12,7 @@ namespace Mindy\Permissions;
 
 use function Mindy\app;
 use Mindy\Auth\UserInterface;
+use Mindy\Permissions\PermissionProvider\PermissionProviderInterface;
 use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
 
 class PermissionManager
@@ -23,28 +24,18 @@ class PermissionManager
 
     /**
      * PermissionManager constructor.
-     * @param array $config
+     * @param PermissionProviderInterface $permissionProvider
      */
-    public function __construct(array $config = [])
+    public function __construct(PermissionProviderInterface $permissionProvider)
     {
-        foreach ($config as $key => $value) {
-            if (method_exists($this, 'set' . ucfirst($key))) {
-                $this->{'set' . ucfirst($key)}($value);
-            } else {
-                $this->{$key} = $value;
-            }
-        }
+        $this->setPermissions($permissionProvider->load());
     }
 
     /**
      * @param $permissions
      */
-    public function setPermissions($permissions)
+    public function setPermissions(array $permissions)
     {
-        if ($permissions instanceof \Closure) {
-            $permissions = $permissions();
-        }
-
         foreach ($this->fetchPermissions($permissions) as $perm) {
             $this->_permissions[$perm->getCode()] = $perm;
         }
