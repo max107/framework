@@ -18,13 +18,38 @@ class FlashTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(0, count($flash));
     }
 
-    public function testAdd()
+    public function flashProvider()
+    {
+        return [
+            ['success'],
+            ['info'],
+            ['warning'],
+            ['error']
+        ];
+    }
+
+    /**
+     * @dataProvider flashProvider
+     */
+    public function testStatuses($status)
     {
         $flash = new Flash();
-        $flash->success('success');
+        $flash->$status($status);
         $this->assertEquals([
-            ['status' => 'success', 'message' => 'success']
+            ['status' => $status, 'message' => $status]
         ], $flash->all());
         $this->assertEquals([], $flash->all());
+    }
+
+    public function testIterator()
+    {
+        $flash = new Flash;
+        $flash->success('1');
+        $flash->success('2');
+        $flash->success('3');
+        foreach ($flash as $msg) {
+
+        }
+        $this->assertEquals(0, $flash->count());
     }
 }

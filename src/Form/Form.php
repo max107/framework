@@ -15,6 +15,11 @@ use Exception;
 class Form extends BaseForm
 {
     /**
+     * @var string
+     */
+    public $errorsTemplate = '<li><p>{label}</p><ul>{errors}</ul></li>';
+
+    /**
      * @return array
      */
     public function getFieldsets() : array
@@ -46,17 +51,17 @@ class Form extends BaseForm
         if (empty($this->getErrors())) {
             return '';
         } else {
-            $errors = [];
+            $errorsHtml = '';
             foreach ($this->getErrors() as $name => $errors) {
-                $errors[] = strtr('<ul><li>{label}<ul>{errors}</ul></li></ul>', [
-                    '{label}' => $this->fields[$name]->label,
+                $errorsHtml .= strtr($this->errorsTemplate, [
+                    '{label}' => $this->fields[$name]->getLabel(),
                     '{errors}' => implode(' ', array_map(function ($error) {
                         return '<li>' . $error . '</li>';
                     }, $errors))
                 ]);
             }
 
-            return '<ul>' . implode(' ', $errors) . '</ul>';
+            return '<ul>' . $errorsHtml . '</ul>';
         }
     }
 
@@ -86,6 +91,7 @@ class Form extends BaseForm
 
     /**
      * Please avoid this method for render form
+     * @codeCoverageIgnore
      * @return string
      */
     public function __toString()

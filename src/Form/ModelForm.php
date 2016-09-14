@@ -41,15 +41,16 @@ class ModelForm extends Form
      */
     private function initializeForm(FormModelInterface $model)
     {
-        if ($this->initialized) {
-            return;
-        }
-        foreach ($model->getFieldsInit() as $name => $modelField) {
-            /** @var FieldInterface $field */
-            $field = $modelField->getFormField();
-            $field->setName($name);
-            $field->setForm($this);
-            $this->fields[$name] = $field;
+        if ($this->initialized === false) {
+            foreach ($model->getFieldsInit() as $name => $modelField) {
+                /** @var FieldInterface $field */
+                $field = $modelField->getFormField();
+                $field->setName($name);
+                $field->setForm($this);
+                $this->fields[$name] = $field;
+            }
+
+            $this->initialized = true;
         }
     }
 

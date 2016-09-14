@@ -56,7 +56,7 @@ class AuthProvider extends BaseAuthProvider
 
         $this->setUser($user);
         $http = app()->http;
-        $session = $http->session;
+        $session = $http->getSession();
 
 //        $model->last_login = $model->getDb()->getAdapter()->getDateTime();
 //        $model->save(['last_login']);

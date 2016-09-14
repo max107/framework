@@ -8,6 +8,7 @@
 
 namespace Mindy\Tests\Auth;
 
+use League\Container\Container;
 use Mindy\Auth\AuthProvider;
 use Mindy\Auth\IAuthProvider;
 use Mindy\Auth\IUser;
@@ -18,6 +19,7 @@ use Mindy\Http\Cookie;
 use Mindy\Http\Http;
 use Mindy\Session\Adapter\MemorySessionAdapter;
 use Mindy\Session\Session;
+use Mindy\Tests\Base\TestApplication;
 
 class UserExample implements IUser
 {
@@ -139,7 +141,7 @@ class AuthTest extends \PHPUnit_Framework_TestCase
 
     public function setUp()
     {
-        $this->app = Mindy::getInstance([
+        $this->app = new TestApplication([
             'basePath' => __DIR__,
             'name' => 'auth_test',
             'components' => [
@@ -150,14 +152,20 @@ class AuthTest extends \PHPUnit_Framework_TestCase
                         'local' => new NullStrategy
                     ]
                 ],
+                /*
+                'http' => function () {
+                    $session = new Session();
+                    $session->setHandler(new MemorySessionAdapter());
+
+                    $http = new Http([
+                        'session' => $session
+                    ]);
+                    return $http;
+                },
+                */
                 'http' => [
                     'class' => '\Mindy\Http\Http',
-                    'session' => [
-                        'class' => '\Mindy\Session\Session',
-                        'handler' => [
-                            'class' => '\Mindy\Session\Adapter\MemorySessionAdapter'
-                        ]
-                    ]
+                    'session' => new Session(['handler' => new MemorySessionAdapter])
                 ],
             ]
         ]);
@@ -196,12 +204,14 @@ class AuthTest extends \PHPUnit_Framework_TestCase
 
     public function testLogin()
     {
+        $session = $this->app->http->session;
+        $this->assertInstanceOf(MemorySessionAdapter::class, $session->getHandler());
+
         $auth = $this->app->auth;
         $user = $auth->getUser();
         $this->assertInstanceOf(IUser::class, $user);
 
         $this->assertTrue($user->isGuest());
-        $this->assertFalse($auth->login($user));
 
         $this->assertEquals([
             'User not found'
@@ -210,15 +220,19 @@ class AuthTest extends \PHPUnit_Framework_TestCase
             'password' => '123'
         ]));
 
+        $user->id = 1;
+        $user->username = 'foo';
+        $user->password = 'bar';
+
         $this->assertEquals([], $auth->authenticate('local', [
             'username' => 'foo',
             'password' => 'bar'
         ]));
 
-        $session = $this->app->http->session;
         $this->assertEquals([
-            '__user' => ['username' => 'foo', 'id' => 1]
-        ], $session->all());
+            'username' => 'foo',
+            'id' => 1
+        ], $session->get('__user'));
 
         $cookie = $this->app->http->getResponse()->getCookie('__user');
         $this->assertInstanceOf(Cookie::class, $cookie);

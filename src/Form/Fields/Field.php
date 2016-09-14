@@ -369,4 +369,15 @@ abstract class Field implements FieldInterface
     {
         return $this->required;
     }
+
+    /**
+     * @return string
+     */
+    public function getLabel() : string
+    {
+        if (empty($this->label)) {
+            $this->label = ucfirst($this->name);
+        }
+        return $this->label;
+    }
 }

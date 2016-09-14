@@ -129,18 +129,16 @@ class Application extends BaseApplication implements ModulesAwareInterface
             unset($config['components']);
         }
 
-        foreach ($config as $name => $value) {
-            $this->{$name} = $value;
-        }
+        $this->configure($config);
 
         if ($container === null) {
-            $container = $this->getDefaultContainer();
+            $container = new Container;
         }
-
         if (!empty($components)) {
             $componentServiceProvider = new LegacyComponentsServiceProvider($components);
             $container->addServiceProvider($componentServiceProvider);
         }
+        $container = $this->prepareContainer($container);
 
         $this->setContainer($container);
         $this->initModules($modules);
@@ -153,15 +151,23 @@ class Application extends BaseApplication implements ModulesAwareInterface
     }
 
     /**
+     * @param ContainerInterface $container
      * @return ContainerInterface
      */
-    protected function getDefaultContainer() : ContainerInterface
+    protected function prepareContainer(ContainerInterface $container)
     {
-        $container = new Container;
-        $container->add('security', Security::class);
-        $container->add('urlManager', UrlManager::class);
-        $container->add('http', Http::class);
-        $container->add('signal', EventManager::class);
+        if ($container->has('security') === false) {
+            $container->add('security', Security::class);
+        }
+        if ($container->has('urlManager') === false) {
+            $container->add('urlManager', UrlManager::class);
+        }
+        if ($container->has('http') === false) {
+            $container->add('http', Http::class);
+        }
+        if ($container->has('signal') === false) {
+            $container->add('signal', EventManager::class);
+        }
         return $container;
     }
 

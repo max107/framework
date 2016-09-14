@@ -18,6 +18,7 @@ use Mindy\Http\Collection\PostParamCollection;
 use Mindy\Http\Response\Response;
 use Mindy\Middleware\MiddlewareManager;
 use Mindy\Session\Flash;
+use Mindy\Session\Session;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -79,6 +80,10 @@ class Http
      * @var callable
      */
     private $_middleware;
+    /**
+     * @var Session
+     */
+    protected $session;
 
     /**
      * Http constructor.
@@ -86,15 +91,6 @@ class Http
      */
     public function __construct(array $config = [])
     {
-        if (!isset($config['session'])) {
-            $config['session'] = [
-                'class' => '\Mindy\Session\Session',
-                'handler' => [
-                    'class' => '\Mindy\Session\Adapter\NativeSessionAdapter'
-                ]
-            ];
-        }
-
         $this->configure($config);
 
         $this->request = Request::fromGlobals();
@@ -133,25 +129,16 @@ class Http
         $this->response = $response;
     }
 
-    public function getSession()
+    public function getSession() : Session
     {
-        return $this->_session;
+        return $this->session;
     }
 
     /**
-     * @param array $config
+     * @param Session $session
      */
-    public function setSession(array $config)
+    public function setSession(Session $session)
     {
-        if (is_array($config)) {
-            $session = Creator::createObject($config);
-        } else if (is_object($config)) {
-            $session = $config;
-        } else if ($config instanceof \Closure) {
-            $session = $config();
-        } else {
-            throw new \RuntimeException("Unknown settings type");
-        }
         $this->session = $session;
     }
 

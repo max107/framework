@@ -98,6 +98,14 @@ class FormTest extends \PHPUnit_Framework_TestCase
         $this->assertContains('<legend>test</legend>', $html);
     }
 
+    public function testRenderErrors()
+    {
+        $form = new FooForm();
+        $form->isValid();
+        $html = $form->renderErrors();
+        $this->assertEquals('<ul><li><p>Name</p><ul><li>This value should not be blank.</li></ul></li></ul>', $html);
+    }
+
     public function testRender()
     {
         $form = new FooForm();
@@ -258,6 +266,10 @@ class FormTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(['name' => 'foo', 'phone' => 123456], $form->getModel()->getAttributes());
 
         $html = $form->render();
+        $this->assertContains("<label for='FooModelForm_1_name'>имя <span class='required'>*</span></label>", $html);
+        $this->assertContains("<label for='FooModelForm_1_phone'>телефон <span class='required'>*</span></label>", $html);
+
+        $html = (string)$form;
         $this->assertContains("<label for='FooModelForm_1_name'>имя <span class='required'>*</span></label>", $html);
         $this->assertContains("<label for='FooModelForm_1_phone'>телефон <span class='required'>*</span></label>", $html);
 

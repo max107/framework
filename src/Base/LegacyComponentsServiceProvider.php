@@ -41,17 +41,17 @@ class LegacyComponentsServiceProvider extends AbstractServiceProvider
         $container = $this->getContainer();
         foreach ($this->components as $id => $config) {
             if (is_string($config)) {
-                $container->add($id, $config);
+                $container->share($id, $config);
             } else if (is_array($config)) {
                 if (isset($config['class'])) {
                     $className = $config['class'];
                     unset($config['class']);
-                    $container->add($id, $className)->withArgument($config);
+                    $container->share($id, $className)->withArgument($config);
                 } else {
                     throw new RuntimeException('Missing class in component config');
                 }
             } else if ($config instanceof Closure) {
-                $container->add($id, $config);
+                $container->share($id, $config);
             } else {
                 throw new RuntimeException('Unknown config format');
             }
