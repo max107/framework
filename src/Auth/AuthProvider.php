@@ -8,11 +8,8 @@
 
 namespace Mindy\Auth;
 
-use Exception;
 use function Mindy\app;
-use Mindy\Helper\Creator;
 use Mindy\Http\Cookie;
-use Modules\User\Models\Session;
 
 class AuthProvider extends BaseAuthProvider
 {
@@ -99,5 +96,14 @@ class AuthProvider extends BaseAuthProvider
 
         $this->setUser($this->getGuestUser());
         return true;
+    }
+
+    /**
+     * @param array $attributes
+     * @return IUser
+     */
+    public function createUser(array $attributes) : IUser
+    {
+        return call_user_func([$this->userClass, 'create'], $attributes);
     }
 }

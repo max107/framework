@@ -30,9 +30,7 @@ class LocalStrategy extends BaseStrategy
         $password = $attributes['password'];
 
         $attribute = strpos($name, "@") > -1 ? 'email' : 'username';
-        $instance = $user->objects()->get([
-            $attribute => strtolower($name)
-        ]);
+        $instance = $this->userProvider->get([$attribute => strtolower($name)]);
 
         if ($instance === null) {
             $this->addError($attribute, app()->t('auth', 'User not registered'));

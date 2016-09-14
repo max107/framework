@@ -15,14 +15,10 @@ declare(strict_types = 1);
 
 namespace Mindy\Base;
 
-use Closure;
-use League\Container\Container;
-use League\Container\ContainerAwareInterface;
-use League\Container\ContainerAwareTrait;
 use League\Container\ContainerInterface;
 use Mindy\Console\ConsoleApplication;
 use Mindy\Di\ModuleContainer;
-use Mindy\Di\ServiceLocator;
+use Mindy\Di\Container;
 use Mindy\Event\EventManager;
 use Mindy\Exception\Exception;
 use Mindy\Exception\HttpException;
@@ -30,11 +26,9 @@ use Mindy\Helper\Alias;
 use Mindy\Helper\Traits\Accessors;
 use Mindy\Helper\Traits\Configurator;
 use Mindy\Http\Http;
-use Mindy\Middleware\MiddlewareManager;
 use Mindy\Router\UrlManager;
 use Mindy\Security\Security;
 use Psr\Http\Message\ResponseInterface;
-use RuntimeException;
 
 /**
  * @property string $id The unique identifier for the application.

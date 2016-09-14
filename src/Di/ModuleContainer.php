@@ -8,8 +8,6 @@
 
 namespace Mindy\Di;
 
-use League\Container\Container;
-
 /**
  * Class ModuleContainer
  * @package Mindy\Di

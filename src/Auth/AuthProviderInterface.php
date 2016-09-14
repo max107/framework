@@ -15,7 +15,7 @@ use Mindy\Auth\PasswordHasher\IPasswordHasher;
  * Interface IAuthProvider
  * @package Mindy\Auth
  */
-interface IAuthProvider
+interface AuthProviderInterface
 {
     /**
      * @param string $hasher
@@ -23,4 +23,10 @@ interface IAuthProvider
      * @throws Exception
      */
     public function getPasswordHasher(string $hasher) : IPasswordHasher;
+
+    /**
+     * @param array $attributes
+     * @return IUser
+     */
+    public function createUser(array $attributes) : IUser;
 }

@@ -2,7 +2,7 @@
 
 namespace Mindy\Tests\Base;
 
-use League\Container\Container;
+use Mindy\Di\Container;
 use Mindy\Base\Mindy;
 use Mindy\Base\Module;
 use Mindy\Event\EventManager;

@@ -8,11 +8,13 @@
 
 namespace Mindy\Tests\Auth;
 
-use League\Container\Container;
 use Mindy\Auth\AuthProvider;
-use Mindy\Auth\IAuthProvider;
+use Mindy\Auth\AuthProviderInterface;
 use Mindy\Auth\IUser;
-use Mindy\Auth\Strategy\IAuthStrategy;
+use Mindy\Auth\PasswordHasher\NullPasswordHasher;
+use Mindy\Auth\Strategy\AuthStrategyInterface;
+use Mindy\Auth\Strategy\LocalStrategy;
+use Mindy\Auth\UserProvider\MemoryUserProvider;
 use Mindy\Base\Application;
 use Mindy\Base\Mindy;
 use Mindy\Http\Cookie;
@@ -34,6 +36,7 @@ class UserExample implements IUser
     {
         $attrs = $this->attrs;
         unset($attrs['password']);
+        unset($attrs['hash_type']);
         return $attrs;
     }
 
@@ -58,9 +61,18 @@ class UserExample implements IUser
 
         return true;
     }
+
+    /**
+     * @param array $attributes
+     * @return mixed
+     */
+    public static function create(array $attributes) : IUser
+    {
+        return new self($attributes);
+    }
 }
 
-class NullStrategy implements IAuthStrategy
+class NullStrategyInterface implements AuthStrategyInterface
 {
     protected $user;
 
@@ -101,19 +113,19 @@ class NullStrategy implements IAuthStrategy
     }
 
     /**
-     * @param IAuthProvider $provider
+     * @param AuthProviderInterface $provider
      * @return mixed
      */
-    public function setAuthProvider(IAuthProvider $provider)
+    public function setAuthProvider(AuthProviderInterface $provider)
     {
         $this->_auth = $provider;
         return $this;
     }
 
     /**
-     * @return IAuthProvider
+     * @return AuthProviderInterface
      */
-    public function getAuthProvider() : IAuthProvider
+    public function getAuthProvider() : AuthProviderInterface
     {
         return $this->_auth;
     }
@@ -149,7 +161,7 @@ class AuthTest extends \PHPUnit_Framework_TestCase
                     'class' => '\Mindy\Auth\AuthProvider',
                     'userClass' => UserExample::class,
                     'strategies' => [
-                        'local' => new NullStrategy
+                        'local' => new NullStrategyInterface
                     ]
                 ],
                 /*
@@ -180,7 +192,7 @@ class AuthTest extends \PHPUnit_Framework_TestCase
     {
         $this->assertInstanceOf(Application::class, $this->app);
         $this->assertInstanceOf(AuthProvider::class, $this->app->auth);
-        $this->assertInstanceOf(NullStrategy::class, $this->app->auth->getStrategy('local'));
+        $this->assertInstanceOf(NullStrategyInterface::class, $this->app->auth->getStrategy('local'));
         $this->assertInstanceOf(Http::class, $this->app->http);
         $this->assertInstanceOf(Session::class, $this->app->http->session);
         $this->assertInstanceOf(MemorySessionAdapter::class, $this->app->http->session->getHandler());
@@ -237,5 +249,38 @@ class AuthTest extends \PHPUnit_Framework_TestCase
         $cookie = $this->app->http->getResponse()->getCookie('__user');
         $this->assertInstanceOf(Cookie::class, $cookie);
         $this->assertEquals(['username' => 'foo', 'id' => 1], unserialize($cookie->getValue()));
+    }
+
+    public function testLocalStrategy()
+    {
+        $authProvider = new AuthProvider([
+            'userClass' => UserExample::class,
+            'passwordHashers' => [
+                'null' => new NullPasswordHasher()
+            ]
+        ]);
+
+        $userProvider = new MemoryUserProvider($authProvider);
+        $userProvider->setUsers([
+            ['username' => 'foo', 'password' => 123, 'id' => 1, 'hash_type' => 'null', 'is_active' => true],
+            ['username' => 'bar', 'password' => 321, 'id' => 2, 'hash_type' => 'null', 'is_active' => true]
+        ]);
+        $this->assertNull($userProvider->get(['username' => 'foo', 'password' => 321]));
+        $user = $userProvider->get(['username' => 'foo', 'password' => 123]);
+        $this->assertNotNull($user);
+
+        $strategy = new LocalStrategy($authProvider, $userProvider);
+
+        $this->assertTrue($strategy->process($user, ['username' => 'foo', 'password' => 123]));
+        $authUser = $strategy->getUser();
+        $this->assertEquals([
+            'username' => 'foo',
+            'id' => 1,
+            'is_active' => true,
+        ], $authUser->getSafeAttributes());
+
+        $this->assertFalse($strategy->process($user, ['username' => 'foo', 'password' => 321]));
+        $errors = $strategy->getErrors();
+        $this->assertEquals(['password' => ['Wrong password']], $errors);
     }
 }

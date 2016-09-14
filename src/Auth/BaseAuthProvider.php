@@ -13,14 +13,14 @@ namespace Mindy\Auth;
 use Exception;
 use function Mindy\app;
 use Mindy\Auth\PasswordHasher\IPasswordHasher;
-use Mindy\Auth\Strategy\IAuthStrategy;
+use Mindy\Auth\Strategy\AuthStrategyInterface;
 use Mindy\Helper\Creator;
 
 /**
  * Class BaseAuthProvider
  * @package Mindy\Auth
  */
-abstract class BaseAuthProvider implements IAuthProvider
+abstract class BaseAuthProvider implements AuthProviderInterface
 {
     /**
      * @var string
@@ -43,7 +43,7 @@ abstract class BaseAuthProvider implements IAuthProvider
      */
     private $_passwordHashers = [];
     /**
-     * @var array|\Mindy\Auth\Strategy\IAuthStrategy[]
+     * @var array|\Mindy\Auth\Strategy\AuthStrategyInterface[]
      */
     private $_strategies = [];
 
@@ -164,7 +164,7 @@ abstract class BaseAuthProvider implements IAuthProvider
     }
 
     /**
-     * @return \Mindy\Auth\Strategy\IAuthStrategy[]
+     * @return \Mindy\Auth\Strategy\AuthStrategyInterface[]
      */
     public function getStrategies() : array
     {
@@ -173,9 +173,9 @@ abstract class BaseAuthProvider implements IAuthProvider
 
     /**
      * @param $name
-     * @return \Mindy\Auth\Strategy\IAuthStrategy
+     * @return \Mindy\Auth\Strategy\AuthStrategyInterface
      */
-    public function getStrategy(string $name) : IAuthStrategy
+    public function getStrategy(string $name) : AuthStrategyInterface
     {
         return $this->_strategies[$name];
     }
@@ -205,7 +205,7 @@ abstract class BaseAuthProvider implements IAuthProvider
             return $this->_passwordHashers[$hasher];
         }
 
-        throw new Exception('Unknown password hasher');
+        throw new Exception('Unknown password hasher: ' . $hasher);
     }
 
     /**

@@ -31,4 +31,10 @@ interface IUser
      * @return array
      */
     public function getSafeAttributes() : array;
+
+    /**
+     * @param array $attributes
+     * @return mixed
+     */
+    public static function create(array $attributes) : IUser;
 }

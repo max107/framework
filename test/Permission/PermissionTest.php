@@ -64,6 +64,15 @@ class UserPerm implements IUser
     {
         return $this->attrs;
     }
+
+    /**
+     * @param array $attributes
+     * @return mixed
+     */
+    public static function create(array $attributes) : IUser
+    {
+        return new self($attributes);
+    }
 }
 
 class PermissionTest extends \PHPUnit_Framework_TestCase

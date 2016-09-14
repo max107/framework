@@ -8,41 +8,42 @@
  */
 namespace Mindy\Auth\Strategy;
 
-use Mindy\Auth\IAuthProvider;
+use Mindy\Auth\AuthProviderInterface;
 use Mindy\Auth\IUser;
+use Mindy\Auth\UserProvider\UserProviderInterface;
 
 /**
  * Class BaseStrategy
  * @package Modules\Auth\Strategy
  */
-abstract class BaseStrategy implements IAuthStrategy
+abstract class BaseStrategy implements AuthStrategyInterface
 {
     /**
      * @var array
      */
     private $_errors = [];
     /**
-     * @var IAuthProvider
-     */
-    private $_auth;
-    /**
      * @var IUser
      */
     private $_user;
+    /**
+     * @var AuthProviderInterface
+     */
+    protected $authProvider;
+    /**
+     * @var UserProviderInterface
+     */
+    protected $userProvider;
 
     /**
      * BaseStrategy constructor.
-     * @param array $config
+     * @param AuthProviderInterface $authProvider
+     * @param UserProviderInterface $userProvider
      */
-    public function __construct(array $config = [])
+    public function __construct(AuthProviderInterface $authProvider, UserProviderInterface $userProvider)
     {
-        foreach ($config as $key => $value) {
-            if (method_exists($this, 'set' . ucfirst($key))) {
-                $this->{'set' . ucfirst($key)}($value);
-            } else {
-                $this->{$key} = $value;
-            }
-        }
+        $this->authProvider = $authProvider;
+        $this->userProvider = $userProvider;
     }
 
     /**
@@ -54,24 +55,6 @@ abstract class BaseStrategy implements IAuthStrategy
     }
 
     /**
-     * @param IAuthProvider $authProvider
-     * @return $this
-     */
-    public function setAuthProvider(IAuthProvider $authProvider)
-    {
-        $this->_auth = $authProvider;
-        return $this;
-    }
-
-    /**
-     * @return IAuthProvider
-     */
-    public function getAuthProvider() : IAuthProvider
-    {
-        return $this->_auth;
-    }
-
-    /**
      * @param IUser $user
      * @param string $password
      * @return string
@@ -80,8 +63,9 @@ abstract class BaseStrategy implements IAuthStrategy
     public function verifyPassword(IUser $user, $password)
     {
         $hash = $user->password;
-        $hasher = $this->getAuthProvider()->getPasswordHasher($user->hash_type);
-        return $hasher->verifyPassword($password, $hash);
+        return $this->authProvider
+            ->getPasswordHasher($user->hash_type)
+            ->verifyPassword($password, $hash);
     }
 
     /**
