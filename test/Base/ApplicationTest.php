@@ -118,6 +118,8 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals(__DIR__ . '/app/Modules/Foo', Alias::get('Foo'));
         $this->assertEquals(__DIR__ . '/app/Modules/Bar', Alias::get('Bar'));
+
+        $this->assertEquals(['Foo', 'Bar'], array_keys($app->getModules()));
     }
 
     public function testAliases()

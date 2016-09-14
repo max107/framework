@@ -26,7 +26,7 @@ class TemplateFinder extends BaseTemplateFinder
      */
     public function find($templatePath)
     {
-        $path = join(DIRECTORY_SEPARATOR, [$this->basePath, $this->templatesDir, $templatePath]);
+        $path = implode(DIRECTORY_SEPARATOR, [$this->basePath, $this->templatesDir, $templatePath]);
         return is_file($path) ? $path : null;
     }
 
@@ -36,7 +36,7 @@ class TemplateFinder extends BaseTemplateFinder
     public function getPaths()
     {
         return [
-            join(DIRECTORY_SEPARATOR, [$this->basePath, $this->templatesDir])
+            implode(DIRECTORY_SEPARATOR, [$this->basePath, $this->templatesDir])
         ];
     }
 }

@@ -23,7 +23,7 @@ class AppTemplateFinder extends TemplateFinder
     {
         $tmp = explode(DIRECTORY_SEPARATOR, $templatePath);
         if (count($tmp) > 1) {
-            $path = join(DIRECTORY_SEPARATOR, [$this->basePath, ucfirst(array_shift($tmp)), $this->templatesDir, $templatePath]);
+            $path = implode(DIRECTORY_SEPARATOR, [$this->basePath, ucfirst(array_shift($tmp)), $this->templatesDir, $templatePath]);
             if (is_file($path)) {
                 return $path;
             }
