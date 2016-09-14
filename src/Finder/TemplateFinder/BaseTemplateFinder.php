@@ -7,13 +7,13 @@
  * Time: 13:53
  */
 
-namespace Mindy\Finder\Finder;
+namespace Mindy\Finder\TemplateFinder;
 
 /**
  * Class BaseTemplateFinder
- * @package Mindy\Finder\Finder
+ * @package Mindy\Finder\TemplateFinder
  */
-abstract class BaseTemplateFinder implements ITemplateFinder
+abstract class BaseTemplateFinder implements TemplateFinderInterface
 {
     /**
      * @var string

@@ -10,7 +10,7 @@
 namespace Mindy\Finder;
 
 use Exception;
-use Mindy\Finder\Finder\ITemplateFinder;
+use Mindy\Finder\TemplateFinder\TemplateFinderInterface;
 use Mindy\Helper\Creator;
 
 /**
@@ -21,7 +21,7 @@ class Finder
 {
     /**
      * Template finders
-     * @var \Mindy\Finder\Finder\ITemplateFinder[]
+     * @var \Mindy\Finder\TemplateFinder\TemplateFinderInterface[]
      */
     private $_finders = [];
     /**
@@ -57,7 +57,7 @@ class Finder
                 $finder = Creator::createObject($config);
             }
 
-            if (($finder instanceof ITemplateFinder) === false) {
+            if (($finder instanceof TemplateFinderInterface) === false) {
                 throw new Exception("Unknown template finder");
             }
 

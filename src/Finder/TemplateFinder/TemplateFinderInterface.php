@@ -7,9 +7,9 @@
  * Time: 13:59
  */
 
-namespace Mindy\Finder\Finder;
+namespace Mindy\Finder\TemplateFinder;
 
-interface ITemplateFinder
+interface TemplateFinderInterface
 {
     /**
      * @param $templatePath

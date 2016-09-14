@@ -7,7 +7,7 @@
  * Time: 13:53
  */
 
-namespace Mindy\Finder\Finder;
+namespace Mindy\Finder\TemplateFinder;
 
 /**
  * Class AppTemplateFinder

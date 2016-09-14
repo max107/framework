@@ -9,10 +9,9 @@
 namespace Mindy\Tests\Finder;
 
 use Mindy\Finder\Finder;
-use Mindy\Finder\Finder\AppTemplateFinder;
-use Mindy\Finder\Finder\ITemplateFinder;
-use Mindy\Finder\Finder\TemplateFinder;
-use Mindy\Finder\Finder\ThemeTemplateFinder;
+use Mindy\Finder\TemplateFinder\AppTemplateFinder;
+use Mindy\Finder\TemplateFinder\TemplateFinder;
+use Mindy\Finder\TemplateFinder\ThemeTemplateFinder;
 
 class FinderTest extends \PHPUnit_Framework_TestCase
 {
