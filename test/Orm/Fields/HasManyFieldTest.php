@@ -14,6 +14,7 @@
 
 namespace Mindy\Tests\Orm\Fields;
 
+use Mindy\QueryBuilder\QueryBuilder;
 use Mindy\Tests\Orm\OrmDatabaseTestCase;
 use Mindy\Tests\Orm\Models\Category;
 use Mindy\Tests\Orm\Models\Color;
@@ -41,8 +42,8 @@ abstract class HasManyFieldTest extends OrmDatabaseTestCase
         $category_animals->name = 'Animals';
         $category_animals->save();
 
-        $db = $this->getConnection();
-        $adapter = $db->getAdapter();
+        $connection = $this->getConnection();
+        $adapter = QueryBuilder::getInstance($connection)->getAdapter();
         $tableSql = $adapter->quoteColumn('product');
         $tableAliasSql = $adapter->quoteColumn('product_1');
         $categoryIdSql = $adapter->quoteColumn('category_id');

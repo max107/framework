@@ -80,7 +80,7 @@ abstract class QuerySetBase implements IteratorAggregate, ArrayAccess, Serializa
      */
     protected function getAdapter()
     {
-        return $this->getDb()->getAdapter();
+        return $this->getConnection()->getAdapter();
     }
 
     /**
@@ -109,7 +109,7 @@ abstract class QuerySetBase implements IteratorAggregate, ArrayAccess, Serializa
     {
         if (($db instanceof Connection) === false) {
             // TODO refact, detach from Mindy::app()
-            $db = Mindy::app()->db->getDb($db);
+            $db = Mindy::app()->db->getConnection($db);
         }
         $this->_db = $db;
         return $this;

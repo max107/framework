@@ -5,6 +5,7 @@ namespace Mindy\Orm;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Schema\Table;
 use Mindy\Orm\Fields\ForeignField;
+use Mindy\Orm\Fields\HasManyField;
 use Mindy\Orm\Fields\ManyToManyField;
 use Mindy\Orm\Fields\OneToOneField;
 use Mindy\QueryBuilder\QueryBuilder;
@@ -49,7 +50,7 @@ class Sync
 
     /**
      * @param $model \Mindy\Orm\Model
-     * @return array
+     * @return int
      */
     public function createTable(Model $model)
     {
@@ -69,12 +70,14 @@ class Sync
 
             $field->setModel($model);
 
-            if ($field instanceof ManyToManyField) {
+            if ($field instanceof HasManyField) {
+                continue;
+            } else if ($field instanceof ManyToManyField) {
                 /* @var $field \Mindy\Orm\Fields\ManyToManyField */
                 if ($field->through === null) {
                     $fieldTableName = $adapter->getRawTableName($field->getTableName());
                     if ($this->hasTable($fieldTableName) === false) {
-                        $fieldTable = new Table($fieldTableName, $field->getColumns());
+                        $fieldTable = new Table($adapter->quoteTableName($fieldTableName), $field->getColumns());
                         $schemaManager->createTable($fieldTable);
                         $i += 1;
                     }
@@ -91,7 +94,7 @@ class Sync
         }
 
         if ($this->hasTable($tableName) === false) {
-            $table = new Table($tableName, $columns, $indexes);
+            $table = new Table($adapter->quoteTableName($tableName), $columns, $indexes);
             $schemaManager->createTable($table);
             $i += 1;
         }
@@ -101,19 +104,22 @@ class Sync
 
     /**
      * @param $model \Mindy\Orm\Model
-     * @return array
+     * @return int
      */
     public function dropTable(Model $model)
     {
         $i = 0;
 
         $adapter = $this->getQueryBuilder()->getAdapter();
+//        $sql = $adapter->sqlCheckIntegrity(false);
+//        $this->connection->query($sql)->execute();
+
         $schemaManager = $this->connection->getSchemaManager();
         foreach ($model->getManyFields() as $field) {
             if ($field->through === null) {
                 $fieldTable = $adapter->getRawTableName($field->getTableName());
                 if ($this->hasTable($fieldTable)) {
-                    $schemaManager->dropTable($fieldTable);
+                    $schemaManager->dropTable($adapter->quoteTableName($fieldTable));
                     $i += 1;
                 }
             }
@@ -121,9 +127,11 @@ class Sync
 
         $modelTable = $adapter->getRawTableName($model->tableName());
         if ($this->hasTable($modelTable)) {
-            $schemaManager->dropTable($modelTable);
+            $schemaManager->dropTable($adapter->quoteTableName($modelTable));
             $i += 1;
         }
+
+//        $this->connection->query($adapter->sqlCheckIntegrity(true))->execute();
 
         return $i;
     }

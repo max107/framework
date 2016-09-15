@@ -2,6 +2,7 @@
 
 namespace Mindy\Orm\Fields;
 
+use Doctrine\DBAL\Schema\Index;
 use Exception;
 use Mindy\Orm\Model;
 use Mindy\QueryBuilder\Expression;
@@ -43,9 +44,10 @@ class OneToOneField extends ForeignField
         return $this->to;
     }
 
+    /*
     public function getDbPrepValue()
     {
-        if ($this->primary && $this->getModel()->getDb()->driverName == 'pgsql') {
+        if ($this->primary && $this->getModel()->getConnection()->driverName == 'pgsql') {
             // Primary key всегда передается по логике Query, а для корректной работы pk в pgsql
             // необходимо передать curval($seq) или nextval($seq) или не экранированный DEFAULT.
             //
@@ -56,6 +58,7 @@ class OneToOneField extends ForeignField
             return parent::getDbPrepValue();
         }
     }
+    */
 
     public function setValue($value)
     {
@@ -104,5 +107,17 @@ class OneToOneField extends ForeignField
         } else {
             return parent::getValue();
         }
+    }
+
+    public function getSqlIndexes() : array
+    {
+        $indexes = [];
+        $name = $this->primary ? $this->name . '_id' : $this->name;
+        if ($this->primary) {
+            $indexes[] = new Index('PRIMARY', [$name], true, true);
+        } else if ($this->unique && !$this->primary) {
+            $indexes[] = new Index($name . '_idx', [$name], true, false);
+        }
+        return $indexes;
     }
 }

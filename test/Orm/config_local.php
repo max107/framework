@@ -10,7 +10,7 @@ return [
         'driver' => 'pdo_pgsql'
     ],
     'sqlite' => [
-        'url' => 'sqlite:///:memory:',
-        'driver' => 'pdo_sqlite'
+        'memory' => true,
+        'driverClass' => '\Mindy\QueryBuilder\Driver\SqliteDriver',
     ]
 ];

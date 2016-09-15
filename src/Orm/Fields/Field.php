@@ -64,9 +64,6 @@ abstract class Field
 
     protected $ownerClassName;
 
-    private $_validatorClass = '\Mindy\Validation\Validator';
-
-    private $_extraFields = [];
     /**
      * @var \Mindy\Orm\Model
      */
@@ -119,8 +116,10 @@ abstract class Field
     public function getSqlIndexes() : array
     {
         $indexes = [];
-        if ($this->unique || $this->primary) {
-            $indexes[] = new Index($this->name . '_index', [$this->name], $this->unique, $this->primary);
+        if ($this->primary) {
+            $indexes[] = new Index('PRIMARY', [$this->name], true, true);
+        } else if ($this->unique && !$this->primary) {
+            $indexes[] = new Index($this->name . '_idx', [$this->name], true, false);
         }
         return $indexes;
     }
@@ -132,24 +131,13 @@ abstract class Field
     {
         $options = [];
 
+        foreach (['length', 'default', 'comment'] as $key) {
+            $options[$key] = $this->{$key};
+        }
+
         if ($this->null) {
             $options['notnull'] = false;
-        }
-
-        if ($this->length) {
-            $options['length'] = $this->length;
-        }
-
-        if ($this->default) {
-            $options['default'] = $this->default;
-        }
-
-        if ($this->comment) {
-            $options['comment'] = $this->comment;
-        }
-
-        if ($this->primary) {
-            $options['autoincrement'] = true;
+            unset($options['default']);
         }
 
         return $options;
@@ -211,23 +199,6 @@ abstract class Field
         return $this->value = $value;
     }
 
-    public function getOptions()
-    {
-        return [
-            'sqlType' => $this->sqlType(),
-            'null' => $this->null,
-            'default' => $this->default,
-            'length' => $this->length,
-            'required' => $this->required,
-            'primary' => $this->primary
-        ];
-    }
-
-    public function hash()
-    {
-        return md5(serialize($this->getOptions()));
-    }
-
     public function getFormValue()
     {
         return $this->getValue();
@@ -235,18 +206,16 @@ abstract class Field
 
     public function isRequired()
     {
-        return $this->required === true;
+        return $this->required;
     }
 
+    /**
+     * @param $name
+     * @return $this
+     */
     public function setName($name)
     {
         $this->name = $name;
-        foreach ($this->validators as $validator) {
-            if (is_subclass_of($validator, $this->_validatorClass)) {
-                $validator->setName($name);
-                $validator->setModel($this->getModel());
-            }
-        }
         return $this;
     }
 
@@ -267,11 +236,6 @@ abstract class Field
                 return $name;
             }
         }
-    }
-
-    public function getExtraFields()
-    {
-        return [];
     }
 
     public function onAfterInsert()
@@ -311,29 +275,9 @@ abstract class Field
         }
 
         if ($fieldClass === null) {
-            $fieldClass = $this->choices ? \Mindy\Form\Fields\DropDownField::className() : \Mindy\Form\Fields\CharField::className();
+            $fieldClass = $this->choices ? \Mindy\Form\Fields\SelectField::class : \Mindy\Form\Fields\TextField::class;
         } elseif ($fieldClass === false) {
             return null;
-        }
-
-        $validators = [];
-        if ($form->hasField($this->name)) {
-            $field = $form->getField($this->name);
-            $validators = $field->validators;
-        }
-
-        if (($this->null === false || $this->required) && $this->autoFetch === false && ($this instanceof BooleanField) === false) {
-            $validator = new RequiredValidator;
-            $validator->setName($this->name);
-            $validator->setModel($this);
-            $validators[] = $validator;
-        }
-
-        if ($this->unique) {
-            $validator = new UniqueValidator;
-            $validator->setName($this->name);
-            $validator->setModel($this);
-            $validators[] = $validator;
         }
 
         return Creator::createObject(array_merge([
@@ -344,7 +288,6 @@ abstract class Field
             'name' => $this->name,
             'label' => $this->verboseName,
             'hint' => $this->helpText,
-            'validators' => array_merge($validators, $this->validators),
             'value' => $this->default ? $this->default : null
 
 //            'html' => [

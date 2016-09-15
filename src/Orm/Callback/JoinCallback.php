@@ -11,7 +11,7 @@ namespace Mindy\Orm\Callback;
 use Mindy\Orm\Fields\ManyToManyField;
 use Mindy\Orm\Fields\RelatedField;
 use Mindy\Orm\Model;
-use Mindy\QueryBuilder\LookupBuilder\Legacy;
+use Mindy\QueryBuilder\LookupBuilder\LookupBuilder;
 use Mindy\QueryBuilder\QueryBuilder;
 
 class JoinCallback
@@ -23,7 +23,7 @@ class JoinCallback
         $this->model = $model;
     }
 
-    public function run(QueryBuilder $queryBuilder, Legacy $lookupBuilder, array $lookupNodes)
+    public function run(QueryBuilder $queryBuilder, LookupBuilder $lookupBuilder, array $lookupNodes)
     {
         $column = '';
         $alias = '';
@@ -34,12 +34,12 @@ class JoinCallback
                 $column = $nodeName;
             } else {
                 if ($nodeName == 'through' && $prevField && $prevField instanceof ManyToManyField) {
-                    $alias = $prevField->setDb($this->model->getDb())->buildThroughQuery($queryBuilder, $queryBuilder->getAlias());
+                    $alias = $prevField->setConnection($this->model->getConnection())->buildThroughQuery($queryBuilder, $queryBuilder->getAlias());
                 } else if ($this->model->hasField($nodeName)) {
                     $field = $this->model->getField($nodeName);
                     if ($field instanceof RelatedField) {
                         /** @var \Mindy\Orm\Fields\RelatedField $field */
-                        $alias = $field->setDb($this->model->getDb())->buildQuery($queryBuilder, $queryBuilder->getAlias());
+                        $alias = $field->setConnection($this->model->getConnection())->buildQuery($queryBuilder, $queryBuilder->getAlias());
                         $prevField = $field;
                     }
                 }

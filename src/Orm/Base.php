@@ -799,14 +799,13 @@ abstract class Base implements ArrayAccess, Serializable
         $connection = static::getConnection();
         $adapter = QueryBuilder::getInstance($connection)->getAdapter();
 
-        if (!$connection->insert($adapter->getRawTableName($this->tableName()), $dbValues)) {
+        if (!$connection->insert($adapter->quoteTableName($adapter->getRawTableName($this->tableName())), $dbValues)) {
             return false;
         }
 
         $primaryKeyName = self::primaryKeyName();
-//        debug($connection->lastInsertId());
-        if (array_key_exists($primaryKeyName, $values) === false && isset($tableSchema)) {
-            $id = $connection->getLastInsertID($tableSchema->sequenceName);
+        if (array_key_exists($primaryKeyName, $values) === false) {
+            $id = $connection->lastInsertId();
             $this->setAttribute($primaryKeyName, $id);
             $values[$primaryKeyName] = $id;
         }
@@ -880,20 +879,20 @@ abstract class Base implements ArrayAccess, Serializable
      */
     public function update(array $fields = [])
     {
-        $db = static::getDb();
+        $connection = static::getConnection();
 
         $this->onBeforeUpdateInternal();
 
-        $transaction = $db->beginTransaction();
+        $connection->beginTransaction();
         try {
             $result = $this->updateInternal($fields);
             if ($result) {
-                $transaction->commit();
+                $connection->commit();
             } else {
-                $transaction->rollBack();
+                $connection->rollBack();
             }
         } catch (Exception $e) {
-            $transaction->rollBack();
+            $connection->rollBack();
             throw $e;
         }
 
@@ -907,6 +906,8 @@ abstract class Base implements ArrayAccess, Serializable
 
     /**
      * @see update()
+     * @param array $fields
+     * @return bool
      * @throws Exception
      */
     protected function updateInternal(array $fields = [])

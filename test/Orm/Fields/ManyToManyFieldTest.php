@@ -14,6 +14,7 @@
 
 namespace Mindy\Tests\Orm\Fields;
 
+use Mindy\QueryBuilder\QueryBuilder;
 use Mindy\Tests\Orm\OrmDatabaseTestCase;
 use Mindy\Tests\Orm\Models\Blogger;
 use Mindy\Tests\Orm\Models\Category;
@@ -46,6 +47,11 @@ abstract class ManyToManyFieldTest extends OrmDatabaseTestCase
         ];
     }
 
+    public function tearDown()
+    {
+
+    }
+
     public function testSimple()
     {
         $category = new Category();
@@ -66,11 +72,9 @@ abstract class ManyToManyFieldTest extends OrmDatabaseTestCase
         $this->assertEquals(1, $product->id);
 
         $list = new ProductList();
-
         $this->assertTrue($list->getIsNewRecord());
 
         $list->name = 'qwe';
-
         $this->assertTrue($list->save());
         $this->assertFalse($list->getIsNewRecord());
         $this->assertEquals(1, $list->id);
@@ -79,6 +83,7 @@ abstract class ManyToManyFieldTest extends OrmDatabaseTestCase
         $list->products->link($product);
 
         $this->assertEquals(1, ProductList::objects()->count());
+        $this->assertEquals(1, $product->lists->count());
         $this->assertEquals(1, count($product->lists->all()));
 
         $new = Product::objects()->get(['id' => 1]);
@@ -245,17 +250,17 @@ abstract class ManyToManyFieldTest extends OrmDatabaseTestCase
         $this->assertEquals(1, Product::objects()->count());
         $this->assertEquals(2, ProductList::objects()->count());
         $tableName = $product->getField('lists')->getTableName();
-        $tableName = $this->getConnection()->getAdapter()->getRawTableName($tableName);
-        $cmd = $this->getConnection()->createCommand("SELECT * FROM " . $tableName);
-        $all = $cmd->queryAll();
+        $tableName = QueryBuilder::getInstance($this->getConnection())->getAdapter()->getRawTableName($tableName);
+        $cmd = $this->getConnection()->query("SELECT * FROM " . $tableName);
+        $all = $cmd->fetchAll();
         $this->assertEquals([], $all);
         $this->assertEquals(0, count($all));
 
         $product->lists = [$list1];
         $product->save();
 
-        $cmd = $this->getConnection()->createCommand("SELECT * FROM " . $tableName);
-        $all = $cmd->queryAll();
+        $cmd = $this->getConnection()->query("SELECT * FROM " . $tableName);
+        $all = $cmd->fetchAll();
         $this->assertEquals([
             ['product_id' => 1, 'product_list_id' => 1]
         ], $all);
@@ -264,8 +269,8 @@ abstract class ManyToManyFieldTest extends OrmDatabaseTestCase
         $product->lists = [$list2];
         $product->save();
 
-        $cmd = $this->getConnection()->createCommand("SELECT * FROM {$tableName}");
-        $all = $cmd->queryAll();
+        $cmd = $this->getConnection()->query("SELECT * FROM {$tableName}");
+        $all = $cmd->fetchAll();
         $this->assertEquals([
             ['product_id' => 1, 'product_list_id' => 2]
         ], $all);
@@ -274,8 +279,8 @@ abstract class ManyToManyFieldTest extends OrmDatabaseTestCase
         $product->lists = [$list1];
         $product->save();
 
-        $cmd = $this->getConnection()->createCommand("SELECT * FROM {$tableName}");
-        $all = $cmd->queryAll();
+        $cmd = $this->getConnection()->query("SELECT * FROM {$tableName}");
+        $all = $cmd->fetchAll();
         $this->assertEquals([
             ['product_id' => 1, 'product_list_id' => 1]
         ], $all);
@@ -284,8 +289,8 @@ abstract class ManyToManyFieldTest extends OrmDatabaseTestCase
         $product->lists = [$list1, $list1, $list1];
         $product->save();
 
-        $cmd = $this->getConnection()->createCommand("SELECT * FROM {$tableName}");
-        $all = $cmd->queryAll();
+        $cmd = $this->getConnection()->query("SELECT * FROM {$tableName}");
+        $all = $cmd->fetchAll();
         $this->assertEquals([
             ['product_id' => 1, 'product_list_id' => 1],
             ['product_id' => 1, 'product_list_id' => 1],

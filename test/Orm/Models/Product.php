@@ -44,7 +44,10 @@ class Product extends Model
                     new Assert\Length(['min' => 3])
                 ]
             ],
-            'price' => ['class' => CharField::class, 'default' => 0],
+            'price' => [
+                'class' => CharField::class,
+                'default' => 0
+            ],
             'description' => ['class' => TextField::class, 'null' => true],
             'category' => [
                 'class' => ForeignField::class,

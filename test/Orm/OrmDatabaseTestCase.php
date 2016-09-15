@@ -19,6 +19,7 @@ use League\Flysystem\Adapter\Local;
 use Mindy\Base\Mindy;
 use Mindy\Orm\Sync;
 use Mindy\QueryBuilder\ConnectionManager;
+use Mindy\QueryBuilder\QueryBuilder;
 
 class OrmDatabaseTestCase extends \PHPUnit_Framework_TestCase
 {
@@ -74,8 +75,7 @@ class OrmDatabaseTestCase extends \PHPUnit_Framework_TestCase
 
     protected function assertSql($expected, $actual)
     {
-        $sql = str_replace([" \n", "\n"], " ", $expected);
-        $sql = $this->getConnection()->getAdapter()->quoteSql($sql);
+        $sql = QueryBuilder::getInstance($this->getConnection())->getAdapter()->quoteSql(str_replace([" \n", "\n"], " ", $expected));
         $this->assertEquals($sql, trim($actual));
     }
 

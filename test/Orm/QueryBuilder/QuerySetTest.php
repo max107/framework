@@ -43,12 +43,6 @@ class QuerySetTest extends OrmDatabaseTestCase
         }
     }
 
-    public function testInit()
-    {
-        $tableSchema = $this->getConnection()->getSchema()->getTableSchema(Hits::tableName(), true);
-        $this->assertInstanceOf(TableSchema::class, $tableSchema);
-    }
-
     public function testCount()
     {
         $this->assertTrue((new Hits)->save());
@@ -197,11 +191,11 @@ class QuerySetTest extends OrmDatabaseTestCase
 
     public function testMultipleQuery()
     {
-        $this->assertSql('SELECT COUNT(*) FROM [[user]] AS [[user_1]]', User::objects()->countSql());
-        $this->assertSql('SELECT [[user_1]].* FROM [[user]] AS [[user_1]]', User::objects()->allSql());
+        $this->assertSql('SELECT COUNT(*) FROM [[users]] AS [[users_1]]', User::objects()->countSql());
+        $this->assertSql('SELECT [[users_1]].* FROM [[users]] AS [[users_1]]', User::objects()->allSql());
 
-        $this->assertSql('SELECT [[user_1]].* FROM [[user]] AS [[user_1]]', User::objects()->allSql());
-        $this->assertSql('SELECT COUNT(*) FROM [[user]] AS [[user_1]]', User::objects()->countSql());
+        $this->assertSql('SELECT [[users_1]].* FROM [[users]] AS [[users_1]]', User::objects()->allSql());
+        $this->assertSql('SELECT COUNT(*) FROM [[users]] AS [[users_1]]', User::objects()->countSql());
     }
 
     public function testForeignField()

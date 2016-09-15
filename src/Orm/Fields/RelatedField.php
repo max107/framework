@@ -2,9 +2,7 @@
 
 namespace Mindy\Orm\Fields;
 
-use Mindy\Orm\QuerySet;
-use Mindy\Query\Connection;
-use Mindy\Query\ConnectionManager;
+use Doctrine\DBAL\Connection;
 use Mindy\QueryBuilder\QueryBuilder;
 
 /**
@@ -28,7 +26,7 @@ abstract class RelatedField extends IntField
     /**
      * @var Connection
      */
-    private $_db;
+    protected $connection;
 
     public function getRelatedName()
     {
@@ -64,18 +62,18 @@ abstract class RelatedField extends IntField
     /**
      * @return Connection
      */
-    protected function getDb()
+    public function getConnection()
     {
-        return $this->_db;
+        return $this->connection;
     }
 
     /**
      * @param Connection $db
      * @return $this
      */
-    public function setDb(Connection $db)
+    public function setConnection(Connection $db)
     {
-        $this->_db = $db;
+        $this->connection = $db;
         return $this;
     }
 

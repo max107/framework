@@ -48,12 +48,7 @@ class HasManyField extends RelatedField
 
     public $null = true;
 
-    public function init()
-    {
-
-    }
-
-    public function sqlType()
+    public function getSqlType()
     {
         return false;
     }

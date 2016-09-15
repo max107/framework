@@ -2,10 +2,11 @@
 
 namespace Mindy\Orm;
 
+use Doctrine\DBAL\Connection;
 use Mindy\Interfaces\Arrayable;
-use Mindy\Query\Connection;
 use Mindy\QueryBuilder\Expression;
 use Mindy\QueryBuilder\Q\QAndNot;
+use Mindy\QueryBuilder\QueryBuilder;
 
 /**
  * Class TreeQuerySet
@@ -183,11 +184,11 @@ class TreeQuerySet extends QuerySet
             new QAndNot(['root__in' => $subQuery])
         ]);
 
-        $ids = $this->createCommand($query->toSQL())->queryColumn();
+        $ids = $db->query($query->toSQL())->fetchColumn();
         if (count($ids) > 0) {
             $deleteQuery = clone $this->getQueryBuilder();
             $deleteQuery->clear()->setTypeDelete()->from($table)->where(['id__in' => $ids]);
-            $db->createCommand($deleteQuery->toSQL())->execute();
+            $db->query($deleteQuery->toSQL())->execute();
         }
     }
 
@@ -220,7 +221,7 @@ class TreeQuerySet extends QuerySet
             new QAndNot(['parent_id__in' => $subQuery])
         ]);
 
-        $rows = $this->createCommand($query->toSQL())->queryAll();
+        $rows = $db->query($query->toSQL())->fetchAll();
         foreach ($rows as $row) {
             $deleteQuery = clone $this->getQueryBuilder();
             $deleteQuery->clear()->setTypeDelete()->from($table)->where([
@@ -228,7 +229,7 @@ class TreeQuerySet extends QuerySet
                 'rgt__lte' => $row['rgt'],
                 'root' => $row['root']
             ]);
-            $db->createCommand($deleteQuery->toSQL())->execute();
+            $db->query($deleteQuery->toSQL())->execute();
         }
     }
 
@@ -252,14 +253,14 @@ class TreeQuerySet extends QuerySet
         $subQuery = "SELECT [[tt]].[[parent_id]] FROM " . $table . " AS [[tt]] WHERE [[tt]].[[parent_id]]=[[t]].[[id]]";
         $where = 'NOT [[lft]]=([[rgt]]-1) AND NOT [[id]] IN (' . $subQuery . ')';
         $sql = "SELECT [[id]], [[root]], [[lft]], [[rgt]], [[rgt]]-[[lft]]-1 AS [[move]] FROM " . $table . " AS [[t]] WHERE " . $where . " ORDER BY [[rgt]] ASC";
-        $adapter = $db->getAdapter();
+        $adapter = QueryBuilder::getInstance($db)->getAdapter();
 
-        $rows = $db->createCommand($adapter->quoteSql($sql))->queryAll();
+        $rows = $db->query($adapter->quoteSql($sql))->fetchAll();
         foreach ($rows as $row) {
             $sql = 'UPDATE ' . $table . ' SET [[lft]]=[[lft]]-' . $row['move'] . ', [[rgt]]=[[rgt]]-' . $row['move'] . ' WHERE [[root]]=' . $row['root'] . ' AND [[lft]]>' . $row['rgt'];
-            $db->createCommand($adapter->quoteSql($sql))->execute();
+            $db->query($adapter->quoteSql($sql))->execute();
             $sql = 'UPDATE ' . $table . ' SET [[rgt]]=[[rgt]]-' . $row['move'] . ' WHERE [[root]]=' . $row['root'] . ' AND [[lft]]<[[rgt]] AND [[rgt]]>=' . $row['rgt'];
-            $db->createCommand($adapter->quoteSql($sql))->execute();
+            $db->query($adapter->quoteSql($sql))->execute();
         }
     }
 
@@ -272,7 +273,7 @@ class TreeQuerySet extends QuerySet
     protected function findAndFixCorruptedTree()
     {
         $model = $this->model;
-        $db = $model->getDb();
+        $db = $model->getConnection();
         $table = $model->tableName();
         $this->deleteBranchWithoutRoot($db, $table);
         $this->deleteBranchWithoutParent($db, $table);

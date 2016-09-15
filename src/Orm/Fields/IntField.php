@@ -35,7 +35,11 @@ class IntField extends Field
     public function getSqlOptions() : array
     {
         $options = parent::getSqlOptions();
-        $options['unsigned'] = $this->unsigned;
+        if ($this->primary) {
+            $options['autoincrement'] = true;
+        } else {
+            $options['unsigned'] = $this->unsigned;
+        }
         return $options;
     }
 }

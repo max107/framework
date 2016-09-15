@@ -120,7 +120,7 @@ abstract class TreeModel extends Model
                     $this->moveAsRoot();
                 }
                 /** @var array $parent */
-                $parent = $this->objects()->asArray()->filter(['pk' => $this->pk])->get();
+                $parent = $this->objects()->asArray()->get(['pk' => $this->pk]);
                 if ($parent !== null) {
                     $this->setAttributes($parent);
                     $this->setIsNewRecord(false);
@@ -372,9 +372,10 @@ abstract class TreeModel extends Model
     private function shiftLeftRight($key, $delta)
     {
         foreach (['lft', 'rgt'] as $attribute) {
-            $this->objects()
-                ->filter([$attribute . '__gte' => $key, 'root' => $this->root])
-                ->update([$attribute => new Expression($attribute . sprintf('%+d', $delta))]);
+            $qs = $this->objects()->filter([$attribute . '__gte' => $key, 'root' => $this->root]);
+            $qs->update([
+                $attribute => new Expression($attribute . sprintf('%+d', $delta))
+            ]);
         }
     }
 

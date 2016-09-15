@@ -313,9 +313,9 @@ class Manager extends ManyToManyManager implements IteratorAggregate, ArrayAcces
     /**
      * Get model if exists. Else create model.
      * @param array $attributes
-     * @return Orm
+     * @return array
      */
-    public function getOrCreate(array $attributes)
+    public function getOrCreate(array $attributes) : array
     {
         return $this->getQuerySet()->getOrCreate($attributes);
     }

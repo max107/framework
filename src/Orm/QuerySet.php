@@ -119,10 +119,9 @@ class QuerySet extends QuerySetBase
      */
     public function each($batchSize = 100)
     {
-        return new BatchDataIterator([
+        return new BatchDataIterator($this->getConnection(), [
             'qs' => $this,
             'batchSize' => $batchSize,
-            'db' => $this->getConnection(),
             'each' => true,
             'asArray' => $this->asArray,
         ]);
@@ -136,7 +135,7 @@ class QuerySet extends QuerySetBase
     public function valuesList($columns, $flat = false)
     {
         $qb = clone $this->getQueryBuilder();
-        $rows = $this->createCommand($qb->select($columns)->toSQL())->queryAll();
+        $rows = $this->getConnection()->query($qb->select($columns)->toSQL())->fetchAll();
 
         if ($flat) {
             $flatArr = [];
@@ -156,27 +155,30 @@ class QuerySet extends QuerySetBase
      */
     public function update(array $attributes)
     {
-        return $this->createCommand($this->updateSql($attributes))->execute();
+        return $this->getConnection()->query($this->updateSql($attributes))->execute();
     }
 
     /**
      * @param array $attributes
-     * @return $this
+     * @return string
      */
     public function updateSql(array $attributes)
     {
         return $this->getQueryBuilder()->setTypeUpdate()->update($this->model->tableName(), $attributes)->toSQL();
     }
 
-    public function getOrCreate(array $attributes)
+    /**
+     * @param array $attributes
+     * @return array
+     */
+    public function getOrCreate(array $attributes) : array
     {
         $model = $this->filter($attributes)->get();
-        $create = false;
-        if ($model === null) {
+        $create = $model === null;
+        if ($create) {
             $model = $this->model;
             $model->setAttributes($attributes);
             $model->save();
-            $create = true;
         }
 
         return [$model, $create];
@@ -773,7 +775,7 @@ class QuerySet extends QuerySetBase
      */
     public function sum($q)
     {
-        return $this->getConnection()->createCommand($this->sumSql($q))->queryScalar();
+        return $this->aggregate(new Sum($q));
     }
 
     /**
@@ -889,13 +891,9 @@ class QuerySet extends QuerySetBase
         return false;
     }
 
-    /**
-     * @return int
-     * @throws \Mindy\Query\Exception
-     */
     public function delete()
     {
-        return $this->createCommand($this->deleteSql())->execute();
+        return $this->getConnection()->query($this->deleteSql())->execute();
     }
 
     public function deleteSql()
@@ -911,16 +909,6 @@ class QuerySet extends QuerySetBase
             ->setTypeDelete()
             ->setAlias(null);
         return $builder->toSQL();
-    }
-
-    /**
-     * @param $command \Mindy\Query\Command
-     * @return $this
-     */
-    protected function setCommand($command)
-    {
-        $this->command = $command;
-        return $this;
     }
 
     /**

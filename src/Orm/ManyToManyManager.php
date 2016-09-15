@@ -9,6 +9,7 @@
 namespace Mindy\Orm;
 
 use Mindy\Exception\Exception;
+use Mindy\QueryBuilder\QueryBuilder;
 
 abstract class ManyToManyManager extends ManagerBase
 {
@@ -59,11 +60,9 @@ abstract class ManyToManyManager extends ManagerBase
         if ($this->primaryModel->pk === null) {
             throw new Exception('Unable to clean models: the primary key of ' . get_class($this->primaryModel) . ' is null.');
         }
-        $db = $this->primaryModel->getDb();
-        $builder = $db->getQueryBuilder()->setTypeDelete()->from($this->relatedTable)->where([
-            $this->primaryModelColumn => $this->primaryModel->pk,
-        ]);
-        return $db->createCommand($builder->toSQL())->execute();
+        $db = $this->primaryModel->getConnection();
+        $adapter = QueryBuilder::getInstance($db)->getAdapter();
+        return $db->delete($adapter->quoteTableName($adapter->getRawTableName($this->relatedTable)), [$this->primaryModelColumn => $this->primaryModel->pk]);
     }
 
     protected function linkUnlinkProcess(Model $model, $link = true, array $extra = [])
@@ -88,20 +87,20 @@ abstract class ManyToManyManager extends ManagerBase
             ]);
             return $through->pk;
         } else {
-            $db = $this->primaryModel->getDb();
-            /** @var $command \Mindy\Query\Command */
-            $builder = $db->getQueryBuilder();
+            $db = $this->primaryModel->getConnection();
+            $builder = QueryBuilder::getInstance($db);
             $data = array_merge([
                 $this->primaryModelColumn => $this->primaryModel->pk,
                 $this->modelColumn => $model->pk,
             ], $extra);
+            $adapter = $builder->getAdapter();
             if ($link) {
-                $sql = $builder->insert($this->relatedTable, array_keys($data), [$data]);
+                $state = $model->getConnection()->insert($adapter->quoteTableName($adapter->getRawTableName($this->relatedTable)), $data);
             } else {
-                $sql = $builder->setTypeDelete()->from($this->relatedTable)->where($data);
+                $state = $model->getConnection()->delete($adapter->quoteTableName($adapter->getRawTableName($this->relatedTable)), $data);
             }
 
-            return $db->createCommand($sql)->execute();
+            return $state;
         }
     }
 }

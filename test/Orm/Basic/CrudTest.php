@@ -42,13 +42,13 @@ abstract class CrudTest extends OrmDatabaseTestCase
             $this->markTestSkipped('mysql specific test');
         }
         $c = $this->getConnection();
-        $sql = $c->getQueryBuilder()->insert(User::tableName(), ['username'], ['foo']);
-        $rows = $c->createCommand($sql)->execute();
-        // Выполняется запрос после INSERT и lastInsertId возвращает 0
-        $tableSchema = $c->getTableSchema(User::tableName(), true);
-        $this->assertInstanceOf(TableSchema::class, $tableSchema);
-        $this->assertEquals(1, $rows);
-        $this->assertEquals(0, $c->getLastInsertID($tableSchema->sequenceName));
+        $adapter = QueryBuilder::getInstance($c)->getAdapter();
+        $c->insert($adapter->quoteTableName($adapter->getRawTableName(User::tableName())), ['username' => 'foo']);
+
+        // Выполняется запрос после INSERT
+        $c->query('SELECT 1+1')->fetchAll();
+        // и lastInsertId возвращает 0
+        $this->assertEquals(0, $c->lastInsertId());
     }
 
     public function testCreate()
