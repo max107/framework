@@ -95,7 +95,7 @@ class QuerySet extends QuerySetBase
      */
     public function all()
     {
-        $rows = $this->getDb()->createCommand($this->allSql())->queryAll();
+        $rows = $this->getConnection()->query($this->allSql())->fetchAll();
         return $this->asArray ? $rows : $this->createModels($rows);
     }
 
@@ -105,10 +105,9 @@ class QuerySet extends QuerySetBase
      */
     public function batch($batchSize = 100)
     {
-        return new BatchDataIterator([
+        return new BatchDataIterator($this->getConnection(), [
             'qs' => $this,
             'batchSize' => $batchSize,
-            'db' => $this->getDb(),
             'each' => false,
             'asArray' => $this->asArray,
         ]);
@@ -123,7 +122,7 @@ class QuerySet extends QuerySetBase
         return new BatchDataIterator([
             'qs' => $this,
             'batchSize' => $batchSize,
-            'db' => $this->getDb(),
+            'db' => $this->getConnection(),
             'each' => true,
             'asArray' => $this->asArray,
         ]);
@@ -234,7 +233,7 @@ class QuerySet extends QuerySetBase
      */
     public function get($filter = [])
     {
-        $rows = $this->createCommand($this->getSql($filter))->queryAll();
+        $rows = $this->getConnection()->query($this->getSql($filter))->fetchAll();
         if (count($rows) > 1) {
             throw new MultipleObjectsReturned();
         } elseif (count($rows) === 0) {
@@ -681,7 +680,7 @@ class QuerySet extends QuerySetBase
      */
     public function quoteColumnName($name)
     {
-        return $this->getDb()->quoteColumnName($name);
+        return $this->getConnection()->quoteColumnName($name);
     }
 
     /**
@@ -774,7 +773,7 @@ class QuerySet extends QuerySetBase
      */
     public function sum($q)
     {
-        return $this->getDb()->createCommand($this->sumSql($q))->queryScalar();
+        return $this->getConnection()->createCommand($this->sumSql($q))->queryScalar();
     }
 
     /**
@@ -828,7 +827,8 @@ class QuerySet extends QuerySetBase
 
     private function aggregate(Aggregation $q)
     {
-        $value = $this->getDb()->createCommand($this->buildAggregateSql($q))->queryScalar();
+        $result = $this->getConnection()->query($this->buildAggregateSql($q))->fetch();
+        $value = end($result);
         return strpos($value, '.') !== false ? floatval($value) : intval($value);
     }
 
@@ -932,7 +932,7 @@ class QuerySet extends QuerySetBase
             if (
                 $this->command === null &&
                 $this->_chainedHasMany &&
-                $this->getDb()->getSchema() instanceof \Mindy\Query\Pgsql\Schema
+                $this->getConnection()->getSchema() instanceof \Mindy\Query\Pgsql\Schema
             ) {
                 $pk = $this->quoteColumnName($this->retreivePrimaryKey());
                 $this->distinct([

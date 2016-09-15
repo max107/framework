@@ -8,6 +8,7 @@
 
 namespace Mindy\Tests\Orm\Fields;
 
+use Mindy\QueryBuilder\QueryBuilder;
 use Mindy\Tests\Orm\OrmDatabaseTestCase;
 use Mindy\Tests\Orm\Models\Product;
 
@@ -21,9 +22,12 @@ class ForeignFieldTest extends OrmDatabaseTestCase
     public function testForeignKey()
     {
         $c = $this->getConnection();
-        $schema = $c->getTableSchema(Product::tableName(), true);
-        $this->assertArrayHasKey('id', $schema->columns);
-        $this->assertArrayHasKey('category_id', $schema->columns);
+        $schemaManager = $c->getSchemaManager();
+        $adapter = QueryBuilder::getInstance($c)->getAdapter();
+        $tableName = $adapter->getRawTableName(Product::tableName());
+        $columns = $schemaManager->listTableColumns($tableName);
+        $this->assertArrayHasKey('id', $columns);
+        $this->assertArrayHasKey('category_id', $columns);
 
         $model = new Product();
         $fk = $model->getField("category");

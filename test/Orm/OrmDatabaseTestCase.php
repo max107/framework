@@ -14,11 +14,11 @@
 
 namespace Mindy\Tests\Orm;
 
+use Doctrine\DBAL\Connection;
 use League\Flysystem\Adapter\Local;
 use Mindy\Base\Mindy;
 use Mindy\Orm\Sync;
-use Mindy\Query\Connection;
-use Mindy\Query\ConnectionManager;
+use Mindy\QueryBuilder\ConnectionManager;
 
 class OrmDatabaseTestCase extends \PHPUnit_Framework_TestCase
 {
@@ -58,7 +58,7 @@ class OrmDatabaseTestCase extends \PHPUnit_Framework_TestCase
                 */
                 'db' => function () {
                     $databases = require(__DIR__ . (@getenv('TRAVIS') ? '/config_travis.php' : '/config_local.php'));
-                    return new ConnectionManager($databases);
+                    return new ConnectionManager($databases, $this->driver);
                 },
                 'storage' => [
                     'class' => '\Mindy\Storage\Storage',
@@ -69,7 +69,6 @@ class OrmDatabaseTestCase extends \PHPUnit_Framework_TestCase
             ]
         ]);
 
-        $this->app->db->setDefaultDb($this->driver);
         $this->initModels($this->getModels(), $this->getConnection());
     }
 
@@ -85,7 +84,7 @@ class OrmDatabaseTestCase extends \PHPUnit_Framework_TestCase
      */
     protected function getConnection()
     {
-        return Mindy::app()->db->getDb($this->driver);
+        return Mindy::app()->db->getConnection($this->driver);
     }
 
     protected function getModels()

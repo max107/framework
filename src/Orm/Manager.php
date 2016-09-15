@@ -169,16 +169,6 @@ class Manager extends ManyToManyManager implements IteratorAggregate, ArrayAcces
     {
         return $this->getQuerySet()->createModels($rows);
     }
-
-    /**
-     * @param string $sql
-     * @param array $params
-     * @return \Mindy\Query\Command
-     */
-    public function createCommand($sql = null, $params = [])
-    {
-        return $this->getQuerySet()->createCommand($sql, $params);
-    }
     
     /**
      * @param bool $asArray

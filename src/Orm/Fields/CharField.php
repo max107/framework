@@ -2,17 +2,25 @@
 
 namespace Mindy\Orm\Fields;
 
+use Doctrine\DBAL\Types\Type;
+
 /**
  * Class CharField
  * @package Mindy\Orm
  */
 class CharField extends Field
 {
+    /**
+     * @var int
+     */
     public $length = 255;
 
-    public function sqlType()
+    /**
+     * @return string
+     */
+    public function getSqlType()
     {
-        return 'string(' . (int)$this->length . ')';
+        return Type::STRING;
     }
 
     public function setDbValue($value)
@@ -27,10 +35,5 @@ class CharField extends Field
             return $this->default;
         }
         return $this->value;
-    }
-
-    public function sqlDefault()
-    {
-        return $this->default === null ? '' : "DEFAULT '{$this->default}'";
     }
 }

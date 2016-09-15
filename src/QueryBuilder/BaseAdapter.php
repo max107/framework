@@ -134,13 +134,7 @@ abstract class BaseAdapter implements ISQLGenerator
             return $str;
         }
 
-        $driver = $this->getDriver();
-        if ($driver && ($value = $driver->quote($str)) !== false) {
-            return $value;
-        } else {
-            // the driver doesn't support quote (e.g. oci)
-            return "'" . addcslashes(str_replace("'", "''", $str), "\000\n\r\\\032") . "'";
-        }
+        return $this->getDriver()->quote($str);
     }
 
     /**

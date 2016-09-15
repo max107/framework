@@ -2,12 +2,12 @@
 
 namespace Mindy\Orm;
 
-use Mindy\Exception\NotSupportedException;
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Schema\Table;
 use Mindy\Orm\Fields\ForeignField;
 use Mindy\Orm\Fields\ManyToManyField;
 use Mindy\Orm\Fields\OneToOneField;
-use Mindy\Query\Connection;
-use Mindy\Query\Schema\TableSchema;
+use Mindy\QueryBuilder\QueryBuilder;
 
 /**
  * Class Sync
@@ -20,38 +20,31 @@ class Sync
      */
     private $_models = [];
     /**
-     * @var \Mindy\Query\Connection
+     * @var Connection
      */
-    private $_db;
-    /**
-     * @var \Mindy\QueryBuilder\QueryBuilder
-     */
-    private $_qb;
+    protected $connection;
 
-    public function __construct($models, Connection $db)
+    /**
+     * Sync constructor.
+     * @param $models
+     * @param Connection $connection
+     */
+    public function __construct($models, Connection $connection)
     {
         if (!is_array($models)) {
             $models = [$models];
         }
         $this->_models = $models;
-        $this->_db = $db;
-        $this->_qb = $db->getQueryBuilder();
+        $this->connection = $connection;
     }
 
     /**
-     * @return Connection
-     */
-    protected function getDb()
-    {
-        return $this->_db;
-    }
-
-    /**
-     * @return \Mindy\QueryBuilder\QueryBuilder
+     * @return QueryBuilder
+     * @throws \Exception
      */
     protected function getQueryBuilder()
     {
-        return $this->_qb;
+        return QueryBuilder::getInstance($this->connection);
     }
 
     /**
@@ -60,36 +53,50 @@ class Sync
      */
     public function createTable(Model $model)
     {
-        $sql = [];
+        $i = 0;
+
+        $schemaManager = $this->connection->getSchemaManager();
+        $adapter = $this->getQueryBuilder()->getAdapter();
+        $tableName = $adapter->getRawTableName($model->tableName());
+
         $columns = [];
-        $schema = $this->getDb()->getSchema();
+        $indexes = [];
+
         foreach ($model->getFieldsInit() as $name => $field) {
             if (is_a($field, OneToOneField::class) && $field->reversed) {
                 continue;
             }
 
             $field->setModel($model);
-            $sqlColumn = $field->getSql($schema);
-            if (empty($sqlColumn) === false) {
-                if ($field instanceof ForeignField) {
-                    $name .= "_id";
-                }
 
-                $columns[$name] = $sqlColumn;
-            } else if ($field instanceof ManyToManyField) {
+            if ($field instanceof ManyToManyField) {
                 /* @var $field \Mindy\Orm\Fields\ManyToManyField */
                 if ($field->through === null) {
-                    $fieldColumns = $field->getColumns($schema);
-                    $sql[] = $this->getQueryBuilder()->createTable($field->getTableName(), $fieldColumns, null, true);
+                    $fieldTableName = $adapter->getRawTableName($field->getTableName());
+                    if ($this->hasTable($fieldTableName) === false) {
+                        $fieldTable = new Table($fieldTableName, $field->getColumns());
+                        $schemaManager->createTable($fieldTable);
+                        $i += 1;
+                    }
                 }
+            } else {
+                $columnType = $field->getSqlType();
+                if (empty($columnType)) {
+                    continue;
+                }
+
+                $columns[] = $field->getColumn();
+                $indexes = array_merge($indexes, $field->getSqlIndexes());
             }
         }
 
-        $mainColumns = array_map(function ($column) use ($schema) {
-            return $schema->getColumnType($column);
-        }, $columns);
-        $sql[] = $this->getQueryBuilder()->createTable($model->tableName(), $mainColumns, null, true);
-        return $sql;
+        if ($this->hasTable($tableName) === false) {
+            $table = new Table($tableName, $columns, $indexes);
+            $schemaManager->createTable($table);
+            $i += 1;
+        }
+
+        return $i;
     }
 
     /**
@@ -98,14 +105,27 @@ class Sync
      */
     public function dropTable(Model $model)
     {
-        $sql = [];
+        $i = 0;
+
+        $adapter = $this->getQueryBuilder()->getAdapter();
+        $schemaManager = $this->connection->getSchemaManager();
         foreach ($model->getManyFields() as $field) {
             if ($field->through === null) {
-                $sql[] = $this->getQueryBuilder()->dropTable($field->getTableName(), true);
+                $fieldTable = $adapter->getRawTableName($field->getTableName());
+                if ($this->hasTable($fieldTable)) {
+                    $schemaManager->dropTable($fieldTable);
+                    $i += 1;
+                }
             }
         }
-        $sql[] = $this->getQueryBuilder()->dropTable($model->tableName(), true);
-        return $sql;
+
+        $modelTable = $adapter->getRawTableName($model->tableName());
+        if ($this->hasTable($modelTable)) {
+            $schemaManager->dropTable($modelTable);
+            $i += 1;
+        }
+
+        return $i;
     }
 
     /**
@@ -115,27 +135,9 @@ class Sync
     {
         $i = 0;
         foreach ($this->_models as $model) {
-            $sql = $this->createTable($model);
-            foreach ($sql as $part) {
-                $state = $this->getDb()->createCommand($part)->execute(true);
-                if ($state) {
-                    $i += 1;
-                }
-            }
+            $i += $this->createTable($model);
         }
         return $i;
-    }
-
-    /**
-     * @return array
-     */
-    public function createSql()
-    {
-        $sql = [];
-        foreach ($this->_models as $model) {
-            $sql[] = $this->createTable($model);
-        }
-        return $sql;
     }
 
     /**
@@ -146,28 +148,9 @@ class Sync
     {
         $i = 0;
         foreach ($this->_models as $model) {
-            $sql = $this->dropTable($model);
-            foreach ($sql as $part) {
-                $state = $this->getDb()->createCommand($part)->execute(true);
-                if ($state) {
-                    $i += 1;
-                }
-            }
+            $i += $this->dropTable($model);
         }
         return $i;
-    }
-
-    /**
-     * Drop all tables from database
-     * @return array
-     */
-    public function deleteSql()
-    {
-        $sql = [];
-        foreach ($this->_models as $model) {
-            $sql[] = $this->dropTable($model);
-        }
-        return $sql;
     }
 
     /**
@@ -180,6 +163,6 @@ class Sync
         if ($tableName instanceof Model) {
             $tableName = $tableName->tableName();
         }
-        return $this->getDb()->getSchema()->getTableSchema($tableName, true) instanceof TableSchema;
+        return $this->connection->getSchemaManager()->tablesExist([$tableName]);
     }
 }

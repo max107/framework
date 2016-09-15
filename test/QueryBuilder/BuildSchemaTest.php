@@ -8,9 +8,13 @@
 
 namespace Mindy\Tests\QueryBuilder;
 
+use Doctrine\DBAL\Configuration;
+use Doctrine\DBAL\DriverManager;
 use Mindy\Helper\Creator;
 use Mindy\Query\Connection;
 use Mindy\Query\PDO;
+use Mindy\QueryBuilder\LookupBuilder\LookupBuilder;
+use Mindy\QueryBuilder\QueryBuilder;
 use ReflectionClass;
 
 abstract class BuildSchemaTest extends BaseTest
@@ -26,35 +30,17 @@ abstract class BuildSchemaTest extends BaseTest
         parent::setUp();
         $reflector = new ReflectionClass(get_class($this));
         $dir = dirname($reflector->getFileName());
-        $configFile = @getenv('TRAVIS') ? 'config_travis.php' : 'config.php';
-        $this->config =  require($dir . '/' . $configFile);
+        $dbConfig =  require($dir . '/' . (@getenv('TRAVIS') ? 'config_travis.php' : 'config.php'));
 
-        try {
-            new PDO($this->config['dsn'], $this->config['username'], $this->config['password'], [
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
-            ]);
-        } catch (\Exception $e) {
-            $this->markTestSkipped($e->getMessage());
-        }
+        $fixtures = $dbConfig['fixture'];
+        unset($dbConfig['fixture']);
 
-        $this->connection = Creator::createObject($this->config);
-    }
+        $config = new Configuration();
+        $this->connection = DriverManager::getConnection($dbConfig, $config);
 
-    /**
-     * @return \Mindy\QueryBuilder\BaseAdapter
-     */
-    protected function getAdapter()
-    {
-        return $this->connection->getAdapter();
-    }
+        $this->loadFixtures($this->connection, $fixtures);
 
-    /**
-     * @return \Mindy\QueryBuilder\QueryBuilder
-     */
-    protected function getQueryBuilder()
-    {
-        return $this->connection->getQueryBuilder();
+        $this->config = $dbConfig;
     }
 
     abstract public function testRenameTable();

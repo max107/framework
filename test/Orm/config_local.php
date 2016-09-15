@@ -2,19 +2,15 @@
 
 return [
     'mysql' => [
-        'class' => '\Mindy\Query\Connection',
-        'dsn' => 'mysql:host=localhost;dbname=test_orm',
-        'username' => 'root',
-        'charset' => 'utf8',
-    ],
-    'sqlite' => [
-        'class' => '\Mindy\Query\Connection',
-        'dsn' => 'sqlite:' . __DIR__ . '/app/sqlite.db',
-//        'dsn' => 'sqlite::memory:',
+        'url' => 'mysql://root@127.0.0.1/test?charset=utf8',
+        'driver' => 'pdo_mysql'
     ],
     'pgsql' => [
-        'class' => '\Mindy\Query\Connection',
-        'dsn' => 'pgsql:host=localhost;dbname=test_orm',
-        'username' => 'root'
+        'dsn' => 'pgsql://root@localhost:5432/test',
+        'driver' => 'pdo_pgsql'
+    ],
+    'sqlite' => [
+        'url' => 'sqlite:///:memory:',
+        'driver' => 'pdo_sqlite'
     ]
 ];

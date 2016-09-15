@@ -3,12 +3,14 @@
 namespace Mindy\Orm\Fields;
 
 use Closure;
+use Doctrine\DBAL\Schema\Column;
+use Doctrine\DBAL\Schema\Index;
+use Doctrine\DBAL\Types\Type;
 use Mindy\Helper\Creator;
 use Mindy\Helper\Traits\Accessors;
 use Mindy\Helper\Traits\Configurator;
 use Mindy\Orm\Base;
 use Mindy\Orm\Model;
-use Mindy\Query\Schema\Schema;
 use Symfony\Component\Validator\Constraints as Assert;
 use Mindy\Validation\UniqueValidator;
 use Mindy\Validation\ValidationAwareTrait;
@@ -23,13 +25,24 @@ abstract class Field
     use Configurator;
     use ValidationAwareTrait;
 
-    public $verboseName = '';
-
+    /**
+     * @var string|null|false
+     */
+    public $comment;
+    /**
+     * @var bool
+     */
     public $null = false;
-
+    /**
+     * @var null|string|int
+     */
     public $default = null;
-
+    /**
+     * @var int|length
+     */
     public $length = 0;
+
+    public $verboseName = '';
 
     public $required;
 
@@ -87,80 +100,62 @@ abstract class Field
         return array_merge($constraints, $this->validators);
     }
 
-    public function sqlDefault()
+    /**
+     * @return Column
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public function getColumn()
     {
-        if (is_numeric($this->default) === false && empty($this->default)) {
-            return '';
-        }
-        return 'DEFAULT ' . $this->default;
-    }
-
-    public function sqlNullable()
-    {
-        return $this->null ? 'NULL' : 'NOT NULL';
-    }
-
-    abstract public function sqlType();
-
-    public function getSql(Schema $schema)
-    {
-        $sql = $this->getSqlType($schema);
-        if ($sql === false) {
-            return false;
-        }
-
-        if (($nullable = $this->sqlNullable()) && empty($nullable) === false) {
-            $sql .= ' ' . $nullable;
-        }
-
-        if (($default = $this->sqlDefault()) && empty($default) === false) {
-            $sql .= ' ' . $default;
-        }
-
-        if (($extra = $this->sqlExtra()) && empty($extra) === false) {
-            $sql .= ' ' . $extra;
-        }
-
-        return trim($sql);
-    }
-
-    public function sqlExtra()
-    {
-        return '';
+        return new Column(
+            $this->name,
+            Type::getType($this->getSqlType()),
+            $this->getSqlOptions()
+        );
     }
 
     /**
-     * @param Schema $schema
-     * @return string
+     * @return array
      */
-    protected function getSqlType(Schema $schema)
+    public function getSqlIndexes() : array
     {
-        return $schema->getColumnType($this->sqlType());
+        $indexes = [];
+        if ($this->unique || $this->primary) {
+            $indexes[] = new Index($this->name . '_index', [$this->name], $this->unique, $this->primary);
+        }
+        return $indexes;
     }
 
     /**
-     * @return Field[]
+     * @return array
      */
-    public function getExtraFieldsInit()
+    public function getSqlOptions() : array
     {
-        return $this->_extraFields;
+        $options = [];
+
+        if ($this->null) {
+            $options['notnull'] = false;
+        }
+
+        if ($this->length) {
+            $options['length'] = $this->length;
+        }
+
+        if ($this->default) {
+            $options['default'] = $this->default;
+        }
+
+        if ($this->comment) {
+            $options['comment'] = $this->comment;
+        }
+
+        if ($this->primary) {
+            $options['autoincrement'] = true;
+        }
+
+        return $options;
     }
 
-    public function getExtraField($name)
-    {
-        return $this->_extraFields[$name];
-    }
-
-    public function hasExtraField($name)
-    {
-        return array_key_exists($name, $this->_extraFields);
-    }
-
-    public function setExtraField($name, Field $field)
-    {
-        $this->_extraFields[$name] = $field;
-        return $this;
-    }
+    abstract public function getSqlType();
 
     public function canBeEmpty()
     {

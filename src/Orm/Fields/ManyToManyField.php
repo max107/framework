@@ -285,7 +285,7 @@ class ManyToManyField extends RelatedField
     public function getTableName()
     {
         if (!$this->through) {
-            $adapter = $this->getRelatedModel()->getDb()->getAdapter();
+            $adapter = QueryBuilder::getInstance($this->getRelatedModel()->getDb())->getAdapter();
             $parts = [$adapter->getRawTableName($this->getTable()), $adapter->getRawTableName($this->getRelatedTable())];
             sort($parts);
             return '{{%' . implode('_', $parts) . '}}';
@@ -298,7 +298,7 @@ class ManyToManyField extends RelatedField
     /**
      * @return array "link" table columns
      */
-    public function getColumns(Schema $schema)
+    public function getColumns()
     {
         if (empty($this->throughLink)) {
             $from = $this->getRelatedModelColumn();
@@ -308,8 +308,8 @@ class ManyToManyField extends RelatedField
         }
 
         return [
-            $from => (new IntField(['name' => $from]))->getSql($schema),
-            $to => (new IntField(['name' => $to]))->getSql($schema)
+            (new IntField(['name' => $from]))->getColumn(),
+            (new IntField(['name' => $to]))->getColumn()
         ];
     }
 

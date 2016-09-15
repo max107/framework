@@ -1,6 +1,7 @@
 <?php
 
 namespace Mindy\Orm\Fields;
+use Doctrine\DBAL\Types\Type;
 
 /**
  * Class TextField
@@ -8,12 +9,21 @@ namespace Mindy\Orm\Fields;
  */
 class TextField extends Field
 {
-    public function sqlType()
+    /**
+     * @return string
+     */
+    public function getSqlType()
     {
-        return 'text';
+        return Type::TEXT;
     }
 
-    public function getFormField($form, $fieldClass = 'Mindy\Form\Fields\TextAreaField', array $extra = [])
+    /**
+     * @param $form
+     * @param string $fieldClass
+     * @param array $extra
+     * @return mixed
+     */
+    public function getFormField($form, $fieldClass = 'Mindy\Form\Fields\TextareaField', array $extra = [])
     {
         return parent::getFormField($form, $fieldClass, $extra);
     }

@@ -2,7 +2,7 @@
 
 namespace Mindy\Orm\Fields;
 
-use Mindy\Validation\IpValidator;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Class IpField
@@ -10,10 +10,18 @@ use Mindy\Validation\IpValidator;
  */
 class IpField extends CharField
 {
+    /**
+     * @var int
+     */
     public $version = 4;
 
-    public function init()
+    /**
+     * @return array
+     */
+    public function getValidationConstraints() : array
     {
-        $this->validators[] = new IpValidator($this->version);
+        return array_merge(parent::getValidationConstraints(), [
+            new Assert\Ip(['version' => $this->version])
+        ]);
     }
 }

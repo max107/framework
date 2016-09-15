@@ -116,25 +116,14 @@ abstract class QuerySetBase implements IteratorAggregate, ArrayAccess, Serializa
     }
 
     /**
-     * @return \Mindy\Query\Connection
+     * @return \Doctrine\Dbal\Connection
      */
-    public function getDb()
+    public function getConnection()
     {
-        /** @var \Mindy\Query\ConnectionManager $cm */
         if ($this->_db === null && Mindy::app()) {
-            $this->_db = Mindy::app()->db->getDb();
+            $this->_db = Mindy::app()->db->getConnection();
         }
         return $this->_db;
-    }
-
-    /**
-     * @param null $sql
-     * @param array $params
-     * @return \Mindy\Query\Command
-     */
-    public function createCommand($sql = null, $params = [])
-    {
-        return $this->getDb()->createCommand($sql, $params);
     }
 
     /**
@@ -157,7 +146,7 @@ abstract class QuerySetBase implements IteratorAggregate, ArrayAccess, Serializa
     public function getQueryBuilder()
     {
         if ($this->_qb === null) {
-            $builder = $this->getDb()->getQueryBuilder();
+            $builder = QueryBuilder::getInstance($this->getConnection());
             $this->setTableAlias($builder, $this->getModel()->tableName());
             $builder->setAlias($this->getTableAlias());
             $model = $this->getModel();

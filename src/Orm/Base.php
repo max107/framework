@@ -14,12 +14,11 @@
 namespace Mindy\Orm;
 
 use ArrayAccess;
+use Doctrine\DBAL\Connection;
 use Exception;
 use function Mindy\app;
 use Mindy\Base\Mindy;
-use Mindy\Exception\InvalidConfigException;
 use Mindy\Exception\InvalidParamException;
-use Mindy\Helper\Alias;
 use Mindy\Helper\Json;
 use Mindy\Helper\Traits\Accessors;
 use Mindy\Helper\Traits\Configurator;
@@ -27,7 +26,7 @@ use Mindy\Orm\Fields\AutoField;
 use Mindy\Orm\Fields\ForeignField;
 use Mindy\Orm\Fields\JsonField;
 use Mindy\Orm\Fields\ManyToManyField;
-use Mindy\Query\Connection;
+use Mindy\QueryBuilder\QueryBuilder;
 use Serializable;
 
 /**
@@ -541,20 +540,19 @@ abstract class Base implements ArrayAccess, Serializable
     {
         if (($db instanceof Connection) === false) {
             // TODO refact, detach from app()
-            $db = app()->db->getDb($db);
+            $db = app()->db->getConnection($db);
         }
         $this->_db = $db;
         return $this;
     }
 
     /**
-     * @return \Mindy\Query\Connection
+     * @return \Doctrine\Dbal\Connection|null
      */
-    public function getDb()
+    public function getConnection()
     {
-        /** @var \Mindy\Query\ConnectionManager $cm */
         if ($this->_db === null && app()) {
-            $this->_db = app()->db->getDb();
+            $this->_db = app()->db->getConnection();
         }
         return $this->_db;
     }
@@ -591,20 +589,20 @@ abstract class Base implements ArrayAccess, Serializable
      */
     public function insert(array $fields = [])
     {
-        $db = static::getDb();
+        $connection = static::getConnection();
 
         $this->onBeforeInsertInternal();
 
-        $transaction = $db->beginTransaction();
+        $connection->beginTransaction();
         try {
             $result = $this->insertInternal($fields);
             if (!$result) {
-                $transaction->rollBack();
+                $connection->rollBack();
             } else {
-                $transaction->commit();
+                $connection->commit();
             }
         } catch (\Exception $e) {
-            $transaction->rollBack();
+            $connection->rollBack();
             throw $e;
         }
 
@@ -798,29 +796,17 @@ abstract class Base implements ArrayAccess, Serializable
             $incValues[$primaryKeyName] = null;
         }
         $dbValues = $this->getDbPrepValues($incValues);
+        $connection = static::getConnection();
+        $adapter = QueryBuilder::getInstance($connection)->getAdapter();
 
-        $db = static::getDb();
-
-        if (array_key_exists($primaryKeyName, $values) === false) {
-            $tableSchema = $db->getTableSchema($this->tableName());
-            if ($tableSchema === null) {
-                $tableSchema = $db->getTableSchema($this->tableName(), true);
-                if ($tableSchema === null) {
-                    throw new Exception('Failed to load table schema');
-                }
-            }
-        }
-
-        // TODO refact ugly syntax with array_keys
-        $sql = $db->getQueryBuilder()->insert($this->tableName(), array_keys($dbValues), [$dbValues]);
-        $command = $db->createCommand($sql);
-        if (!$command->execute()) {
+        if (!$connection->insert($adapter->getRawTableName($this->tableName()), $dbValues)) {
             return false;
         }
 
         $primaryKeyName = self::primaryKeyName();
+//        debug($connection->lastInsertId());
         if (array_key_exists($primaryKeyName, $values) === false && isset($tableSchema)) {
-            $id = $db->getLastInsertID($tableSchema->sequenceName);
+            $id = $connection->getLastInsertID($tableSchema->sequenceName);
             $this->setAttribute($primaryKeyName, $id);
             $values[$primaryKeyName] = $id;
         }

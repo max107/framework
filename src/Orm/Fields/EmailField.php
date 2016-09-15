@@ -2,7 +2,7 @@
 
 namespace Mindy\Orm\Fields;
 
-use Mindy\Validation\EmailValidator;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Class EmailField
@@ -10,12 +10,25 @@ use Mindy\Validation\EmailValidator;
  */
 class EmailField extends CharField
 {
-    public function __construct(array $options = [])
-    {
-        parent::__construct($options);
+    /**
+     * @var bool
+     */
+    public $checkMX = false;
+    /**
+     * @var bool
+     */
+    public $checkHost = false;
 
-        $this->validators = array_merge([
-            new EmailValidator(!$this->canBeEmpty())
-        ], $this->validators);
+    /**
+     * @return array
+     */
+    public function getValidationConstraints() : array
+    {
+        return array_merge(parent::getValidationConstraints(), [
+            new Assert\Email([
+                'checkMX' => $this->checkMX,
+                'checkHost' => $this->checkHost
+            ])
+        ]);
     }
 }

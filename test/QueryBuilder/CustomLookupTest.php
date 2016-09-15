@@ -11,7 +11,7 @@ namespace Mindy\Tests\QueryBuilder;
 use Exception;
 use Mindy\QueryBuilder\Interfaces\IAdapter;
 use Mindy\QueryBuilder\Interfaces\ILookupCollection;
-use Mindy\QueryBuilder\LookupBuilder\Legacy;
+use Mindy\QueryBuilder\LookupBuilder\LookupBuilder;
 use Mindy\QueryBuilder\Database\Mysql\Adapter;
 use Mindy\QueryBuilder\QueryBuilder;
 
@@ -46,11 +46,11 @@ class LookupLibrary implements ILookupCollection
     }
 }
 
-class CustomLookupTest extends \PHPUnit_Framework_TestCase
+class CustomLookupTest extends BaseTest
 {
     public function testCustom()
     {
-        $qb = new QueryBuilder(new Adapter(), new Legacy());
+        $qb = $this->getQueryBuilder();
         $qb->addLookupCollection(new LookupLibrary());
         list($lookup, $column, $value) = $qb->getLookupBuilder()->parseLookup($qb, 'name__foo', 1);
         $sql = $qb->getLookupBuilder()->runLookup($qb->getAdapter(), $lookup, $column, $value);

@@ -2,14 +2,19 @@
 
 namespace Mindy\Orm\Fields;
 
+use Doctrine\DBAL\Types\Type;
+
 /**
  * Class FloatField
  * @package Mindy\Orm
  */
 class FloatField extends Field
 {
-    public function sqlType()
+    /**
+     * @return string
+     */
+    public function getSqlType()
     {
-        return 'float';
+        return Type::FLOAT;
     }
 }

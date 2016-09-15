@@ -13,6 +13,7 @@
 
 namespace Mindy\Orm;
 
+use Doctrine\DBAL\Connection;
 use Iterator;
 use Mindy\Helper\Traits\Accessors;
 use Mindy\Helper\Traits\Configurator;
@@ -49,10 +50,10 @@ class BatchDataIterator implements Iterator
      */
     public $qs;
     /**
-     * @var \Mindy\Query\Connection the DB connection to be used when performing batch query.
+     * @var \Doctrine\Dbal\Connection the DB connection to be used when performing batch query.
      * If null, the "db" application component will be used.
      */
-    public $db;
+    protected $connection;
     /**
      * @var integer the number of rows to be returned in each batch.
      */
@@ -83,11 +84,12 @@ class BatchDataIterator implements Iterator
      * BatchDataIterator constructor.
      * @param array $config
      */
-    public function __construct(array $config = [])
+    public function __construct(Connection $connection, array $config = [])
     {
         foreach ($config as $key => $value) {
             $this->{$key} = $value;
         }
+        $this->connection = $connection;
     }
 
     /**
@@ -155,7 +157,7 @@ class BatchDataIterator implements Iterator
     {
         if ($this->_dataReader === null) {
             $qb = clone $this->qs->getQueryBuilder();
-            $this->_dataReader = $this->qs->createCommand($qb->toSQL())->query();
+            $this->_dataReader = new DataReader($this->connection->query($qb->toSQL()));
         }
         $rows = [];
         $count = 0;

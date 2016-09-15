@@ -2,26 +2,40 @@
 
 namespace Mindy\Orm\Fields;
 
+use Doctrine\DBAL\Types\Type;
+
 /**
  * Class IntField
  * @package Mindy\Orm
  */
 class IntField extends Field
 {
+    /**
+     * @var int|string
+     */
     public $length = 11;
+    /**
+     * @var bool
+     */
+    public $unsigned = false;
 
     public function setValue($value)
     {
         $this->value = (int)$value;
     }
 
-    public function sqlNullable()
+    /**
+     * @return string
+     */
+    public function getSqlType()
     {
-        return $this->sqlType() === 'pk' ? '' : parent::sqlNullable();
+        return Type::INTEGER;
     }
 
-    public function sqlType()
+    public function getSqlOptions() : array
     {
-        return $this->primary ? 'pk' : 'integer(' . (int)$this->length . ')';
+        $options = parent::getSqlOptions();
+        $options['unsigned'] = $this->unsigned;
+        return $options;
     }
 }

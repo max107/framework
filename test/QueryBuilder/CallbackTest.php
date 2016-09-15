@@ -4,7 +4,7 @@ namespace Mindy\Tests\QueryBuilder;
 
 use Exception;
 use Mindy\QueryBuilder\Interfaces\ILookupBuilder;
-use Mindy\QueryBuilder\LookupBuilder\Legacy;
+use Mindy\QueryBuilder\LookupBuilder\LookupBuilder;
 use Mindy\QueryBuilder\QueryBuilder;
 use Mindy\QueryBuilder\QueryBuilderFactory;
 use Mindy\QueryBuilder\Database\Sqlite\Adapter;
@@ -76,27 +76,8 @@ class CallbackTestTwoCallback
  * Date: 27/06/16
  * Time: 15:28
  */
-class CallbackTest extends \PHPUnit_Framework_TestCase
+class CallbackTest extends BaseTest
 {
-    /**
-     * @var QueryBuilderFactory
-     */
-    public $factory;
-
-    protected function setUp()
-    {
-        parent::setUp();
-        $adapter = new Adapter();
-        $lookupBuilder = new Legacy();
-        $lookupBuilder->addLookupCollection($adapter->getLookupCollection());
-        $this->factory = new QueryBuilderFactory($adapter, $lookupBuilder);
-    }
-
-    protected function getQueryBuilder()
-    {
-        return $this->factory->getQueryBuilder();
-    }
-
     public function testSimple()
     {
         $qb = $this->getQueryBuilder();

@@ -11,15 +11,20 @@ use Mindy\Query\Expression;
  */
 class AutoField extends IntField
 {
-    public $primary = true;
-
     /**
-     * @return null|string
+     * @var bool
      */
+    public $primary = true;
+    /**
+     * @var bool
+     */
+    public $unsigned = true;
+
+    /*
     public function getDbPrepValue()
     {
         $db = $this->getModel()->getDb();
-        if ($db->driverName == 'pgsql') {
+        if ($db->getDriver()->getName() == 'pdo_pgsql') {
             // Primary key всегда передается по логике Query, а для корректной работы pk в pgsql
             // необходимо передать curval($seq) или nextval($seq) или не экранированный DEFAULT.
             //
@@ -31,4 +36,5 @@ class AutoField extends IntField
             return parent::getDbPrepValue();
         }
     }
+    */
 }

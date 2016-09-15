@@ -57,6 +57,11 @@ class User extends Model
         ];
     }
 
+    public static function tableName()
+    {
+        return 'users';
+    }
+
     public static function objectsManager($instance = null)
     {
         $className = get_called_class();

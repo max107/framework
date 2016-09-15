@@ -2,19 +2,19 @@
 
 namespace Mindy\Orm\Fields;
 
+use Doctrine\DBAL\Types\Type;
+
 /**
  * Class TimeField
  * @package Mindy\Orm
  */
 class TimeField extends Field
 {
-    public function sqlType()
+    /**
+     * @return string
+     */
+    public function getSqlType()
     {
-        return 'time';
-    }
-
-    public function sqlDefault()
-    {
-        return $this->default === null ? '' : "DEFAULT '{$this->default}'";
+        return Type::TIME;
     }
 }

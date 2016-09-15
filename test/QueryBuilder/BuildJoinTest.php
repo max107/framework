@@ -11,12 +11,12 @@ namespace Mindy\Tests\QueryBuilder;
 use Mindy\QueryBuilder\Aggregation\Max;
 use Mindy\QueryBuilder\Aggregation\Min;
 use Mindy\QueryBuilder\Expression;
-use Mindy\QueryBuilder\LookupBuilder\Legacy;
+use Mindy\QueryBuilder\LookupBuilder\LookupBuilder;
 use Mindy\QueryBuilder\QueryBuilder;
 
 class BuildJoinCallback
 {
-    public function run(QueryBuilder $queryBuilder, Legacy $lookupBuilder, array $lookupNodes)
+    public function run(QueryBuilder $queryBuilder, LookupBuilder $lookupBuilder, array $lookupNodes)
     {
         $column = '';
         $alias = '';

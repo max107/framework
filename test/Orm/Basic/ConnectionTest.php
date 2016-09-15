@@ -8,8 +8,8 @@
 
 namespace Mindy\Tests\Orm\Basic;
 
+use Doctrine\DBAL\Connection;
 use Mindy\Base\Mindy;
-use Mindy\Query\Connection;
 use Mindy\Tests\Orm\OrmDatabaseTestCase;
 
 class ConnectionTest extends OrmDatabaseTestCase
@@ -17,20 +17,8 @@ class ConnectionTest extends OrmDatabaseTestCase
     public function testId()
     {
         $db = Mindy::app()->db;
-
-        $connection = $db->getDb('mysql');
-        $this->assertInstanceOf(Connection::class, $connection);
-        $newConnection = $db->getDb('mysql');
-        $this->assertSame($connection->getId(), $newConnection->getId());
-
-        $connection = $db->getDb('sqlite');
-        $this->assertInstanceOf(Connection::class, $connection);
-        $newConnection = $db->getDb('sqlite');
-        $this->assertSame($connection->getId(), $newConnection->getId());
-
-        $connection = $db->getDb('pgsql');
-        $this->assertInstanceOf(Connection::class, $connection);
-        $newConnection = $db->getDb('pgsql');
-        $this->assertSame($connection->getId(), $newConnection->getId());
+        $this->assertInstanceOf(Connection::class, $db->getConnection('mysql'));
+        $this->assertInstanceOf(Connection::class, $db->getConnection('sqlite'));
+        $this->assertInstanceOf(Connection::class, $db->getConnection('pgsql'));
     }
 }

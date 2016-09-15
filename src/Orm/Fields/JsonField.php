@@ -11,6 +11,9 @@ use Mindy\Validation\Json as JsonValidator;
  */
 class JsonField extends TextField
 {
+    /**
+     * @return array
+     */
     public function getValidationConstraints() : array
     {
         return array_merge(parent::getValidationConstraints(), [

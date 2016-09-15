@@ -2,6 +2,8 @@
 
 namespace Mindy\Orm\Fields;
 
+use Doctrine\DBAL\Schema\Column;
+use Doctrine\DBAL\Types\Type;
 use Exception;
 use InvalidArgumentException;
 use Mindy\Orm\Base;
@@ -40,6 +42,15 @@ class ForeignField extends RelatedField
         $this->value = $value;
 
         return $this;
+    }
+
+    public function getColumn()
+    {
+        return new Column(
+            $this->name . '_id',
+            Type::getType($this->getSqlType()),
+            $this->getSqlOptions()
+        );
     }
 
     public function getOnDelete()

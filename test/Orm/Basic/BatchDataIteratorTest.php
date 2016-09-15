@@ -27,10 +27,9 @@ class BatchDataIteratorTest extends OrmDatabaseTestCase
         $this->assertEquals(100, User::objects()->count());
 
         $qs = User::objects();
-        $iterator = new BatchDataIterator([
+        $iterator = new BatchDataIterator($this->getConnection(), [
             'qs' => $qs,
             'batchSize' => 10,
-            'db' => $this->getConnection(),
             'each' => true,
             'asArray' => false,
         ]);
@@ -51,10 +50,9 @@ class BatchDataIteratorTest extends OrmDatabaseTestCase
         $this->assertEquals(100, User::objects()->count());
 
         $qs = User::objects();
-        $iterator = new BatchDataIterator([
+        $iterator = new BatchDataIterator($this->getConnection(), [
             'qs' => $qs,
             'batchSize' => 10,
-            'db' => $this->getConnection(),
             'each' => false,
             'asArray' => false,
         ]);

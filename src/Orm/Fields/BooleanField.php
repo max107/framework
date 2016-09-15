@@ -1,6 +1,8 @@
 <?php
 
 namespace Mindy\Orm\Fields;
+use Doctrine\DBAL\Types\Type;
+use Mindy\QueryBuilder\QueryBuilder;
 
 /**
  * Class BooleanField
@@ -8,20 +10,10 @@ namespace Mindy\Orm\Fields;
  */
 class BooleanField extends Field
 {
+    /**
+     * @var bool
+     */
     public $default = false;
-
-    public function sqlType()
-    {
-        return 'boolean';
-    }
-
-    public function sqlDefault()
-    {
-        $adapter = $this->getModel()->getDb()->getAdapter();
-        $default = (string)$adapter->getBoolean($this->default);
-        $sql = $this->default === null ? '' : "DEFAULT {$default}";
-        return $sql;
-    }
 
     public function setValue($value)
     {
@@ -41,5 +33,23 @@ class BooleanField extends Field
     public function getFormField($form, $fieldClass = '\Mindy\Form\Fields\CheckboxField', array $extra = [])
     {
         return parent::getFormField($form, $fieldClass, $extra);
+    }
+
+    /**
+     * @return string
+     */
+    public function getSqlType()
+    {
+        return Type::BOOLEAN;
+    }
+
+    /**
+     * @return array
+     */
+    public function getSqlOptions() : array
+    {
+        $options = parent::getSqlOptions();
+        $options['default'] = $this->default;
+        return $options;
     }
 }

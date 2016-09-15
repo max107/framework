@@ -14,12 +14,12 @@ use Mindy\QueryBuilder\Aggregation\Max;
 use Mindy\QueryBuilder\Aggregation\Min;
 use Mindy\QueryBuilder\Aggregation\Sum;
 use Mindy\QueryBuilder\Expression;
-use Mindy\QueryBuilder\LookupBuilder\Legacy;
+use Mindy\QueryBuilder\LookupBuilder\LookupBuilder;
 use Mindy\QueryBuilder\QueryBuilder;
 
 class BuildSelectJoinCallback
 {
-    public function run(QueryBuilder $qb, Legacy $lookupBuilder, array $lookupNodes)
+    public function run(QueryBuilder $qb, LookupBuilder $lookupBuilder, array $lookupNodes)
     {
         $column = '';
         $alias = '';

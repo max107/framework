@@ -1,8 +1,8 @@
 <?php
 
 namespace Mindy\Orm\Fields;
-
-use Mindy\Query\ConnectionManager;
+use Doctrine\DBAL\Types\Type;
+use Mindy\QueryBuilder\QueryBuilder;
 
 /**
  * Class DateField
@@ -10,15 +10,21 @@ use Mindy\Query\ConnectionManager;
  */
 class DateField extends Field
 {
-    public $autoFetch = true;
-
+    /**
+     * @var bool
+     */
     public $autoNowAdd = false;
-
+    /**
+     * @var bool
+     */
     public $autoNow = false;
 
-    public function sqlType()
+    /**
+     * @return string
+     */
+    public function getSqlType()
     {
-        return 'date';
+        return Type::DATE;
     }
 
     public function onBeforeInsert()
@@ -42,7 +48,7 @@ class DateField extends Field
 
     public function getValue()
     {
-        $adapter = $this->getModel()->getDb()->getAdapter();
+        $adapter = QueryBuilder::getInstance($this->getModel()->getConnection())->getAdapter();
         if ($this->autoNowAdd && $this->getModel()->getIsNewRecord() || $this->autoNow) {
             return $adapter->getDate();
         }
@@ -50,25 +56,6 @@ class DateField extends Field
             return $adapter->getDate($this->value);
         }
         return $this->value;
-    }
-
-    public function toArray()
-    {
-        if (empty($this->value)) {
-            return $this->value;
-        } else {
-            return $this->getValue();
-        }
-    }
-
-    public function sqlDefault()
-    {
-        return $this->default === null ? '' : "DEFAULT '{$this->default}'";
-    }
-
-    public function sqlNullable()
-    {
-        return $this->autoNow ? 'NULL' : parent::sqlNullable();
     }
 
     public function getFormField($form, $fieldClass = '\Mindy\Form\Fields\DateField', array $extra = [])

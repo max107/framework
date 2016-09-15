@@ -2,9 +2,6 @@
 
 namespace Mindy\Orm\Fields;
 
-use Mindy\Helper\Creator;
-use Mindy\Validation\RequiredValidator;
-
 /**
  * Class TreeForeignField
  * @package Mindy\Orm
@@ -32,7 +29,7 @@ class TreeForeignField extends ForeignField
         }
 
         if ($fieldClass === null) {
-            $fieldClass = $this->choices ? \Mindy\Form\Fields\DropDownField::className() : \Mindy\Form\Fields\CharField::className();
+            $fieldClass = $this->choices ? \Mindy\Form\Fields\SelectField::class : \Mindy\Form\Fields\TextField::class;
         } elseif ($fieldClass === false) {
             return null;
         }

@@ -1,8 +1,7 @@
 <?php
 
 namespace Mindy\Orm\Fields;
-use Mindy\Base\Mindy;
-use Mindy\Query\ConnectionManager;
+use Doctrine\DBAL\Types\Type;
 
 /**
  * Class BlobField
@@ -10,17 +9,9 @@ use Mindy\Query\ConnectionManager;
  */
 class BlobField extends Field
 {
-    public function sqlType()
+    public function getSqlType()
     {
-        return $this->getModel()->getDb()->getDriverName() == 'pgsql' ? 'BYTEA' : 'longblob';
-    }
-
-    public function getDbPrepValue()
-    {
-        // TODO
-        // if ($db->getDriverName() == 'sqlsrv' || $db->getDriverName() == 'mssql' || $db->getDriverName() == 'dblib')
-        //     $select = 'CONVERT(VARCHAR(MAX), data)';
-        return parent::getDbPrepValue();
+        return Type::BLOB;
     }
 }
 

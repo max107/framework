@@ -9,6 +9,7 @@
 namespace Mindy\Tests\Orm\Basic;
 
 use Mindy\Query\Schema\TableSchema;
+use Mindy\QueryBuilder\QueryBuilder;
 use Mindy\Tests\Orm\OrmDatabaseTestCase;
 use Mindy\Tests\Orm\Models\Customer;
 use Mindy\Tests\Orm\Models\Solution;
@@ -21,14 +22,18 @@ abstract class CrudTest extends OrmDatabaseTestCase
         return [new User, new Solution, new Customer];
     }
 
+    public function tearDown()
+    {
+
+    }
+
     public function testLastInsertId()
     {
         $c = $this->getConnection();
-        $tableSchema = $c->getTableSchema(User::tableName(), true);
-        $sql = $c->getQueryBuilder()->insert(User::tableName(), ['username'], ['foo']);
-        $rows = $c->createCommand($sql)->execute();
-        $this->assertEquals(1, $rows);
-        $this->assertEquals(1, $c->getLastInsertID($tableSchema->sequenceName));
+        $adapter = QueryBuilder::getInstance($c)->getAdapter();
+        $tableName = $adapter->getRawTableName(User::tableName());
+        $c->insert($tableName, ['username' => 'foo']);
+        $this->assertEquals(1, $c->lastInsertId());
     }
 
     public function testBrokenLastInsertId()

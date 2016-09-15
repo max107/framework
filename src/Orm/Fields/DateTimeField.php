@@ -2,7 +2,8 @@
 
 namespace Mindy\Orm\Fields;
 
-use Mindy\Query\ConnectionManager;
+use Doctrine\DBAL\Types\Type;
+use Mindy\QueryBuilder\QueryBuilder;
 
 /**
  * Class DateTimeField
@@ -13,7 +14,7 @@ class DateTimeField extends DateField
     public function getValue()
     {
         /** @var \Mindy\QueryBuilder\BaseAdapter $db */
-        $db = $this->getModel()->getDb()->getAdapter();
+        $db = QueryBuilder::getInstance($this->getModel()->getConnection())->getAdapter();
         if ($this->autoNowAdd && $this->getModel()->getIsNewRecord() || $this->autoNow) {
             return $db->getDateTime();
         }
@@ -25,9 +26,12 @@ class DateTimeField extends DateField
         return $this->value;
     }
 
-    public function sqlType()
+    /**
+     * @return string
+     */
+    public function getSqlType()
     {
-        return 'datetime';
+        return Type::DATETIME;
     }
 
     public function getFormField($form, $fieldClass = '\Mindy\Form\Fields\DateTimeField', array $extra = [])
