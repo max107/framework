@@ -3,6 +3,7 @@
 namespace Mindy\Orm;
 
 use ArrayAccess;
+use Doctrine\DBAL\Connection;
 use Exception;
 use IteratorAggregate;
 use Mindy\Base\Mindy;
@@ -12,13 +13,6 @@ use Mindy\Helper\Traits\Configurator;
 use Mindy\Orm\Callback\FetchColumnCallback;
 use Mindy\Orm\Callback\JoinCallback;
 use Mindy\Orm\Callback\LookupCallback;
-use Mindy\Orm\Fields\ForeignField;
-use Mindy\Orm\Fields\HasManyField;
-use Mindy\Orm\Fields\ManyToManyField;
-use Mindy\Orm\Fields\OneToOneField;
-use Mindy\Orm\Fields\RelatedField;
-use Mindy\Query\Connection;
-use Mindy\QueryBuilder\LookupBuilder\Legacy;
 use Mindy\QueryBuilder\QueryBuilder;
 use Serializable;
 
@@ -48,7 +42,7 @@ abstract class QuerySetBase implements IteratorAggregate, ArrayAccess, Serializa
      */
     private $_iterator;
     /**
-     * @var \Mindy\Query\Connection
+     * @var \Doctrine\Dbal\Connection
      */
     private $_db;
     /**
@@ -64,8 +58,6 @@ abstract class QuerySetBase implements IteratorAggregate, ArrayAccess, Serializa
      */
     private $_tableAlias;
 
-    abstract public function getData();
-
     /**
      * @return \Mindy\Event\EventManager
      */
@@ -75,12 +67,12 @@ abstract class QuerySetBase implements IteratorAggregate, ArrayAccess, Serializa
     }
 
     /**
-     * @return \Mindy\QueryBuilder\Database\Mysql\Adapter|\Mindy\QueryBuilder\Database\Pgsql\Adapter|\Mindy\QueryBuilder\Database\Sqlite\Adapter
-     * @throws \Mindy\Query\Exception\Exception
+     * @return \Mindy\QueryBuilder\BaseAdapter|\Mindy\QueryBuilder\Interfaces\ISQLGenerator
+     * @throws Exception
      */
     protected function getAdapter()
     {
-        return $this->getConnection()->getAdapter();
+        return QueryBuilder::getInstance($this->getConnection())->getAdapter();
     }
 
     /**
@@ -194,12 +186,7 @@ abstract class QuerySetBase implements IteratorAggregate, ArrayAccess, Serializa
      */
     public function createModel(array $row)
     {
-        /** @var Base $className */
-        $className = get_class($this->getModel());
-        if (!$className) {
-            throw new Exception('$className must be a string in createModel method of qs');
-        }
-        return $className::create($row);
+        return $this->getModel()->create($row);
     }
 
     /**
@@ -215,6 +202,11 @@ abstract class QuerySetBase implements IteratorAggregate, ArrayAccess, Serializa
         }
         return $models;
     }
+
+    /**
+     * @return array
+     */
+    abstract public function all();
 
     /**
      * (PHP 5 &gt;= 5.0.0)<br/>

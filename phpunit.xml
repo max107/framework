@@ -8,7 +8,10 @@
             <!--<directory>test/QueryBuilder</directory>-->
         <!--</testsuite>-->
         <testsuite name="Orm">
-            <directory>test/Orm</directory>
+            <!--<directory>test/Orm</directory>-->
+            <file>test/Orm/Basic/MetaDataTest.php</file>
+            <!--<file>test/Orm/Basic/IsNewTest.php</file>-->
+            <!--<file>test/Orm/Basic/ModelAttributesTest.php</file>-->
         </testsuite>
         <!--<testsuite name="Form">-->
             <!--<directory>test/Form</directory>-->
@@ -17,14 +20,14 @@
     <php>
         <ini name="error_reporting" value="32767"/>
     </php>
-    <!--<filter>-->
-        <!--<whitelist>-->
+    <filter>
+        <whitelist>
             <!--<directory suffix=".php">src/</directory>-->
-            <!--&lt;!&ndash;<directory suffix="MetaData.php">src/</directory>&ndash;&gt;-->
-        <!--</whitelist>-->
-    <!--</filter>-->
-    <!--<logging>-->
-        <!--<log type="coverage-html" target="./coverage" charset="UTF-8"-->
-             <!--yui="true" highlight="true" lowUpperBound="50" highLowerBound="80"/>-->
-    <!--</logging>-->
+            <file>src/Orm/MetaData.php</file>
+        </whitelist>
+    </filter>
+    <logging>
+        <log type="coverage-html" target="./coverage" charset="UTF-8"
+             yui="true" highlight="true" lowUpperBound="50" highLowerBound="80"/>
+    </logging>
 </phpunit>

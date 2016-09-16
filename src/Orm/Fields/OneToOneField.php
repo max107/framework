@@ -120,4 +120,17 @@ class OneToOneField extends ForeignField
         }
         return $indexes;
     }
+
+    /**
+     * @return string
+     */
+    public function getAttributeName() : string
+    {
+        if ($this->primary) {
+            $primaryKeyName = call_user_func([$this->modelClass, 'getPkName']);
+            return $this->name . '_' . $primaryKeyName;
+        } else {
+            return $this->name;
+        }
+    }
 }

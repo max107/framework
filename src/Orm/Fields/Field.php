@@ -19,7 +19,7 @@ use Mindy\Validation\ValidationAwareTrait;
  * Class Field
  * @package Mindy\Orm
  */
-abstract class Field
+abstract class Field implements ModelFieldInterface
 {
     use Accessors;
     use Configurator;
@@ -143,6 +143,14 @@ abstract class Field
         return $options;
     }
 
+    /**
+     * @return string
+     */
+    public function getAttributeName()
+    {
+        return $this->name;
+    }
+
     abstract public function getSqlType();
 
     public function canBeEmpty()
@@ -213,7 +221,7 @@ abstract class Field
      * @param $name
      * @return $this
      */
-    public function setName($name)
+    public function setName(string $name)
     {
         $this->name = $name;
         return $this;

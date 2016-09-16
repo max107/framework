@@ -39,10 +39,9 @@ class User extends Model
                     new Assert\Length(['min' => 3, 'max' => 20]),
                 ]
             ],
-            'password' => [
-                'class' => PasswordField::class,
+            'password' => new PasswordField([
                 'null' => true
-            ],
+            ]),
             'groups' => [
                 'class' => ManyToManyField::class,
                 'modelClass' => Group::class,

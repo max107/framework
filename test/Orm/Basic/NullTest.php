@@ -13,6 +13,7 @@
 
 namespace Mindy\Tests\Orm\Basic;
 
+use Mindy\Tests\Orm\Models\Customer;
 use Mindy\Tests\Orm\OrmDatabaseTestCase;
 use Mindy\Tests\Orm\Models\Order;
 
@@ -22,7 +23,7 @@ class NullTest extends OrmDatabaseTestCase
 
     protected function getModels()
     {
-        return [new Order];
+        return [new Order, new Customer];
     }
 
     public function testIsNull()

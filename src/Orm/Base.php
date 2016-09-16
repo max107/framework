@@ -23,18 +23,18 @@ use Mindy\Helper\Json;
 use Mindy\Helper\Traits\Accessors;
 use Mindy\Helper\Traits\Configurator;
 use Mindy\Orm\Fields\AutoField;
+use Mindy\Orm\Fields\FileField;
 use Mindy\Orm\Fields\ForeignField;
 use Mindy\Orm\Fields\JsonField;
 use Mindy\Orm\Fields\ManyToManyField;
 use Mindy\QueryBuilder\QueryBuilder;
-use Serializable;
 
 /**
  * Class Base
  * @package Mindy\Orm
  * @property boolean $isNewRecord Whether the record is new and should be inserted when calling [[save()]].
  */
-abstract class Base implements ArrayAccess, Serializable
+abstract class Base implements ArrayAccess
 {
     use Accessors, Configurator;
 
@@ -60,39 +60,36 @@ abstract class Base implements ArrayAccess, Serializable
      */
     protected $errors = [];
     /**
-     * @var array attribute values indexed by attribute names
+     * @var array
      */
-    private $_attributes = [];
-    /**
-     * @var array|null old attribute values indexed by attribute names.
-     * This is `null` if the record [[isNewRecord|is new]].
-     */
-    private $_oldAttributes;
-
     private $_related = [];
-
-    private static $_cache;
-
-    protected $_attributesSchema = null;
     /**
      * @var \Mindy\Event\EventManager
      */
     private $_eventManager;
     /**
-     * @var \Mindy\Query\Connection
+     * @var Connection
      */
-    private $_db;
+    protected $connection;
+    /**
+     * @var
+     */
+    private $_isNewRecord = true;
+
+    /**
+     * @var AttributeCollection
+     */
+    protected $attributeCollection;
 
     /**
      * @param array $attributes
      */
     public function __construct(array $attributes = [])
     {
-        if (!empty($attributes)) {
-            $this->setAttributes($attributes);
-        }
+        $this->attributeCollection = new AttributeCollection();
+        $this->setAttributes($attributes);
+
         self::getMeta();
-        $this->init();
     }
 
     public function __toString()
@@ -170,10 +167,6 @@ abstract class Base implements ArrayAccess, Serializable
     {
     }
 
-    public function init()
-    {
-    }
-
     /**
      * Example usage:
      * return [
@@ -236,9 +229,11 @@ abstract class Base implements ArrayAccess, Serializable
             $field = $this->getField($name)->setModel($this);
             $field->setDbValue($this->getAttribute($name));
             return $field->getValue();
-        } else if (isset($this->_attributes[$name]) || array_key_exists($name, $this->_attributes)) {
-            return $this->_attributes[$name];
         } else if ($this->hasAttribute($name)) {
+            return $this->getAttribute($name);
+
+        } else if ($this->hasAttribute($name)) {
+            // TODO problem here
             return $this->hasField($name) ? $this->getField($name)->default : null;
         }
 
@@ -279,8 +274,8 @@ abstract class Base implements ArrayAccess, Serializable
         } else if ($meta->hasHasManyField($name) || $meta->hasManyToManyField($name)) {
             $this->_related[$name] = $value;
         } elseif ($this->hasAttribute($name)) {
-            if ($meta->hasFileField($name)) {
-                $field = $meta->getFileField($name);
+            $field = $meta->getField($name);
+            if ($field instanceof FileField) {
                 $field->setDbValue($this->getAttribute($name));
                 $field->setModel($this);
                 $field->setValue($value);
@@ -332,7 +327,7 @@ abstract class Base implements ArrayAccess, Serializable
      */
     public function getIsNewRecord()
     {
-        return $this->_oldAttributes === null;
+        return $this->_isNewRecord;
     }
 
     /**
@@ -342,7 +337,7 @@ abstract class Base implements ArrayAccess, Serializable
      */
     public function setIsNewRecord($value)
     {
-        $this->_oldAttributes = $value ? null : $this->_attributes;
+        $this->_isNewRecord = $value;
     }
 
     /**
@@ -361,13 +356,12 @@ abstract class Base implements ArrayAccess, Serializable
     }
 
     /**
-     * Returns a value indicating whether the model has an attribute with the specified name.
-     * @param string $name the name of the attribute
-     * @return boolean whether the model has an attribute with the specified name.
+     * @param $name
+     * @return bool
      */
-    public function hasAttribute($name)
+    public function hasAttribute($name) : bool
     {
-        return isset($this->_attributes[$name]) || in_array($name, $this->attributes());
+        return in_array($name, $this->attributes());
     }
 
     /**
@@ -380,8 +374,9 @@ abstract class Base implements ArrayAccess, Serializable
      */
     public function getAttribute($name)
     {
-        if (isset($this->_attributes[$name])) {
-            return $this->_attributes[$name];
+        $value = $this->attributeCollection->getAttribute($name);
+        if ($value) {
+            return $value;
         } else if (isset($this->_related[$name])) {
             return $this->_related[$name];
         }
@@ -399,16 +394,20 @@ abstract class Base implements ArrayAccess, Serializable
     public function setAttribute($name, $value)
     {
         if ($this->hasAttribute($name)) {
-            if ($this->isPrimaryKey([$name])) {
+            if ($this->isPrimaryKey([$name]) && $this->getAttribute($name) !== $value) {
                 $this->setIsNewRecord(true);
             }
-
-            $this->_attributes[$name] = $value;
+            $this->attributeCollection->setAttribute($name, $value);
         } else {
             throw new InvalidParamException(get_class($this) . ' has no attribute named "' . $name . '".');
         }
     }
 
+    /**
+     * @param array $attributes
+     * @return $this
+     * @throws InvalidParamException
+     */
     public function setAttributes(array $attributes)
     {
         foreach ($attributes as $name => $value) {
@@ -421,13 +420,24 @@ abstract class Base implements ArrayAccess, Serializable
         return $this;
     }
 
+    /**
+     * Populate model with data from database
+     * @param array $attributes
+     * @return $this
+     * @throws InvalidParamException
+     */
     protected function setDbAttributes(array $attributes)
     {
+        $primaryKey = $this->primaryKeyName();
         foreach ($attributes as $name => $value) {
             if ($this->hasAttribute($name)) {
-                $this->setAttribute($name, $value);
+                if ($primaryKey === $name && $this->getIsNewRecord()) {
+                    $this->setIsNewRecord(false);
+                }
+                $this->attributeCollection->setAttribute($name, $value);
             }
         }
+        $this->attributeCollection->resetOldAttributes();
         return $this;
     }
 
@@ -498,11 +508,11 @@ abstract class Base implements ArrayAccess, Serializable
     {
         $keys = $this->primaryKey();
         if (count($keys) === 1 && !$asArray) {
-            return isset($this->_attributes[$keys[0]]) ? $this->_attributes[$keys[0]] : null;
+            return $this->attributeCollection->getAttribute($keys[0]);
         } else {
             $values = [];
             foreach ($keys as $name) {
-                $values[$name] = isset($this->_attributes[$name]) ? $this->_attributes[$name] : null;
+                $values[$name] = $this->attributeCollection->getAttribute($name);
             }
 
             return $values;
@@ -542,7 +552,7 @@ abstract class Base implements ArrayAccess, Serializable
             // TODO refact, detach from app()
             $db = app()->db->getConnection($db);
         }
-        $this->_db = $db;
+        $this->connection = $db;
         return $this;
     }
 
@@ -551,10 +561,10 @@ abstract class Base implements ArrayAccess, Serializable
      */
     public function getConnection()
     {
-        if ($this->_db === null && app()) {
-            $this->_db = app()->db->getConnection();
+        if ($this->connection === null && app()) {
+            $this->connection = app()->db->getConnection();
         }
-        return $this->_db;
+        return $this->connection;
     }
 
     /**
@@ -579,7 +589,11 @@ abstract class Base implements ArrayAccess, Serializable
      */
     public function save(array $fields = [])
     {
-        return $this->getIsNewRecord() ? $this->insert($fields) : $this->update($fields);
+        if ($this->getIsNewRecord()) {
+            return $this->insert($fields);
+        } else {
+            return $this->update($fields);
+        }
     }
 
     /**
@@ -595,11 +609,11 @@ abstract class Base implements ArrayAccess, Serializable
 
         $connection->beginTransaction();
         try {
-            $result = $this->insertInternal($fields);
-            if (!$result) {
-                $connection->rollBack();
-            } else {
+            if (($result = $this->insertInternal($fields))) {
                 $connection->commit();
+                $this->setIsNewRecord(false);
+            } else {
+                $connection->rollBack();
             }
         } catch (\Exception $e) {
             $connection->rollBack();
@@ -783,7 +797,34 @@ abstract class Base implements ArrayAccess, Serializable
      */
     protected function insertInternal(array $fields = [])
     {
-        $values = $this->getDirtyAttributes($fields);
+        if (empty($fields)) {
+            $fields = $this->attributes();
+        }
+
+        $dirty = $this->getDirtyAttributes();
+        if (empty($dirty)) {
+            $dirty = $fields;
+        }
+
+        $values = [];
+        foreach ($dirty as $name) {
+            if (in_array($name, $fields) === false) {
+                continue;
+            }
+
+            $field = $this->getField($name);
+            $value = $field->getValue();
+            if (empty($value) && $field->default !== null) {
+                continue;
+            }
+
+            $values[$name] = $value;
+        }
+
+        if (empty($values)) {
+            return true;
+        }
+
 //        if (empty($values)) {
 //            foreach ($this->getPrimaryKey(true) as $key => $value) {
 //                $values[$key] = $value;
@@ -799,7 +840,8 @@ abstract class Base implements ArrayAccess, Serializable
         $connection = static::getConnection();
         $adapter = QueryBuilder::getInstance($connection)->getAdapter();
 
-        if (!$connection->insert($adapter->quoteTableName($adapter->getRawTableName($this->tableName())), $dbValues)) {
+        $inserted = $connection->insert($adapter->quoteTableName($adapter->getRawTableName($this->tableName())), $dbValues);
+        if ($inserted === false) {
             return false;
         }
 
@@ -826,7 +868,7 @@ abstract class Base implements ArrayAccess, Serializable
         */
 
         $this->setAttributes($values);
-        $this->setOldAttributes($values);
+        $this->attributeCollection->resetOldAttributes();
 
         return true;
     }
@@ -897,9 +939,8 @@ abstract class Base implements ArrayAccess, Serializable
         }
 
         $this->updateRelated();
-        $dirty = $this->getDirtyAttributes($fields);
         $this->onAfterUpdateInternal();
-        $this->setOldAttributes($dirty);
+        $this->attributeCollection->resetOldAttributes();
 
         return $result;
     }
@@ -912,13 +953,25 @@ abstract class Base implements ArrayAccess, Serializable
      */
     protected function updateInternal(array $fields = [])
     {
-        $values = $this->getDirtyAttributes($fields);
+        $dirty = $this->getDirtyAttributes();
+        $values = [];
+        if (empty($fields)) {
+            foreach ($dirty as $name) {
+                $values[$name] = $this->getAttribute($name);
+            }
+        } else {
+            foreach ($dirty as $name) {
+                if (in_array($name, $fields)) {
+                    $values[$name] = $this->getAttribute($name);
+                }
+            }
+        }
+
         if (empty($values)) {
             return true;
         }
 
         // Work incorrecly, see https://github.com/studio107/Mindy_Orm/issues/64
-        // $condition = $this->getOldPrimaryKey(true);
         $condition = $this->getPrimaryKey(true);
 
         $lock = $this->optimisticLock();
@@ -938,40 +991,10 @@ abstract class Base implements ArrayAccess, Serializable
         }
 
         foreach ($values as $name => $value) {
-            $this->_attributes[$name] = $value;
+            $this->attributeCollection->setAttribute($name, $value);
         }
 
         return $rows >= 0;
-    }
-
-    /**
-     * Returns the old primary key value(s).
-     * This refers to the primary key value that is populated into the record
-     * after executing a find method (e.g. find(), findOne()).
-     * The value remains unchanged even if the primary key attribute is manually assigned with a different value.
-     * @param boolean $asArray whether to return the primary key value as an array. If true,
-     * the return value will be an array with column name as key and column value as value.
-     * If this is false (default), a scalar value will be returned for non-composite primary key.
-     * @property mixed The old primary key value. An array (column name => column value) is
-     * returned if the primary key is composite. A string is returned otherwise (null will be
-     * returned if the key value is null).
-     * @return mixed the old primary key value. An array (column name => column value) is returned if the primary key
-     * is composite or `$asArray` is true. A string is returned otherwise (null will be returned if
-     * the key value is null).
-     */
-    public function getOldPrimaryKey($asArray = false)
-    {
-        $keys = $this->primaryKey();
-        if (count($keys) === 1 && !$asArray) {
-            return isset($this->_oldAttributes[$keys[0]]) ? $this->_oldAttributes[$keys[0]] : null;
-        } else {
-            $values = [];
-            foreach ($keys as $name) {
-                $values[$name] = isset($this->_oldAttributes[$name]) ? $this->_oldAttributes[$name] : null;
-            }
-
-            return $values;
-        }
     }
 
     /**
@@ -1055,18 +1078,7 @@ abstract class Base implements ArrayAccess, Serializable
      */
     public function getOldAttributes()
     {
-        return $this->_oldAttributes === null ? [] : $this->_oldAttributes;
-    }
-
-    /**
-     * Sets the old attribute values.
-     * All existing old attribute values will be discarded.
-     * @param array|null $values old attribute values to be set.
-     * If set to `null` this record is considered to be [[isNewRecord|new]].
-     */
-    public function setOldAttributes($values)
-    {
-        $this->_oldAttributes = $values;
+        return $this->attributeCollection->getOldAttributes();
     }
 
     /**
@@ -1080,91 +1092,15 @@ abstract class Base implements ArrayAccess, Serializable
      */
     public function getOldAttribute($name)
     {
-        return isset($this->_oldAttributes[$name]) ? $this->_oldAttributes[$name] : null;
+        return $this->attributeCollection->getOldAttribute($name);
     }
 
     /**
-     * Sets the old value of the named attribute.
-     * @param string $name the attribute name
-     * @param mixed $value the old attribute value.
-     * @throws InvalidParamException if the named attribute does not exist.
-     * @see hasAttribute()
+     * @return array
      */
-    public function setOldAttribute($name, $value)
+    public function getDirtyAttributes() : array
     {
-        if (isset($this->_oldAttributes[$name]) || $this->hasAttribute($name)) {
-            $this->_oldAttributes[$name] = $value;
-        } else {
-            throw new InvalidParamException(get_class($this) . ' has no attribute named "' . $name . '".');
-        }
-    }
-
-    /**
-     * Marks an attribute dirty.
-     * This method may be called to force updating a record when calling [[update()]],
-     * even if there is no change being made to the record.
-     * @param string $name the attribute name
-     */
-    public function markAttributeDirty($name)
-    {
-        unset($this->_oldAttributes[$name]);
-    }
-
-    /**
-     * Returns a value indicating whether the named attribute has been changed.
-     * @param string $name the name of the attribute
-     * @return boolean whether the attribute has been changed
-     */
-    public function isAttributeChanged($name)
-    {
-        if (isset($this->_attributes[$name], $this->_oldAttributes[$name])) {
-            return $this->_attributes[$name] !== $this->_oldAttributes[$name];
-        } else {
-            return isset($this->_attributes[$name]) || isset($this->_oldAttributes[$name]);
-        }
-    }
-
-    /**
-     * Returns the attribute values that have been modified since they are loaded or saved most recently.
-     * @param string[]|null $fields the names of the attributes whose values may be returned if they are
-     * changed recently. If null, [[attributes()]] will be used.
-     * @return array the changed attribute values (name-value pairs)
-     */
-    public function getDirtyAttributes(array $fields = [])
-    {
-        if ($fields === []) {
-            $fields = $this->attributes();
-        }
-        $fields = array_flip($fields);
-        $attributes = [];
-        if ($this->_oldAttributes === null) {
-            foreach ($this->_attributes as $name => $value) {
-                if (isset($fields[$name])) {
-                    $attributes[$name] = $value;
-                }
-            }
-        } else {
-            foreach ($this->_attributes as $name => $value) {
-                $nameFk = null;
-                if ($this->getMeta()->hasForeignField($name)) {
-                    $nameFk = $this->getMeta()->getForeignKey($name);
-                }
-                if (
-                    (
-                        isset($fields[$name]) ||
-                        $nameFk && isset($fields[$nameFk])
-                    ) &&
-                    (
-                        !array_key_exists($name, $this->_oldAttributes) ||
-                        $value !== $this->_oldAttributes[$name]
-                    )
-                ) {
-                    $attributes[$name] = $value;
-                }
-            }
-        }
-
-        return $attributes;
+        return $this->attributeCollection->getDirtyAttributes();
     }
 
     public static function __callStatic($method, $args)
@@ -1272,6 +1208,7 @@ abstract class Base implements ArrayAccess, Serializable
     public function getField($name, $throw = true)
     {
         $meta = self::getMeta();
+
         if ($meta->hasField($name)) {
             $field = $meta->getField($name);
             if ($meta->hasForeignField($name)) {
@@ -1307,7 +1244,7 @@ abstract class Base implements ArrayAccess, Serializable
     {
         $this->onBeforeDeleteInternal();
         $result = $this->objects()->delete(['pk' => $this->pk]);
-        if ($result > 0) {
+        if ($result) {
             $this->onAfterDeleteInternal();
         }
         return $result;
@@ -1358,40 +1295,12 @@ abstract class Base implements ArrayAccess, Serializable
      * @param array $row attribute values (name => value)
      * @return \Mindy\Orm\Model the newly created active record.
      */
-    public static function create(array $row)
+    public static function create(array $row = [])
     {
         /** @var Model $record */
-        $className = self::className();
+        $className = get_called_class();
         $record = new $className;
         $record->setDbAttributes($row);
-        $record->setOldAttributes($row);
         return $record;
-    }
-
-    /**
-     * (PHP 5 &gt;= 5.1.0)<br/>
-     * String representation of object
-     * @link http://php.net/manual/en/serializable.serialize.php
-     * @return string the string representation of the object or null
-     */
-    public function serialize()
-    {
-        return serialize($this->_attributes);
-    }
-
-    /**
-     * (PHP 5 &gt;= 5.1.0)<br/>
-     * Constructs the object
-     * @link http://php.net/manual/en/serializable.unserialize.php
-     * @param string $serialized <p>
-     * The string representation of the object.
-     * </p>
-     * @return void
-     */
-    public function unserialize($serialized)
-    {
-        $attributes = unserialize($serialized);
-        $this->setDbAttributes($attributes);
-        $this->setOldAttributes($attributes);
     }
 }

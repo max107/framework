@@ -5,8 +5,12 @@ composer.lock
 vendor
 coverage
 *.swp
+
+*.db
+*.db-journal
+
 .DS_Store
 *.log
-test/Orm/app/sqlite.db
 WWW/runtime/*
+test/Orm/app/protected/migration
 test/Base/state.bin

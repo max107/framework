@@ -155,16 +155,14 @@ abstract class CrudTest extends OrmDatabaseTestCase
         $this->assertEquals('Anton', $model->username);
         $this->assertEquals('VeryGoodP@ssword', $model->password);
 
-        $saved = $model->save(['username']);
-        $this->assertTrue($saved);
-        $this->assertEquals(1, User::objects()->count());
-        $this->assertFalse($model->getIsNewRecord());
+        $this->assertTrue($model->save(['username']));
         $this->assertEquals(1, $model->pk);
+        $this->assertEquals(1, User::objects()->count());
         $this->assertEquals('Anton', $model->username);
         $this->assertEquals('VeryGoodP@ssword', $model->password);
 
-        $model = User::objects()->get();
-        $this->assertNull($model->password);
+        $findModel = User::objects()->get(['pk' => 1]);
+        $this->assertNull($findModel->password);
     }
 
     public function testUpdateMore()
@@ -231,10 +229,14 @@ abstract class CrudTest extends OrmDatabaseTestCase
 
     public function testUpdateOrCreate()
     {
+        /** @var $model User */
         list($model, $created) = User::objects()->getOrCreate(['username' => 'Max', 'password' => 'VeryGoodP@ssword']);
+        $this->assertTrue($created);
+        $this->assertFalse($model->getIsNewRecord());
         $this->assertEquals(1, $model->pk);
         $this->assertEquals('Max', $model->username);
 
+        /** @var $updatedModel User */
         $updatedModel = User::objects()->updateOrCreate(['username' => 'Max'], ['username' => 'Oleg']);
         $this->assertEquals(1, $updatedModel->pk);
         $this->assertEquals('Oleg', $updatedModel->username);
@@ -247,15 +249,23 @@ abstract class CrudTest extends OrmDatabaseTestCase
     public function testDeleteMore()
     {
         list($model, $created) = User::objects()->getOrCreate(['username' => 'Max', 'password' => 'VeryGoodP@ssword']);
-        $this->assertNotNull($model->pk);
+        $this->assertTrue($created);
+        $this->assertEquals(1, $model->pk);
         $this->assertEquals(1, User::objects()->count());
-        $this->assertEquals(1, $model->delete());
+        $this->assertTrue($model->delete());
+
         $this->assertEquals(0, User::objects()->count());
 
-        list($model, $created) = User::objects()->getOrCreate(['username' => 'Max', 'password' => 'VeryGoodP@ssword']);
-        $this->assertNotNull($model->pk);
+        list($model, $created) = User::objects()->getOrCreate(['username' => 'Max123', 'password' => 'VeryGoodP@ssword']);
+        $this->assertTrue($created);
         $this->assertEquals(1, User::objects()->count());
-        $this->assertEquals(1, User::objects()->filter(['pk' => 2])->delete());
+        if ($this->driver === 'sqlite') {
+            $this->assertEquals(1, $model->pk);
+            $this->assertEquals(1, User::objects()->filter(['pk' => 1])->delete());
+        } else {
+            $this->assertEquals(2, $model->pk);
+            $this->assertEquals(1, User::objects()->filter(['pk' => 2])->delete());
+        }
         $this->assertEquals(0, User::objects()->count());
     }
 
@@ -284,10 +294,7 @@ abstract class CrudTest extends OrmDatabaseTestCase
 
         $model->username = 'Anton';
         $model->password = 'VeryGoodP@ssword';
-        $this->assertEquals($model->getDirtyAttributes(), [
-            'username' => 'Anton',
-            'password' => 'VeryGoodP@ssword'
-        ]);
+        $this->assertEquals(['username', 'password'], $model->getDirtyAttributes());
 
         $model->save();
         $this->assertEquals($model->getDirtyAttributes(), []);
@@ -295,21 +302,17 @@ abstract class CrudTest extends OrmDatabaseTestCase
 
         $model->username = 'Vasya';
         $model->username = 'Vasya';
-        $this->assertEquals($model->getDirtyAttributes(), [
-            'username' => 'Vasya'
-        ]);
+        $this->assertEquals(['username'], $model->getDirtyAttributes());
 
         $model->save();
 
-        $finded = User::objects()->filter(['pk' => $model->pk])->get();
+        $finded = User::objects()->get(['pk' => $model->pk]);
         $this->assertNotNull($finded);
         $this->assertEquals('Vasya', $finded->username);
-        $this->assertEquals($finded->getDirtyAttributes(), []);
+        $this->assertEquals([], $finded->getDirtyAttributes());
 
         $finded->username = 'Max';
-        $this->assertEquals($finded->getDirtyAttributes(), [
-            'username' => 'Max'
-        ]);
+        $this->assertEquals(['username'], $finded->getDirtyAttributes());
     }
 
     /**
@@ -355,13 +358,13 @@ abstract class CrudTest extends OrmDatabaseTestCase
         $this->assertEquals('foo', $user->username);
         $user->setAttributes(['username' => 'bar']);
         $this->assertEquals('bar', $user->username);
-        $this->assertEquals(['username' => 'bar'], $user->getDirtyAttributes(['username']));
+        $this->assertEquals(['username'], $user->getDirtyAttributes());
         $saved = $user->save(['username']);
         $this->assertEquals('bar', $user->username);
         $this->assertTrue($saved);
 
         $user->setAttributes(['password' => 1]);
-        $this->assertEquals(['password' => 1], $user->getDirtyAttributes(['password']));
+        $this->assertEquals(['password'], $user->getDirtyAttributes());
         $user->save(['password']);
         $this->assertEquals(1, $user->password);
         $this->assertTrue($saved);

@@ -15,6 +15,7 @@ use Mindy\QueryBuilder\Aggregation\Min;
 use Mindy\QueryBuilder\Aggregation\Sum;
 use Mindy\QueryBuilder\Q\QAndNot;
 use Mindy\QueryBuilder\Q\QOrNot;
+use Mindy\QueryBuilder\QueryBuilder;
 
 /**
  * Class QuerySet
@@ -23,70 +24,9 @@ use Mindy\QueryBuilder\Q\QOrNot;
 class QuerySet extends QuerySetBase
 {
     /**
-     * @var null
-     */
-    protected $_data = [];
-    /**
-     * @var \Mindy\Query\Command
-     */
-    protected $command;
-    /**
      * @var array a list of relations that this query should be performed with
      */
-    public $with = [];
-    /**
-     * @var string the SQL statement to be executed for retrieving AR records.
-     * This is set by [[QuerySet::createCommand()]].
-     */
-    public $sql;
-    /**
-     * Chains of joins
-     * @var array
-     */
-    private $_chains = [];
-    /**
-     * Has chained
-     * @var bool
-     */
-    private $_chainedHasMany = false;
-    /**
-     * @var string
-     */
-    protected $_tableAlias;
-    /**
-     * @var bool
-     */
-    private $_filterComplete = false;
-    /**
-     * @var array
-     */
-    private $_filterAnd = [];
-    /**
-     * @var array
-     */
-    private $_filterOr = [];
-    /**
-     * @var array
-     */
-    private $_filterExclude = [];
-    /**
-     * @var array
-     */
-    private $_filterOrExclude = [];
-
-    private static $_cache;
-
-    public static function getCache()
-    {
-        if (self::$_cache === null) {
-            if (class_exists('\Mindy\Base\Mindy')) {
-                self::$_cache = \Mindy\Base\Mindy::app()->getComponent('cache');
-            } else {
-                self::$_cache = new \Mindy\Cache\DummyCache;
-            }
-        }
-        return self::$_cache;
-    }
+    protected $with = [];
 
     /**
      * Executes query and returns all results as an array.
@@ -96,7 +36,11 @@ class QuerySet extends QuerySetBase
     public function all()
     {
         $rows = $this->getConnection()->query($this->allSql())->fetchAll();
-        return $this->asArray ? $rows : $this->createModels($rows);
+        if ($this->asArray) {
+            return !empty($this->with) ? $this->populateWith($rows) : $rows;
+        }
+
+        return $this->createModels($rows);
     }
 
     /**
@@ -173,23 +117,23 @@ class QuerySet extends QuerySetBase
      */
     public function getOrCreate(array $attributes) : array
     {
-        $model = $this->filter($attributes)->get();
-        $create = $model === null;
-        if ($create) {
-            $model = $this->model;
-            $model->setAttributes($attributes);
+        $model = $this->get($attributes);
+        if ($model === null) {
+            $className = $this->getModel()->className();
+            /** @var Model $model */
+            $model = new $className($attributes);
             $model->save();
+            return [$model, true];
         }
 
-        return [$model, $create];
+        return [$model, false];
     }
 
     public function updateOrCreate(array $attributes, array $updateAttributes)
     {
-        /** @var Model $model */
-        $model = $this->filter($attributes)->get();
-        if (!$model) {
-            $model = $this->model;
+        $model = $this->get($attributes);
+        if ($model === null) {
+            $model = $this->getModel()->create();
         }
         $model->setAttributes($updateAttributes);
         $model->save();
@@ -258,24 +202,6 @@ class QuerySet extends QuerySetBase
     }
 
     /**
-     * Add chained relation
-     * @param array|string $keyChain
-     * @param string $alias
-     * @param object $model
-     */
-    protected function addChain($keyChain, $alias, $model)
-    {
-        if (is_array($keyChain)) {
-            $keyChain = $this->prefixToKey($keyChain);
-        }
-
-        $this->_chains[$keyChain] = [
-            'alias' => $alias,
-            'model' => $model
-        ];
-    }
-
-    /**
      * Converts array prefix to string key
      * @param array $prefix
      * @return string
@@ -315,96 +241,6 @@ class QuerySet extends QuerySetBase
         return [$model, $alias, $prefixRemains, $chainRemains];
     }
 
-    /**
-     * Makes connection by chain (creates joins)
-     * @param $prefix
-     */
-    protected function makeChain(array $prefix, $prefixedSelect = false, $autoGroup = true, array $select = [])
-    {
-        // Searching closest already connected relation
-        list($model, $alias, $prefix, $chain) = $this->searchChain($prefix);
-
-        foreach ($prefix as $relationName) {
-            $through = false;
-            $throughChain = null;
-            $throughAlias = null;
-            $throughModel = null;
-
-            if (substr($relationName, -8) == '_through') {
-                $throughChain = array_merge($chain, [$relationName]);
-                $through = true;
-                $relationName = substr($relationName, 0, strlen($relationName) - 8);
-            }
-
-            $chain[] = $relationName;
-            /** @var Model $model */
-            /** @var \Mindy\Orm\Fields\RelatedField $relatedValue */
-            $relatedValue = $model->getField($relationName);
-
-            // TODO prefetch_related
-            if ($prefixedSelect && $relatedValue instanceof ManyToManyField) {
-                continue;
-            }
-
-            if ($relatedValue instanceof ManyToManyField) {
-                list($throughModelInfo, $manyModelInfo) = $relatedValue->processQuerySet($this, $alias, $autoGroup);
-                if ($through) {
-                    if (!$throughModelInfo) {
-                        throw new Exception("Through model is not specified");
-                    }
-                    list($throughModel, $throughAlias) = $throughModelInfo;
-                }
-                list($relatedModel, $newAlias) = $manyModelInfo;
-            } else {
-                list($relatedModel, $newAlias) = $relatedValue->processQuerySet($this, $alias, $autoGroup);
-            }
-            $alias = $newAlias;
-
-            if ($prefixedSelect) {
-                $selectNames = [];
-                $selectRelatedNames = [];
-                /** @var \Mindy\Orm\Model $relatedModel */
-                if (!empty($select)) {
-                    $columnNames = $select;
-                } else {
-                    $columnNames = $relatedModel->getMeta()->getAttributes();
-                }
-                foreach ($columnNames as $item) {
-                    $selectRelatedNames[] = $alias . '.' . $this->quoteColumnName($item) . ' AS ' . $relationName . '__' . $item;
-                }
-                $oldSelect = $this->select;
-                $this->select(array_merge($selectNames, $selectRelatedNames));
-                $this->select = array_merge($this->select, $oldSelect);
-            }
-
-            $this->addChain($chain, $alias, $relatedModel);
-            $model = $relatedModel;
-
-            if ($through) {
-                $this->addChain($throughChain, $throughAlias, $throughModel);
-                $model = $throughModel;
-            }
-        }
-    }
-
-    /**
-     * Returns chain if exists
-     * @param array|string $keyChain
-     * @return null|array
-     */
-    protected function getChain($keyChain)
-    {
-        if (is_array($keyChain)) {
-            $keyChain = $this->prefixToKey($keyChain);
-        }
-
-        if (isset($this->_chains[$keyChain])) {
-            return $this->_chains[$keyChain];
-        }
-
-        return null;
-    }
-
     public function with(array $with)
     {
         foreach ($with as $name => $fields) {
@@ -417,189 +253,6 @@ class QuerySet extends QuerySetBase
                 $this->getOrCreateChainAlias([$name], true, true, is_array($fields) ? $fields : []);
             }
         }
-        return $this;
-    }
-
-    /**
-     * Returns chain alias
-     * @param array|string $keyChain
-     * @return string
-     */
-    protected function getChainAlias($keyChain)
-    {
-        $chain = $this->getChain($keyChain);
-        return $chain ? $chain['alias'] : '';
-    }
-
-    /**
-     * Get or create alias and related model by chain
-     * @param array $prefix
-     * @param bool $prefixedSelect
-     * @return array
-     */
-    protected function getOrCreateChainAlias(array $prefix, $prefixedSelect = false, $autoGroup = true, array $select = [])
-    {
-        if (!$this->from) {
-            $this->from($this->model->tableName() . ' ' . $this->tableAlias);
-            if (empty($this->select)) {
-                $this->select($this->tableAlias . '.*');
-            }
-        }
-
-        if (count($prefix) > 0) {
-            $chain = $this->getChain($prefix);
-            if ($chain === null) {
-                $this->makeChain($prefix, $prefixedSelect, $autoGroup, $select);
-                $chain = $this->getChain($prefix);
-            }
-            if ($chain) {
-                return [
-                    $chain['alias'],
-                    $chain['model']
-                ];
-            }
-        }
-
-        return [
-            $this->tableAlias,
-            $this->model
-        ];
-    }
-
-    /**
-     * Example:
-     * >>> $user = User::objects()->get(['pk' => 1]);
-     * >>> $pages = Page::object()->filter(['user__in' => [$user]])->all();
-     * @param array $query
-     * @param bool $aliased
-     * @throws \Mindy\Exception\Exception
-     * @return array
-     */
-    protected function parseLookup(array $query, $aliased = true, $autoGroup = true)
-    {
-        $queryBuilder = $this->getQueryBuilder();
-        $lookupQuery = [];
-        $lookupParams = [];
-
-        $resultQuery = [];
-        foreach ($query as $key => $queryItem) {
-            if ($queryItem instanceof Q) {
-                $queryCondition = $queryItem->getQueryCondition();
-                $expressionQueryJoin = $queryItem->getQueryJoinCondition();
-                $expressionConditionGroups = $queryItem->getConditions();
-
-                $expressionParams = [];
-                $expressionQuery = [];
-
-                foreach ($expressionConditionGroups as $expressionConditions) {
-                    list($conditionQuery, $conditionParams) = $this->parseLookup($expressionConditions, $aliased, $autoGroup);
-
-                    $expressionQuery[] = array_merge($expressionQueryJoin, $conditionQuery);
-                    $expressionParams = array_merge($expressionParams, $conditionParams);
-                }
-
-                $lookupParams = array_merge($lookupParams, $expressionParams);
-                $lookupQuery[] = array_merge($queryCondition, $expressionQuery);
-            } else {
-                $resultQuery[$key] = $queryItem;
-            }
-        }
-
-        $query = $resultQuery;
-        $lookup = new LookupBuilder($query);
-
-        foreach ($lookup->parse($queryBuilder) as $data) {
-            list($prefix, $field, $condition, $params) = $data;
-
-            // Issue #124 https://github.com/studio107/Mindy_Orm/issues/124
-            $meta = $this->model->getMeta();
-            $fkList = array_flip(array_merge($meta->getForeignFields(), $meta->getOneToOneFields()));
-            if ((($params instanceof Base) == false) && array_key_exists($field, $fkList)) {
-                $field .= '_id';
-            }
-
-            /** @var Model $model */
-            list($alias, $model) = $this->getOrCreateChainAlias($prefix, false, $autoGroup);
-
-            if ($field === 'pk') {
-                $field = $model->getPkName();
-            }
-
-            if (is_object($params) && ($params instanceof QuerySet || $params instanceof Manager)) {
-                if ($condition != 'in') {
-                    throw new Exception("QuerySet object can be used as a parameter only in case of 'in' condition");
-                } else {
-                    if ($params instanceof Manager) {
-                        $params = $params->getQuerySet();
-                    }
-                    $params->prepareConditions();
-                }
-            }
-
-            // https://github.com/studio107/Mindy_Orm/issues/26
-            if ($model->hasField($field)) {
-                if ($condition == 'in' || $condition == 'exact') {
-                    $initField = $model->getField($field);
-                    if (is_a($initField, ForeignField::class)) {
-                        $initFieldModelClass = $initField->modelClass;
-                        $field .= '_' . $initFieldModelClass::primaryKeyName();
-
-                        // https://github.com/studio107/Mindy_Orm/issues/29
-                        if ($condition == 'exact') {
-                            if (is_a($params, Model::className())) {
-                                $params = $params->pk;
-                            }
-                        }
-                    }
-                }
-            }
-
-            if ($aliased === true || is_string($aliased)) {
-                if (strpos($field, '.') === false) {
-                    if (is_string($aliased)) {
-                        $field = $aliased . '.' . $field;
-                    } else if ($alias) {
-                        $field = $alias . '.' . $field;
-                    }
-                }
-            }
-
-            $method = 'build' . ucfirst($condition);
-            if (method_exists($this, $method)) {
-                list($query, $params) = $this->$method($field, $params);
-            } else {
-                list($query, $params) = $queryBuilder->$method($field, $params);
-            }
-            $lookupParams = array_merge($lookupParams, $params);
-            $lookupQuery[] = $query;
-        }
-
-        return [$lookupQuery, $lookupParams];
-    }
-
-    /**
-     * @param array $query
-     * @param $method
-     * @param array $queryCondition
-     * @param bool $aliased
-     * @return $this
-     */
-    public function buildCondition(array $query, $method, $queryCondition = [], $aliased = true, $autoGroup = true)
-    {
-        list($condition, $params) = $this->parseLookup($query, $aliased, $autoGroup);
-        $this->$method(array_merge($queryCondition, $condition), $params);
-        return $this;
-    }
-
-    public function clearFilter()
-    {
-        $this->command = null;
-        $this->_filterComplete = false;
-        $this->_filterAnd = [];
-        $this->_filterExclude = [];
-        $this->_filterOr = [];
-        $this->_filterOrExclude = [];
-        $this->where = [];
         return $this;
     }
 
@@ -656,26 +309,6 @@ class QuerySet extends QuerySetBase
     }
 
     /**
-     * @param $condition
-     * @param array $params
-     * @return static
-     */
-    public function excludeWhere($condition, $params = [])
-    {
-        return parent::andWhere(['not', $condition], $params);
-    }
-
-    /**
-     * @param $condition
-     * @param array $params
-     * @return static
-     */
-    public function excludeOrWhere($condition, $params = [])
-    {
-        return parent::orWhere(['not', $condition], $params);
-    }
-
-    /**
      * Converts name => `name`, user.name => `user`.`name`
      * @param string $name Column name
      * @return string Quoted column name
@@ -683,28 +316,6 @@ class QuerySet extends QuerySetBase
     public function quoteColumnName($name)
     {
         return $this->getConnection()->quoteColumnName($name);
-    }
-
-    /**
-     * @param $columns
-     * @return array
-     */
-    protected function normalizeOrderBy($columns)
-    {
-        if (!is_array($columns)) {
-            $columns = preg_split('/\s*,\s*/', trim($columns), -1, PREG_SPLIT_NO_EMPTY);
-        }
-        $result = [];
-        foreach ($columns as $column) {
-            $sort = SORT_ASC;
-            if (substr($column, 0, 1) == '-') {
-                $column = substr($column, 1);
-                $sort = SORT_DESC;
-            }
-            $column = $column == '?' ? $this->getQueryBuilder()->getRandomOrder() : $this->aliasColumn($column);
-            $result[$column] = $sort;
-        }
-        return $result;
     }
 
     /**
@@ -736,37 +347,6 @@ class QuerySet extends QuerySetBase
         }
         $this->getQueryBuilder()->order($newColumns);
         return $this;
-    }
-
-
-    /**
-     * 'id' -> '`t1`.`id`'
-     * @param $column
-     * @return string
-     */
-    public function aliasColumn($column)
-    {
-        $builder = new LookupBuilder();
-        list($prefix, $field, $condition, $params) = $builder->parseLookup($column);
-
-        // Issue #124 https://github.com/studio107/Mindy_Orm/issues/124
-        $fkList = array_flip($this->model->getMeta()->getForeignFields());
-        if ((($params instanceof Base) == false) && array_key_exists($field, $fkList)) {
-            $field .= '_id';
-        }
-
-        list($alias, $model) = $this->getOrCreateChainAlias($prefix);
-
-        $column = $field;
-
-        if (strpos($column, '.') === false) {
-            if ($alias) {
-                $column = $alias . '.' . $column;
-            } elseif ($this->_chainedHasMany) {
-                $column = $this->tableAlias . '.' . $column;
-            }
-        }
-        return $this->quoteColumnName($column);
     }
 
     /**
@@ -870,30 +450,10 @@ class QuerySet extends QuerySetBase
         return $this->buildAggregateSql(new Max($q));
     }
 
-    /**
-     * @return bool
-     */
-    private function filterHasJoin()
-    {
-        $meta = $this->model->getMeta();
-        foreach ([$this->_filterAnd, $this->_filterOr, $this->_filterExclude, $this->_filterOrExclude] as $data) {
-            foreach ($data as $subFilter) {
-                foreach ($subFilter as $key => $value) {
-                    if (strpos($key, '__') !== false) {
-                        $parts = explode('__', $key);
-                        if ($meta->hasRelatedField(array_shift($parts))) {
-                            return true;
-                        }
-                    }
-                }
-            }
-        }
-        return false;
-    }
-
     public function delete()
     {
-        return $this->getConnection()->query($this->deleteSql())->execute();
+        $statement = $this->getConnection()->query($this->deleteSql());
+        return $statement->execute();
     }
 
     public function deleteSql()
@@ -909,53 +469,6 @@ class QuerySet extends QuerySetBase
             ->setTypeDelete()
             ->setAlias(null);
         return $builder->toSQL();
-    }
-
-    /**
-     * @return array|Model[]
-     */
-    public function getData()
-    {
-        if (empty($this->_data)) {
-            if (
-                $this->command === null &&
-                $this->_chainedHasMany &&
-                $this->getConnection()->getSchema() instanceof \Mindy\Query\Pgsql\Schema
-            ) {
-                $pk = $this->quoteColumnName($this->retreivePrimaryKey());
-                $this->distinct([
-                    $this->_tableAlias . '.' . $pk => $this->_tableAlias . '.' . $pk
-                ]);
-                $orderBy = $this->orderBy;
-                if ($orderBy) {
-                    $this->orderBy = array_merge([$this->_tableAlias . '.' . $pk => SORT_ASC], $orderBy);
-                }
-                $this->from = '(' . parent::allSql() . ') ' . $this->quoteColumnName("_tmp");
-                $this->select = '*';
-                $this->groupBy = false;
-                $this->where = [];
-
-                if ($orderBy) {
-                    $orderFields = [];
-                    foreach ($orderBy as $field => $order) {
-                        $tmp = explode('.', $field);
-                        $name = str_replace('"', '', end($tmp));
-                        $orderFields[$this->quoteColumnName("_tmp") . '.' . $this->quoteColumnName($name)] = $order;
-                    }
-                    $this->orderBy = $orderFields;
-                }
-                $this->distinct = null;
-                $this->join = [];
-            }
-
-            $this->prepareCommand();
-            $data = $this->command->queryAll();
-            $this->_data = !empty($this->with) ? $this->populateWith($data) : $data;
-            $this->with = [];
-            $this->command = null;
-            $this->_filterComplete = true;
-        }
-        return $this->asArray ? $this->_data : $this->createModels($this->_data);
     }
 
     /**
@@ -1006,29 +519,17 @@ class QuerySet extends QuerySetBase
         return $newData;
     }
 
-    public function addGroupBy($columns)
-    {
-        if (!is_array($columns)) {
-            $columns = [$columns];
-        }
-        $newColumns = [];
-        foreach ($columns as $column) {
-            if ($column == 'pk') {
-                $column = $this->model->getPkName();
-            }
-            $newColumns[] = $this->quoteColumnName($this->tableAlias . '.' . $column);
-        }
-        return parent::addGroupBy($newColumns);
-    }
-
     /**
      * Truncate table
      * @return int
-     * @throws \Mindy\Query\Exception
      */
     public function truncate()
     {
-        return $this->createCommand()->truncateTable($this->model->tableName())->execute();
+        $connection = $this->getConnection();
+        $adapter = QueryBuilder::getInstance($connection)->getAdapter();
+        $tableName = $adapter->quoteTableName($adapter->getRawTableName($this->model->tableName()));
+        $q = $connection->getDatabasePlatform()->getTruncateTableSQL($tableName);
+        return $connection->executeUpdate($q);
     }
 
     /**
@@ -1037,7 +538,7 @@ class QuerySet extends QuerySetBase
      */
     public function distinct($fields = true)
     {
-        parent::distinct($fields);
+        $this->getQueryBuilder()->distinct($fields);
         return $this;
     }
 
@@ -1048,12 +549,6 @@ class QuerySet extends QuerySetBase
     public function group($columns)
     {
         $this->getQueryBuilder()->group($columns);
-        return $this;
-    }
-
-    public function setChainedHasMany()
-    {
-        $this->_chainedHasMany = true;
         return $this;
     }
 

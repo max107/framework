@@ -6,11 +6,15 @@ return [
         'driver' => 'pdo_mysql'
     ],
     'pgsql' => [
-        'dsn' => 'pgsql://root@localhost:5432/test',
+        'url' => 'pgsql://root@localhost:5432/test',
         'driver' => 'pdo_pgsql'
     ],
     'sqlite' => [
-        'memory' => true,
+        'path' => __DIR__ . '/sqlite.db',
+        'user' => '',
+        'password' => '',
+        'host' => 'localhost',
+        'memory' => false,
         'driverClass' => '\Mindy\QueryBuilder\Driver\SqliteDriver',
     ]
 ];

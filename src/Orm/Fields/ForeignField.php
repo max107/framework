@@ -73,9 +73,7 @@ class ForeignField extends RelatedField
 
     public function getForeignPrimaryKey()
     {
-        $modelClass = $this->modelClass;
-        /** @var $modelClass \Mindy\Orm\Model */
-        return $modelClass::getPkName();
+        return call_user_func([$this->modelClass, 'getPkName']);
     }
 
     public function getJoin(QueryBuilder $qb, $topAlias)
@@ -130,7 +128,7 @@ class ForeignField extends RelatedField
 
         /** @var $modelClass \Mindy\Orm\Model */
         $modelClass = $this->modelClass;
-        return $modelClass::objects()->filter(array_merge(['pk' => $value], $this->extra))->get();
+        return $modelClass::objects()->get(array_merge(['pk' => $value], $this->extra));
     }
 
     public function toArray()
@@ -142,5 +140,13 @@ class ForeignField extends RelatedField
     public function getSelectJoin(QueryBuilder $qb, $topAlias)
     {
         // TODO: Implement getSelectJoin() method.
+    }
+
+    /**
+     * @return string
+     */
+    public function getAttributeName() : string
+    {
+        return $this->name . '_id';
     }
 }

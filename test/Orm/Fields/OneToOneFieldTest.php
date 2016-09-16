@@ -9,39 +9,9 @@
 namespace Mindy\Tests\Orm\Fields;
 
 use Exception;
-use Mindy\Orm\Fields\OneToOneField;
-use Mindy\Orm\Model;
+use Mindy\Tests\Orm\Models\Member;
+use Mindy\Tests\Orm\Models\MemberProfile;
 use Mindy\Tests\Orm\OrmDatabaseTestCase;
-
-class Member extends Model
-{
-    public static function getFields()
-    {
-        return [
-            'profile' => [
-                'class' => OneToOneField::class,
-                'modelClass' => MemberProfile::class,
-                'reversed' => true,
-                'to' => 'user_id'
-            ],
-        ];
-    }
-}
-
-class MemberProfile extends Model
-{
-    public static function getFields()
-    {
-        return [
-            'user' => [
-                'class' => OneToOneField::class,
-                'modelClass' => Member::class,
-                'primary' => true,
-                'to' => 'id'
-            ]
-        ];
-    }
-}
 
 abstract class OneToOneFieldTest extends OrmDatabaseTestCase
 {
