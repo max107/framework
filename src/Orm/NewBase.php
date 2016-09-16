@@ -15,6 +15,11 @@ use Mindy\Orm\Fields\HasManyField;
 use Mindy\Orm\Fields\ManyToManyField;
 use Mindy\Orm\Fields\ModelFieldInterface;
 
+/**
+ * Class NewBase
+ * @package Mindy\Orm
+ * @method static \Mindy\Orm\Manager objects($instance = null)
+ */
 abstract class NewBase implements ModelInterface, ArrayAccess
 {
     /**
@@ -129,14 +134,20 @@ abstract class NewBase implements ModelInterface, ArrayAccess
      */
     public function setAttribute(string $name, $value)
     {
-        $name = $this->convertToPrimaryKeyName($name);
-
         $primaryKeyNames = self::getPrimaryKeyName(true);
-        if ($this->hasAttribute($name)) {
-            if (in_array($name, $primaryKeyNames) && $this->getAttribute($name) !== $value) {
+
+        $meta = self::getMeta();
+        $name = $meta->getMappingName($name);
+
+        if ($meta->hasField($name)) {
+            $field = $meta->getField($name);
+            $attributeName = $field->getAttributeName();
+
+            if (in_array($attributeName, $primaryKeyNames) && $this->getAttribute($attributeName) !== $value) {
                 $this->setIsNewRecord(true);
             }
-            $this->attributes->setAttribute($name, $value);
+
+            $this->attributes->setAttribute($attributeName, $value);
         } else {
             throw new Exception(get_class($this) . ' has no attribute named "' . $name . '".');
         }
@@ -212,6 +223,26 @@ abstract class NewBase implements ModelInterface, ArrayAccess
     {
         $className = get_called_class();
         return new Manager($instance ? $instance : new $className);
+    }
+
+    /**
+     * @param $method
+     * @param $args
+     * @return mixed
+     * @throws Exception
+     */
+    public function __call($method, $args)
+    {
+        $manager = $method . 'Manager';
+        if (method_exists($this, $manager)) {
+            return call_user_func_array([$this, $manager], array_merge([$this], $args));
+
+        } elseif (method_exists($this, $method)) {
+            return call_user_func_array([$this, $method], $args);
+
+        } else {
+            throw new Exception('Call unknown method ' . $method);
+        }
     }
 
     /**
@@ -322,7 +353,7 @@ abstract class NewBase implements ModelInterface, ArrayAccess
      * @param array $row
      * @return ModelInterface
      */
-    public static function create(array $row)
+    public static function create(array $row = [])
     {
         $className = get_called_class();
         return new $className($row);
@@ -368,7 +399,7 @@ abstract class NewBase implements ModelInterface, ArrayAccess
     protected function getFieldValue(string $name)
     {
         $field = $this->getField($name);
-        $field->setValue($this->getAttribute($name));
+        $field->setValue($this->getAttribute($field->getAttributeName()));
         return $field->getValue();
     }
 

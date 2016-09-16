@@ -77,4 +77,9 @@ interface ModelInterface
      * @return string
      */
     public static function tableName() : string;
+
+    /**
+     * @param array $attributes
+     */
+    public function setAttributes(array $attributes);
 }

@@ -77,11 +77,6 @@ class ForeignField extends RelatedField
      */
     public function setValue($value)
     {
-        if ($value instanceof ModelInterface) {
-            $this->setDbValue($value->pk);
-        } else {
-            $this->setDbValue($value);
-        }
         $this->value = $value;
     }
 
@@ -97,10 +92,20 @@ class ForeignField extends RelatedField
             } else {
                 throw new Exception('Value is empty');
             }
-        }
+        } else {
+            if ($this->value instanceof ModelInterface) {
+                if ($this->value->getIsNewRecord()) {
+                    throw new Exception('Failed to set new model');
+                } else {
+                    $value = $this->value->pk;
+                }
+            } else {
+                $value = $this->value;
+            }
 
-        $params = array_merge(['pk' => $this->value], $this->extra);
-        return call_user_func([$this->modelClass, 'objects'])->get($params);
+            $params = array_merge(['pk' => $value], $this->extra);
+            return call_user_func([$this->modelClass, 'objects'])->get($params);
+        }
     }
 
     /**

@@ -13,9 +13,16 @@ use Mindy\Tests\Orm\OrmDatabaseTestCase;
 
 class IsNewTest extends OrmDatabaseTestCase
 {
+    public $driver = 'mysql';
+
     public function getModels()
     {
         return [new User];
+    }
+
+    public function tearDown()
+    {
+
     }
 
     public function testSimple()
@@ -45,6 +52,9 @@ class IsNewTest extends OrmDatabaseTestCase
         list($newUser, $created) = User::objects()->getOrCreate(['username' => 'foo123', 'password' => 'bar']);
         $this->assertTrue($created);
         $this->assertFalse($newUser->getIsNewRecord());
+
+        $model = User::objects()->get(['username' => 'foo123']);
+        $this->assertFalse($model->getIsNewRecord());
 
         /** @var $updatedUser User */
         $updatedUser = User::objects()->updateOrCreate(['username' => 'foo123'], ['username' => 'john']);

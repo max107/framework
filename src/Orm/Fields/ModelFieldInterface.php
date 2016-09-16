@@ -36,4 +36,14 @@ interface ModelFieldInterface
      * @return mixed
      */
     public function getValue();
+
+    /**
+     * @return string|null
+     */
+    public function getSqlType();
+
+    /**
+     * @return string
+     */
+    public function getAttributeName();
 }

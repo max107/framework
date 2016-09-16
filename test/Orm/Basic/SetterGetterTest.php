@@ -10,9 +10,15 @@ namespace Mindy\Tests\Orm\Basic;
 
 use Mindy\Tests\Orm\Models\Category;
 use Mindy\Tests\Orm\Models\Product;
+use Mindy\Tests\Orm\OrmDatabaseTestCase;
 
-class SetterGetterTest extends \PHPUnit_Framework_TestCase
+class SetterGetterTest extends OrmDatabaseTestCase
 {
+    public function getModels()
+    {
+        return [new Product, new Category];
+    }
+
     public function testSimple()
     {
         $model = new Product();
@@ -28,22 +34,41 @@ class SetterGetterTest extends \PHPUnit_Framework_TestCase
         $this->assertSame('123', $model->type);
     }
 
-    public function testSetGet()
+    /**
+     * @expectedException \Exception
+     */
+    public function testSetForeignField()
     {
         $category = new Category();
         $category->name = 'Toys';
         $this->assertSame('Toys', $category->name);
 
         $product = new Product();
-        $product->name = 'Bear';
-        $product->price = 100;
-        $product->description = 'Funny white bear';
+        $this->assertNull($product->category);
+        $this->assertNull($product->category_id);
+
+        $product->category = $category;
+        $this->assertNull($product->category);
+        $this->assertNull($product->category_id);
+
+        $product->category_id = 1;
+        $this->assertSame(1, $product->category_id);
+        $this->assertSame(1, $product->getAttribute('category_id'));
+    }
+
+    public function testSetGet()
+    {
+        $category = new Category(['name' => 'Toys']);
+        $this->assertSame('Toys', $category->name);
+        $this->assertTrue($category->save());
+
+        $product = new Product();
         $this->assertNull($product->category);
         $this->assertNull($product->category_id);
 
         // Мы не храним полное состояние модели
         $product->category = $category;
-        $this->assertNull($product->category);
+        $this->assertInstanceOf(Category::class, $product->category);
         $this->assertNull($product->category_id);
 
         $product->category_id = 1;

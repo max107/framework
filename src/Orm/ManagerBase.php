@@ -8,6 +8,10 @@
 
 namespace Mindy\Orm;
 
+/**
+ * Class ManagerBase
+ * @package Mindy\Orm
+ */
 abstract class ManagerBase
 {
     /**
@@ -19,6 +23,11 @@ abstract class ManagerBase
      */
     private $_model;
 
+    /**
+     * ManagerBase constructor.
+     * @param Model $model
+     * @param array $config
+     */
     public function __construct(Model $model, $config = [])
     {
         $this->_model = $model;

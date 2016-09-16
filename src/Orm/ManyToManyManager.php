@@ -11,6 +11,10 @@ namespace Mindy\Orm;
 use Mindy\Exception\Exception;
 use Mindy\QueryBuilder\QueryBuilder;
 
+/**
+ * Class ManyToManyManager
+ * @package Mindy\Orm
+ */
 abstract class ManyToManyManager extends ManagerBase
 {
     /**
@@ -40,21 +44,37 @@ abstract class ManyToManyManager extends ManagerBase
      */
     public $relatedTable;
 
+    /**
+     * @param Model $model
+     * @param array $extra
+     * @return int
+     */
     public function link(Model $model, array $extra = [])
     {
         return $this->linkUnlinkProcess($model, true, $extra);
     }
 
+    /**
+     * @param Model $model
+     * @return int
+     */
     public function unlink(Model $model)
     {
         return $this->linkUnlinkProcess($model, false);
     }
 
+    /**
+     * @return Model
+     */
     private function getPrimaryModel()
     {
         return $this->primaryModel;
     }
 
+    /**
+     * @return int
+     * @throws Exception
+     */
     public function clean()
     {
         if ($this->primaryModel->pk === null) {
@@ -65,6 +85,13 @@ abstract class ManyToManyManager extends ManagerBase
         return $db->delete($adapter->quoteTableName($adapter->getRawTableName($this->relatedTable)), [$this->primaryModelColumn => $this->primaryModel->pk]);
     }
 
+    /**
+     * @param Model $model
+     * @param bool $link
+     * @param array $extra
+     * @return int
+     * @throws Exception
+     */
     protected function linkUnlinkProcess(Model $model, $link = true, array $extra = [])
     {
         $primaryModel = $this->getPrimaryModel();

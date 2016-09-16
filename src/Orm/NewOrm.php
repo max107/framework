@@ -9,10 +9,15 @@
 namespace Mindy\Orm;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Types\Type;
 use Exception;
 use function Mindy\app;
 use Mindy\QueryBuilder\QueryBuilder;
 
+/**
+ * Class NewOrm
+ * @package Mindy\Orm
+ */
 class NewOrm extends NewBase
 {
     /**
@@ -44,11 +49,6 @@ class NewOrm extends NewBase
         }
     }
 
-    protected function updateInternal(array $fields)
-    {
-
-    }
-
     /**
      * @return QueryBuilder
      * @throws Exception
@@ -66,56 +66,48 @@ class NewOrm extends NewBase
         return $this->getQueryBuilder()->getAdapter();
     }
 
-    protected function insertInternal(array $fields)
+    protected function updateInternal(array $fields = [])
     {
-        if (empty($fields)) {
-            $fields = $this->getMeta()->getAttributes();
-        }
-
-        $dirty = $this->getDirtyAttributes();
-        if (empty($dirty)) {
-            $dirty = $fields;
-        }
-
-        $values = [];
-        foreach ($dirty as $name) {
-            $field = $this->getField($name);
-            $value = $field->getDbValue();
-            if ($value) {
-                $values[$field->getAttributeName()] = $value;
-            }
-        }
-
-        debug($values, $this->attributes->getAttributes());
+        $values = $this->getChangedAttributes($fields);
         if (empty($values)) {
             return true;
         }
 
-//        if (empty($values)) {
-//            foreach ($this->getPrimaryKey(true) as $key => $value) {
-//                $values[$key] = $value;
-//            }
-//        }
+        $rows = $this->objects()
+            ->filter($this->getPrimaryKeyValues())
+            ->update($values);
 
-        $incValues = $values;
-        $primaryKeyName = self::getPrimaryKeyName();
-        if (array_key_exists($primaryKeyName, $incValues) === false) {
-            $incValues[$primaryKeyName] = null;
+        foreach ($values as $name => $value) {
+            $this->setAttribute($name, $value);
         }
-        $dbValues = $this->getDbValues($incValues);
+        $this->attributes->resetOldAttributes();
+
+        return $rows >= 0;
+    }
+
+    protected function insertInternal(array $fields = [])
+    {
+        $values = $this->getChangedAttributes($fields);
+
+        if (empty($values)) {
+            return true;
+        }
 
         $connection = static::getConnection();
         $adapter = QueryBuilder::getInstance($connection)->getAdapter();
 
-        $inserted = $connection->insert($adapter->quoteTableName($adapter->getRawTableName($this->tableName())), $dbValues);
+        $tableName = $adapter->quoteTableName($adapter->getRawTableName($this->tableName()));
+        $inserted = $connection->insert($tableName, $values);
         if ($inserted === false) {
             return false;
         }
 
-        if (array_key_exists($primaryKeyName, $values) === false) {
-            $id = $connection->lastInsertId();
-            $this->setAttribute($primaryKeyName, $id);
-            $values[$primaryKeyName] = $id;
+        foreach (self::getMeta()->getPrimaryKeyName(true) as $primaryKeyName) {
+            if (array_key_exists($primaryKeyName, $values) === false) {
+                $id = $connection->lastInsertId();
+                $this->setAttribute($primaryKeyName, $id);
+                $values[$primaryKeyName] = $id;
+            }
         }
 
         $this->setAttributes($values);
@@ -219,5 +211,44 @@ class NewOrm extends NewBase
     public function setConnection(Connection $connection)
     {
         $this->connection = $connection;
+    }
+
+    /**
+     * @param array $fields
+     * @return array
+     */
+    public function getChangedAttributes(array $fields = []) : array
+    {
+        $changed = [];
+
+        if (empty($fields)) {
+            $fields = $this->getMeta()->getAttributes();
+        }
+
+        $dirty = $this->getDirtyAttributes();
+        if (empty($dirty)) {
+            $dirty = $fields;
+        }
+
+        foreach ($this->getPrimaryKeyValues() as $name => $value) {
+            if ($value) {
+                $changed[$name] = $value;
+            }
+        }
+
+        $platform = $this->getConnection()->getDatabasePlatform();
+
+        $meta = self::getMeta();
+        foreach ($this->getAttributes() as $name => $attribute) {
+            if (in_array($name, $dirty) && $meta->hasField($name)) {
+                $field = $this->getField($name);
+                $sqlType = $field->getSqlType();
+                if ($sqlType) {
+                    $changed[$name] = Type::getType($sqlType)->convertToDatabaseValue($attribute, $platform);
+                }
+            }
+        }
+
+        return $changed;
     }
 }

@@ -124,14 +124,19 @@ class QueryBuilder
     }
 
     /**
-     * @return \Doctrine\DBAL\Platforms\AbstractPlatform|\Mindy\QueryBuilder\DatabasePlatform\MysqlCheckIntegrityTrait
+     * @return \Doctrine\DBAL\Platforms\AbstractPlatform
      */
     public function getDatabasePlatform()
     {
         return $this->getConnection()->getDatabasePlatform();
     }
 
-    public static function getInstance(\Doctrine\DBAL\Driver\Connection $connection)
+    /**
+     * @param Connection $connection
+     * @return QueryBuilder
+     * @throws Exception
+     */
+    public static function getInstance(Connection $connection)
     {
         $driver = $connection->getDriver();
         switch ($driver->getName()) {

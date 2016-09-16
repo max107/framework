@@ -15,25 +15,36 @@ use Traversable;
  */
 class Manager extends ManyToManyManager implements IteratorAggregate, ArrayAccess
 {
-    public function with(array $value)
+    /**
+     * @param string|array $value
+     * @return $this
+     */
+    public function with($value)
     {
+        if (!is_array($value)) {
+            $value = [$value];
+        }
         $this->getQuerySet()->with($value);
         return $this;
     }
 
+    /**
+     * @param bool $value
+     * @return $this
+     */
     public function asArray($value = true)
     {
-        return $this->getQuerySet()->asArray($value);
+        $this->getQuerySet()->asArray($value);
+        return $this;
     }
 
-    public function asSql($value = true)
+    /**
+     * @param string $connection
+     * @return $this
+     */
+    public function using(string $connection)
     {
-        return $this->getQuerySet()->asSql($value);
-    }
-
-    public function using($db)
-    {
-        $this->getQuerySet()->using($db);
+        $this->getQuerySet()->using($connection);
         return $this;
     }
 
@@ -90,7 +101,7 @@ class Manager extends ManyToManyManager implements IteratorAggregate, ArrayAcces
 
     /**
      * @param array $q
-     * @return TreeModel|Model|null
+     * @return ModelInterface|array|null
      */
     public function get(array $q = [])
     {

@@ -6,6 +6,7 @@ use ArrayAccess;
 use Doctrine\DBAL\Connection;
 use Exception;
 use IteratorAggregate;
+use function Mindy\app;
 use Mindy\Base\Mindy;
 use Mindy\Helper\Creator;
 use Mindy\Helper\Traits\Accessors;
@@ -34,17 +35,17 @@ abstract class QuerySetBase implements IteratorAggregate, ArrayAccess, Serializa
      */
     protected $asArray;
     /**
-     * @var boolean whether to return statement as an sql.
+     * @var Connection
      */
-    protected $asSql;
+    protected $connection;
+    /**
+     * @var string
+     */
+    protected $using;
     /**
      * @var DataIterator
      */
     private $_iterator;
-    /**
-     * @var \Doctrine\Dbal\Connection
-     */
-    private $_db;
     /**
      * @var \Mindy\QueryBuilder\QueryBuilder
      */
@@ -94,28 +95,24 @@ abstract class QuerySetBase implements IteratorAggregate, ArrayAccess, Serializa
     }
 
     /**
-     * @param $db
+     * @param $connection
      * @return $this
      */
-    public function using($db)
+    public function using(string $connection)
     {
-        if (($db instanceof Connection) === false) {
-            // TODO refact, detach from Mindy::app()
-            $db = Mindy::app()->db->getConnection($db);
-        }
-        $this->_db = $db;
+        $this->using = $connection;
         return $this;
     }
 
     /**
-     * @return \Doctrine\Dbal\Connection
+     * @return Connection
      */
     public function getConnection()
     {
-        if ($this->_db === null && Mindy::app()) {
-            $this->_db = Mindy::app()->db->getConnection();
+        if ($this->connection === null) {
+            $this->connection = app()->db->getConnection($this->using);
         }
-        return $this->_db;
+        return $this->connection;
     }
 
     /**
@@ -170,19 +167,8 @@ abstract class QuerySetBase implements IteratorAggregate, ArrayAccess, Serializa
     }
 
     /**
-     * Sets the [[asArray]] property.
-     * @param boolean $value whether to return the query results in terms of arrays instead of Active Records.
-     * @return static the query object itself
-     */
-    public function asSql($value = true)
-    {
-        $this->asSql = $value;
-        return $this;
-    }
-
-    /**
      * @param $row array
-     * @return Model
+     * @return ModelInterface
      */
     public function createModel(array $row)
     {

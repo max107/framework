@@ -136,4 +136,13 @@ class NewModelTest extends OrmDatabaseTestCase
         $connection = $model->getConnection();
         $this->assertInstanceOf(Connection::class, $connection);
     }
+
+    public function testChangedAttributes()
+    {
+        $model = new User();
+        $model->username = 'foo';
+        $this->assertEquals([
+            'username' => 'foo'
+        ], $model->getChangedAttributes());
+    }
 }

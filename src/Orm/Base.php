@@ -845,7 +845,7 @@ abstract class Base implements ArrayAccess, ModelInterface
      * or [[beforeSave()]] stops the updating process.
      * @throws \Exception in case update failed.
      */
-    public function update(array $fields = [])
+    public function update(array $fields = []) : bool
     {
         $connection = static::getConnection();
 

@@ -119,7 +119,7 @@ class QuerySet extends QuerySetBase
     {
         $model = $this->get($attributes);
         if ($model === null) {
-            $className = $this->getModel()->className();
+            $className = get_class($this->getModel());
             /** @var Model $model */
             $model = new $className($attributes);
             $model->save();
@@ -129,6 +129,11 @@ class QuerySet extends QuerySetBase
         return [$model, false];
     }
 
+    /**
+     * @param array $attributes
+     * @param array $updateAttributes
+     * @return ModelInterface|Orm|null
+     */
     public function updateOrCreate(array $attributes, array $updateAttributes)
     {
         $model = $this->get($attributes);
@@ -152,6 +157,9 @@ class QuerySet extends QuerySetBase
         return $this;
     }
 
+    /**
+     * @return string
+     */
     public function allSql()
     {
         $qb = clone $this->getQueryBuilder();
@@ -174,7 +182,7 @@ class QuerySet extends QuerySetBase
     /**
      * Executes query and returns a single row of result.
      * @param array $filter
-     * @return Orm|null
+     * @return ModelInterface|array|null
      * @throws MultipleObjectsReturned
      */
     public function get($filter = [])
@@ -190,7 +198,13 @@ class QuerySet extends QuerySetBase
             $rows = $this->populateWith($rows);
         }
         $row = array_shift($rows);
-        return $this->asArray ? $row : $this->createModel($row);
+        if ($this->asArray) {
+            return $row;
+        } else {
+            $model = $this->createModel($row);
+            $model->setIsNewRecord(false);
+            return $model;
+        }
     }
 
     /**
