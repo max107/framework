@@ -131,7 +131,7 @@ class QueryBuilder
         return $this->getConnection()->getDatabasePlatform();
     }
 
-    public static function getInstance(Connection $connection)
+    public static function getInstance(\Doctrine\DBAL\Driver\Connection $connection)
     {
         $driver = $connection->getDriver();
         switch ($driver->getName()) {

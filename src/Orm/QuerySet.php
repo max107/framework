@@ -194,14 +194,6 @@ class QuerySet extends QuerySetBase
     }
 
     /**
-     * @return mixed|null
-     */
-    public function retreivePrimaryKey()
-    {
-        return $this->getModel()->primaryKeyName();
-    }
-
-    /**
      * Converts array prefix to string key
      * @param array $prefix
      * @return string
@@ -461,7 +453,7 @@ class QuerySet extends QuerySetBase
 //        if ($this->filterHasJoin()) {
 //            $this->prepareConditions();
 //            return $this->createCommand()->delete($tableName, [
-//                $this->retreivePrimaryKey() => $this->valuesList(['pk'], true)
+//                $this->getPrimaryKeyName() => $this->valuesList(['pk'], true)
 //            ], $this->params);
 //        }
 

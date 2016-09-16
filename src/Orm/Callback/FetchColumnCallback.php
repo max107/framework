@@ -25,11 +25,11 @@ class FetchColumnCallback
     public function run($column)
     {
         if ($column === 'pk') {
-            return $this->model->primaryKeyName();
+            return $this->model->getPrimaryKeyName();
         } else if ($this->meta->hasForeignField($column)) {
             return strpos($column, '_id') === false ? $column . '_id' : $column;
         } else if (strpos($column, '_id') === false) {
-            $fields = $this->meta->getManyFields();
+            $fields = $this->meta->getManyToManyFields();
             foreach ($fields as $field) {
                 if (empty($field->through) === false) {
                     $meta = MetaData::getInstance($field->through);

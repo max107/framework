@@ -7,6 +7,8 @@ use Doctrine\DBAL\Types\Type;
 use Exception;
 use InvalidArgumentException;
 use Mindy\Orm\Base;
+use Mindy\Orm\Model;
+use Mindy\Orm\ModelInterface;
 use Mindy\Orm\Orm;
 use Mindy\Orm\RelatedManager;
 use Mindy\QueryBuilder\QueryBuilder;
@@ -33,17 +35,6 @@ class ForeignField extends RelatedField
         }
     }
 
-    public function setValue($value)
-    {
-        if (empty($value)) {
-            $value = null;
-        }
-
-        $this->value = $value;
-
-        return $this;
-    }
-
     public function getColumn()
     {
         return new Column(
@@ -61,14 +52,6 @@ class ForeignField extends RelatedField
     public function getOnUpdate()
     {
         return $this->onUpdate;
-    }
-
-    public function getDbPrepValue()
-    {
-        if (is_a($this->value, Orm::class)) {
-            return $this->value->pk;
-        }
-        return $this->value;
     }
 
     public function getForeignPrimaryKey()
@@ -90,22 +73,42 @@ class ForeignField extends RelatedField
     }
 
     /**
-     * @return \Mindy\Orm\ManyToManyManager QuerySet of related objects
+     * @param $value
      */
-    public function getManager()
+    public function setValue($value)
     {
-        // TODO move query to fetch method
-        $manager = new RelatedManager($this->getRelatedModel());
-        $value = $this->getValue();
-        return is_object($value) ? $value : $manager->filter(array_merge(['pk' => $value], $this->extra));
+        if ($value instanceof ModelInterface) {
+            $this->setDbValue($value->pk);
+        } else {
+            $this->setDbValue($value);
+        }
+        $this->value = $value;
     }
 
+    /**
+     * @return null|ModelInterface
+     * @throws Exception
+     */
     public function getValue()
     {
-        $value = parent::getValue();
-        return is_a($value, $this->modelClass) === false ? $this->fetch($value) : $value;
+        if (empty($this->value)) {
+            if ($this->null) {
+                return null;
+            } else {
+                throw new Exception('Value is empty');
+            }
+        }
+
+        $params = array_merge(['pk' => $this->value], $this->extra);
+        return call_user_func([$this->modelClass, 'objects'])->get($params);
     }
 
+    /**
+     * @param $form
+     * @param string $fieldClass
+     * @param array $extra
+     * @return mixed|null
+     */
     public function getFormField($form, $fieldClass = '\Mindy\Form\Fields\DropDownField', array $extra = [])
     {
         return parent::getFormField($form, $fieldClass, $extra);
@@ -148,5 +151,15 @@ class ForeignField extends RelatedField
     public function getAttributeName() : string
     {
         return $this->name . '_id';
+    }
+
+    public function convertToPHPValue($value)
+    {
+        return $value;
+    }
+
+    public function convertToDatabaseValue($value)
+    {
+        return $value instanceof ModelInterface ? $value->pk : $value;
     }
 }

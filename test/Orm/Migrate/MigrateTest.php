@@ -19,43 +19,6 @@ use Mindy\Orm\Migration;
 use Mindy\Orm\Model;
 use Mindy\Tests\Orm\OrmDatabaseTestCase;
 
-class Test extends Model
-{
-    public static function getFields()
-    {
-        return [
-            'name' => [
-                'class' => CharField::className(),
-                'verboseName' => "Name"
-            ]
-        ];
-    }
-
-    public static function tableName()
-    {
-        return "{{tests_test}}";
-    }
-}
-
-class TestChanged extends Model
-{
-    public static function getFields()
-    {
-        return [
-            'name' => [
-                'class' => CharField::className(),
-                'length' => 50,
-                'verboseName' => "Name"
-            ]
-        ];
-    }
-
-    public static function tableName()
-    {
-        return "{{tests_test_changed}}";
-    }
-}
-
 class MigrateTest extends OrmDatabaseTestCase
 {
     /**

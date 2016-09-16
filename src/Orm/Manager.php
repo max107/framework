@@ -38,24 +38,6 @@ class Manager extends ManyToManyManager implements IteratorAggregate, ArrayAcces
     }
 
     /**
-     * Returns the primary key name(s) for this AR class.
-     * The default implementation will return the primary key(s) as declared
-     * in the DB table that is associated with this AR class.
-     *
-     * If the DB table does not declare any primary key, you should override
-     * this method to return the attributes that you want to use as primary keys
-     * for this AR class.
-     *
-     * Note that an array should be returned even for a table with single primary key.
-     *
-     * @return string[] the primary keys of the associated database table.
-     */
-    public function primaryKey()
-    {
-        return $this->getModel()->getTableSchema()->primaryKey;
-    }
-
-    /**
      * @param array|string|Expression $q
      * @return \Mindy\Orm\Manager
      */

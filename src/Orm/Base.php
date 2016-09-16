@@ -25,8 +25,10 @@ use Mindy\Helper\Traits\Configurator;
 use Mindy\Orm\Fields\AutoField;
 use Mindy\Orm\Fields\FileField;
 use Mindy\Orm\Fields\ForeignField;
+use Mindy\Orm\Fields\HasManyField;
 use Mindy\Orm\Fields\JsonField;
 use Mindy\Orm\Fields\ManyToManyField;
+use Mindy\Orm\Fields\OneToOneField;
 use Mindy\QueryBuilder\QueryBuilder;
 
 /**
@@ -34,7 +36,7 @@ use Mindy\QueryBuilder\QueryBuilder;
  * @package Mindy\Orm
  * @property boolean $isNewRecord Whether the record is new and should be inserted when calling [[save()]].
  */
-abstract class Base implements ArrayAccess
+abstract class Base implements ArrayAccess, ModelInterface
 {
     use Accessors, Configurator;
 
@@ -86,10 +88,10 @@ abstract class Base implements ArrayAccess
      */
     public function __construct(array $attributes = [])
     {
+        self::getMeta();
+
         $this->attributeCollection = new AttributeCollection();
         $this->setAttributes($attributes);
-
-        self::getMeta();
     }
 
     public function __toString()
@@ -109,18 +111,6 @@ abstract class Base implements ArrayAccess
         return $this->_eventManager;
     }
 
-    public static function getCache()
-    {
-        if (self::$_cache === null) {
-            if (class_exists('\Mindy\Base\Mindy')) {
-                self::$_cache = \Mindy\Base\Mindy::app()->getComponent('cache');
-            } else {
-                self::$_cache = new \Mindy\Cache\DummyCache;
-            }
-        }
-        return self::$_cache;
-    }
-
     /**
      * @param $owner Model
      * @param $isNew
@@ -135,7 +125,6 @@ abstract class Base implements ArrayAccess
      */
     public function afterSave($owner, $isNew)
     {
-        self::getCache()->set($owner->className() . '_' . $owner->primaryKeyName(), $owner);
     }
 
     /**
@@ -150,7 +139,6 @@ abstract class Base implements ArrayAccess
      */
     public function afterDelete($owner)
     {
-        self::getCache()->delete($owner->className() . '_' . $owner->primaryKeyName());
     }
 
     /**
@@ -197,44 +185,20 @@ abstract class Base implements ArrayAccess
     public function __getInternalOrm($name)
     {
         if ($name == 'pk') {
-            $name = $this->primaryKey();
-            $name = array_shift($name);
+            $name = $this->getPrimaryKeyName();
         }
 
         $meta = static::getMeta();
 
-        if ($meta->hasFileField($name)) {
-            $fileField = $this->getField($name);
-            $fileField->setModel($this);
-            $fileField->setDbValue($this->getAttribute($name));
-            return $fileField;
-        } else if ($meta->hasOneToOneField($name) && $this->hasAttribute($name) === false) {
-            /* @var $field \Mindy\Orm\Fields\OneToOneField */
-            $field = $meta->getField($name)->setModel($this);
-            return $field->getValue();
-        } else if ($meta->hasForeignField($name) && $this->hasAttribute($name) === false) {
-            $value = $this->getAttribute($name . '_id');
-            if (is_null($value)) {
-                return $value;
-            } else {
-                /* @var $field \Mindy\Orm\Fields\ForeignField */
-                $field = $meta->getForeignField($name)->setModel($this)->setValue($value);
-                return $field->getValue();
-            }
-        } else if ($meta->hasManyToManyField($name) || $meta->hasHasManyField($name)) {
-            /* @var $field \Mindy\Orm\Fields\ManyToManyField|\Mindy\Orm\Fields\HasManyField */
+        if ($meta->hasField($name)) {
             $field = $meta->getField($name);
-            return $field->setModel($this)->getManager();
-        } else if ($meta->hasField($name) && is_a($this->getField($name), JsonField::class)) {
-            $field = $this->getField($name)->setModel($this);
-            $field->setDbValue($this->getAttribute($name));
+            $field->setModel($this);
+            if ($this->hasAttribute($name)) {
+                $field->setValue($this->getAttribute($name));
+            }
             return $field->getValue();
         } else if ($this->hasAttribute($name)) {
             return $this->getAttribute($name);
-
-        } else if ($this->hasAttribute($name)) {
-            // TODO problem here
-            return $this->hasField($name) ? $this->getField($name)->default : null;
         }
 
         return $this->__getInternal($name);
@@ -250,39 +214,23 @@ abstract class Base implements ArrayAccess
     public function __set($name, $value)
     {
         if ($name == 'pk') {
-            $name = $this->primaryKey();
-            $name = array_shift($name);
+            $name = $this->getPrimaryKeyName();
         }
 
         $meta = static::getMeta();
 
-        if ($meta->hasForeignField($name) && !$this->hasAttribute($name)) {
-            $name .= '_id';
-            if ($value instanceof Base) {
-                $value = $value->pk;
-            }
-        }
-
-        if ($meta->hasOneToOneField($name)) {
-            if (strpos($name, '_id') === false) {
-                $name .= '_id';
-            }
-            if ($value instanceof Base) {
-                $value = $value->pk;
-            }
-            $this->_related[$name] = $value;
-        } else if ($meta->hasHasManyField($name) || $meta->hasManyToManyField($name)) {
-            $this->_related[$name] = $value;
-        } elseif ($this->hasAttribute($name)) {
+        if ($meta->hasField($name)) {
             $field = $meta->getField($name);
-            if ($field instanceof FileField) {
-                $field->setDbValue($this->getAttribute($name));
-                $field->setModel($this);
-                $field->setValue($value);
-                $value = $field->getDbPrepValue();
+
+            if ($value instanceof Base) {
+                $value = $value->pk;
             }
 
-            $this->setAttribute($name, $value);
+            if ($field instanceof HasManyField || $field instanceof ManyToManyField || $field instanceof OneToOneField) {
+                $this->_related[$name] = $value;
+            } else {
+                $this->setAttribute($name, $value);
+            }
         } else {
             throw new Exception("Setting unknown property " . get_class($this) . "::" . $name);
         }
@@ -312,11 +260,9 @@ abstract class Base implements ArrayAccess
     public function __unset($name)
     {
         if ($this->hasAttribute($name)) {
-            unset($this->_attributes[$name]);
+            $this->attributeCollection->remove($name);
         } elseif (array_key_exists($name, $this->_related)) {
             unset($this->_related[$name]);
-        } elseif (array_key_exists($name, $this->_related)) {
-            unset($this->_related);
         }
     }
 
@@ -335,7 +281,7 @@ abstract class Base implements ArrayAccess
      * @param boolean $value whether the record is new and should be inserted when calling [[save()]].
      * @see getIsNewRecord()
      */
-    public function setIsNewRecord($value)
+    public function setIsNewRecord(bool $value)
     {
         $this->_isNewRecord = $value;
     }
@@ -347,7 +293,10 @@ abstract class Base implements ArrayAccess
      */
     public static function isPrimaryKey($keys)
     {
-        $pks = static::primaryKey();
+        if (!is_array($keys)) {
+            $keys = [$keys];
+        }
+        $pks = static::getPrimaryKeyName(true);
         if (count($keys) === count($pks)) {
             return count(array_intersect($keys, $pks)) === count($pks);
         } else {
@@ -361,7 +310,10 @@ abstract class Base implements ArrayAccess
      */
     public function hasAttribute($name) : bool
     {
-        return in_array($name, $this->attributes());
+        $attributes = $this->attributes();
+        return
+            in_array(self::getMeta()->getMappingName($name), $attributes) ||
+            in_array($name, $attributes);
     }
 
     /**
@@ -394,7 +346,7 @@ abstract class Base implements ArrayAccess
     public function setAttribute($name, $value)
     {
         if ($this->hasAttribute($name)) {
-            if ($this->isPrimaryKey([$name]) && $this->getAttribute($name) !== $value) {
+            if ($this->isPrimaryKey($name) && $this->getAttribute($name) !== $value) {
                 $this->setIsNewRecord(true);
             }
             $this->attributeCollection->setAttribute($name, $value);
@@ -411,9 +363,7 @@ abstract class Base implements ArrayAccess
     public function setAttributes(array $attributes)
     {
         foreach ($attributes as $name => $value) {
-            if ($this->hasField($name) || $this->getMeta()->hasForeignKey($name)) {
-                $this->$name = $value;
-            } else if ($this->hasAttribute($name)) {
+            if ($this->hasAttribute($name)) {
                 $this->setAttribute($name, $value);
             }
         }
@@ -428,7 +378,7 @@ abstract class Base implements ArrayAccess
      */
     protected function setDbAttributes(array $attributes)
     {
-        $primaryKey = $this->primaryKeyName();
+        $primaryKey = $this->getPrimaryKeyName();
         foreach ($attributes as $name => $value) {
             if ($this->hasAttribute($name)) {
                 if ($primaryKey === $name && $this->getIsNewRecord()) {
@@ -452,27 +402,12 @@ abstract class Base implements ArrayAccess
     }
 
     /**
-     * Returns the primary key name(s) for this AR class.
-     * The default implementation will return the primary key(s) as declared
-     * in the DB table that is associated with this AR class.
-     *
-     * If the DB table does not declare any primary key, you should override
-     * this method to return the attributes that you want to use as primary keys
-     * for this AR class.
-     *
-     * Note that an array should be returned even for a table with single primary key.
-     *
-     * @return string[] the primary keys of the associated database table.
+     * @param bool $asArray
+     * @return array|string
      */
-    public static function primaryKey()
+    public static function getPrimaryKeyName($asArray = false)
     {
-        // return static::getTableSchema()->primaryKey;
-        return static::getMeta()->primaryKey();
-    }
-
-    public static function primaryKeyName()
-    {
-        return implode('_', self::primaryKey());
+        return static::getMeta()->getPrimaryKeyName($asArray);
     }
 
     /**
@@ -489,7 +424,7 @@ abstract class Base implements ArrayAccess
      */
     public function getFieldsInit()
     {
-        return static::getMeta()->getFieldsInit();
+        return static::getMeta()->getFields();
     }
 
     /**
@@ -506,7 +441,7 @@ abstract class Base implements ArrayAccess
      */
     public function getPrimaryKey($asArray = false)
     {
-        $keys = $this->primaryKey();
+        $keys = $this->getPrimaryKeyName($asArray);
         if (count($keys) === 1 && !$asArray) {
             return $this->attributeCollection->getAttribute($keys[0]);
         } else {
@@ -628,21 +563,26 @@ abstract class Base implements ArrayAccess
 
     protected function onBeforeInsertInternal()
     {
+        $signal = $this->getEventManager();
+
         $meta = static::getMeta();
-        foreach ($this->getFieldsInit() as $name => $field) {
-            if ($meta->hasHasManyField($name) || $meta->hasManyToManyField($name) || $meta->hasOneToOneField($name)) {
+        foreach ($meta->getFields() as $name => $field) {
+            if (
+                $field instanceof ManyToManyField ||
+                $field instanceof HasManyField ||
+                $field instanceof OneToOneField
+            ) {
                 continue;
-            } else if ($meta->hasForeignField($name)) {
-                $foreighField = $meta->getForeignField($name);
-                $name .= "_" . MetaData::getInstance($foreighField->modelClass)->getPkName();
             }
 
             $field->setModel($this);
             $field->setValue($this->getAttribute($name));
-            $field->onBeforeInsert();
+
+            // TODO rename event to beforeSave
+            $signal->send($field, 'beforeInsert', $this);
         }
 
-        $this->getEventManager()->send($this, 'beforeSave', $this, true);
+        $signal->send($this, 'beforeSave', $this, true);
     }
 
     protected function onBeforeUpdateInternal()
@@ -763,30 +703,21 @@ abstract class Base implements ArrayAccess
         $this->_related = [];
     }
 
-    protected function getDbPrepValues($values)
+    /**
+     * @param $values
+     * @return array
+     */
+    protected function getDbValues($values) : array
     {
         $meta = static::getMeta();
-        $prepValues = [];
+        $dbValues = [];
         foreach ($values as $name => $value) {
-            if ($meta->hasForeignField($name)) {
-                /** @var \Mindy\Orm\Fields\ForeignField $field */
-                $field = $meta->getForeignField($name);
-                $field->setModel($this)->setValue($value);
-                $prepValues[$name] = $field->getDbPrepValue();
-            } else if ($meta->hasOneToOneField($name)) {
-                /** @var \Mindy\Orm\Fields\ForeignField $field */
-                $field = $meta->getOneToOneField($name);
-                $field->setModel($this)->setValue($value);
-                $prepValues[$name] = $field->getDbPrepValue();
-            } else if ($this->hasField($name)) {
-                /** @var \Mindy\Orm\Fields\Field $field */
-                $field = $this->getField($name);
-                $prepValues[$name] = $field->getDbPrepValue();
-            } else {
-                $prepValues[$name] = $value;
-            }
+            $field = $meta->getField($name);
+            $field->setModel($this);
+            $field->setValue($value);
+            $dbValues[$name] = $field->getDbValue();
         }
-        return $prepValues;
+        return $dbValues;
     }
 
     /**
@@ -808,19 +739,14 @@ abstract class Base implements ArrayAccess
 
         $values = [];
         foreach ($dirty as $name) {
-            if (in_array($name, $fields) === false) {
-                continue;
-            }
-
             $field = $this->getField($name);
-            $value = $field->getValue();
-            if (empty($value) && $field->default !== null) {
-                continue;
+            $value = $field->getDbValue();
+            if ($value) {
+                $values[$field->getAttributeName()] = $value;
             }
-
-            $values[$name] = $value;
         }
 
+        debug($values, $this->attributeCollection->getAttributes());
         if (empty($values)) {
             return true;
         }
@@ -832,11 +758,12 @@ abstract class Base implements ArrayAccess
 //        }
 
         $incValues = $values;
-        $primaryKeyName = self::primaryKeyName();
+        $primaryKeyName = self::getPrimaryKeyName();
         if (array_key_exists($primaryKeyName, $incValues) === false) {
             $incValues[$primaryKeyName] = null;
         }
-        $dbValues = $this->getDbPrepValues($incValues);
+        $dbValues = $this->getDbValues($incValues);
+
         $connection = static::getConnection();
         $adapter = QueryBuilder::getInstance($connection)->getAdapter();
 
@@ -845,7 +772,6 @@ abstract class Base implements ArrayAccess
             return false;
         }
 
-        $primaryKeyName = self::primaryKeyName();
         if (array_key_exists($primaryKeyName, $values) === false) {
             $id = $connection->lastInsertId();
             $this->setAttribute($primaryKeyName, $id);
@@ -971,58 +897,15 @@ abstract class Base implements ArrayAccess
             return true;
         }
 
-        // Work incorrecly, see https://github.com/studio107/Mindy_Orm/issues/64
         $condition = $this->getPrimaryKey(true);
-
-        $lock = $this->optimisticLock();
-        if ($lock !== null) {
-            if (!isset($values[$lock])) {
-                $values[$lock] = $this->$lock + 1;
-            }
-            $condition[$lock] = $this->$lock;
-        }
-        // We do not check the return value of updateAll() because it's possible
-        // that the UPDATE statement doesn't change anything and thus returns 0.
-        $dbValues = $this->getDbPrepValues($values);
+        $dbValues = $this->getDbValues($values);
         $rows = $this->objects()->filter($condition)->update($dbValues);
-
-        if ($lock !== null && !$rows) {
-            throw new Exception('The object being updated is outdated.');
-        }
 
         foreach ($values as $name => $value) {
             $this->attributeCollection->setAttribute($name, $value);
         }
 
         return $rows >= 0;
-    }
-
-    /**
-     * Returns the name of the column that stores the lock version for implementing optimistic locking.
-     *
-     * Optimistic locking allows multiple users to access the same record for edits and avoids
-     * potential conflicts. In case when a user attempts to save the record upon some staled data
-     * (because another user has modified the data), a [[StaleObjectException]] exception will be thrown,
-     * and the update or deletion is skipped.
-     *
-     * Optimistic locking is only supported by [[update()]] and [[delete()]].
-     *
-     * To use Optimistic locking:
-     *
-     * 1. Create a column to store the version number of each row. The column type should be `BIGINT DEFAULT 0`.
-     *    Override this method to return the name of this column.
-     * 2. In the Web form that collects the user input, add a hidden field that stores
-     *    the lock version of the recording being updated.
-     * 3. In the controller action that does the data updating, try to catch the [[StaleObjectException]]
-     *    and implement necessary business logic (e.g. merging the changes, prompting stated data)
-     *    to resolve the conflict.
-     *
-     * @return string the column name that stores the lock version of a table row.
-     * If null is returned (default implemented), optimistic locking will not be supported.
-     */
-    public function optimisticLock()
-    {
-        return null;
     }
 
     /**
@@ -1211,21 +1094,13 @@ abstract class Base implements ArrayAccess
 
         if ($meta->hasField($name)) {
             $field = $meta->getField($name);
-            if ($meta->hasForeignField($name)) {
-                $value = $this->getAttribute($name . '_id');
-            } else if ($meta->hasOneToOneField($name)) {
-                $value = $this->getAttribute($name . '_id');
-            } else {
-                $value = $this->getAttribute($name);
-            }
             $field->setModel($this);
-            if ($value !== null) {
-                $field->setDbValue($value);
-            }
-            return $field;
-        }
 
-        if ($throw) {
+            $value = $this->getAttribute($field->getAttributeName());
+            $field->setValue($value);
+
+            return $field;
+        } else if ($throw) {
             throw new Exception('Field "' . $name . '" not found in model: ' . get_class($this));
         } else {
             return null;

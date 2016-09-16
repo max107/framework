@@ -28,7 +28,7 @@ class DataIteratorTest extends OrmDatabaseTestCase
     {
         foreach (range(1, 5) as $i) {
             $model = new BookCategory(['id' => $i]);
-            $model->save();
+            $this->assertTrue($model->save());
         }
 
         $qs = BookCategory::objects()->filter(['id__gt' => 0]);

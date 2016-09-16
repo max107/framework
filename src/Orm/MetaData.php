@@ -294,11 +294,20 @@ class MetaData
     }
 
     /**
-     * @return array|[]ModelFieldInterface
+     * @return array|\Mindy\Orm\Fields\ModelFieldInterface[]
      */
     public function getFields() : array
     {
         return $this->fields;
+    }
+
+    /**
+     * @param $name
+     * @return mixed|null
+     */
+    public function getMappingName($name)
+    {
+        return $this->mapping[$name] ?? $name;
     }
 
     /**
@@ -308,12 +317,10 @@ class MetaData
     public function getField($name)
     {
         if ($name === 'pk') {
-            $name = $this->getPkName();
+            $name = $this->getPrimaryKeyName();
         }
 
-        if (isset($this->mapping[$name])) {
-            $name = $this->mapping[$name];
-        }
+        $name = $this->getMappingName($name);
 
         if (isset($this->fields[$name])) {
             $field = $this->fields[$name];
@@ -393,5 +400,22 @@ class MetaData
     {
         $field = $this->getField($name);
         return $field instanceof HasManyField ? $field : null;
+    }
+
+    /**
+     * @param $keys
+     * @return bool
+     */
+    public static function isPrimaryKey($keys)
+    {
+        if (!is_array($keys)) {
+            $keys = [$keys];
+        }
+        $pks = static::getPrimaryKeyName(true);
+        if (count($keys) === count($pks)) {
+            return count(array_intersect($keys, $pks)) === count($pks);
+        } else {
+            return false;
+        }
     }
 }

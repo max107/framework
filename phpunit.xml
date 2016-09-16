@@ -1,4 +1,4 @@
-<phpunit colors="true" strict="true" backupGlobals="false"
+<phpunit colors="true" strict="true" stopOnError="true" backupGlobals="false"
          bootstrap="vendor/autoload.php">
     <testsuites>
         <!--<testsuite name="All">-->
@@ -8,8 +8,9 @@
             <!--<directory>test/QueryBuilder</directory>-->
         <!--</testsuite>-->
         <testsuite name="Orm">
-            <!--<directory>test/Orm</directory>-->
-            <file>test/Orm/Basic/MetaDataTest.php</file>
+            <directory>test/Orm</directory>
+            <!--<file>test/Orm/Basic/NewModelTest.php</file>-->
+            <!--<file>test/Orm/Basic/MetaDataTest.php</file>-->
             <!--<file>test/Orm/Basic/IsNewTest.php</file>-->
             <!--<file>test/Orm/Basic/ModelAttributesTest.php</file>-->
         </testsuite>
@@ -20,14 +21,15 @@
     <php>
         <ini name="error_reporting" value="32767"/>
     </php>
-    <filter>
-        <whitelist>
+    <!--<filter>-->
+        <!--<whitelist>-->
             <!--<directory suffix=".php">src/</directory>-->
-            <file>src/Orm/MetaData.php</file>
-        </whitelist>
-    </filter>
-    <logging>
-        <log type="coverage-html" target="./coverage" charset="UTF-8"
-             yui="true" highlight="true" lowUpperBound="50" highLowerBound="80"/>
-    </logging>
+            <!--<file>src/Orm/NewOrm.php</file>-->
+            <!--<file>src/Orm/NewBase.php</file>-->
+        <!--</whitelist>-->
+    <!--</filter>-->
+    <!--<logging>-->
+        <!--<log type="coverage-html" target="./coverage" charset="UTF-8"-->
+             <!--yui="true" highlight="true" lowUpperBound="50" highLowerBound="80"/>-->
+    <!--</logging>-->
 </phpunit>

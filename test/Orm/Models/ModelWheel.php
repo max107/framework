@@ -23,7 +23,7 @@ class ModelWheel extends Model
     const TYPE_STAMP = 1;
     const TYPE_CAST = 2;
 
-    public static function tableName()
+    public static function tableName() : string
     {
         return 'mir_model_wheel';
     }

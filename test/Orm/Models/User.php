@@ -56,7 +56,7 @@ class User extends Model
         ];
     }
 
-    public static function tableName()
+    public static function tableName() : string
     {
         return 'users';
     }

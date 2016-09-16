@@ -22,7 +22,8 @@ class BatchDataIteratorTest extends OrmDatabaseTestCase
     public function testEach()
     {
         foreach (range(1, 100) as $i) {
-            (new User(['id' => $i, 'username' => 'user_' . $i, 'password' => 'pass_' . $i]))->save();
+            $user = new User(['id' => $i, 'username' => 'user_' . $i, 'password' => 'pass_' . $i]);
+            $user->save();
         }
         $this->assertEquals(100, User::objects()->count());
 

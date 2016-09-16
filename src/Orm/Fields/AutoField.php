@@ -9,7 +9,7 @@ use Mindy\Query\Expression;
  * Class AutoField
  * @package Mindy\Orm
  */
-class AutoField extends IntField
+class AutoField extends BigIntField
 {
     /**
      * @var bool

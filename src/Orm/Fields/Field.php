@@ -3,6 +3,7 @@
 namespace Mindy\Orm\Fields;
 
 use Closure;
+use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\Index;
 use Doctrine\DBAL\Types\Type;
@@ -11,6 +12,7 @@ use Mindy\Helper\Traits\Accessors;
 use Mindy\Helper\Traits\Configurator;
 use Mindy\Orm\Base;
 use Mindy\Orm\Model;
+use Mindy\Orm\ModelInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 use Mindy\Validation\UniqueValidator;
 use Mindy\Validation\ValidationAwareTrait;
@@ -38,15 +40,13 @@ abstract class Field implements ModelFieldInterface
      */
     public $default = null;
     /**
-     * @var int|length
+     * @var int|string
      */
     public $length = 0;
 
     public $verboseName = '';
 
     public $required;
-
-    public $value;
 
     public $editable = true;
 
@@ -73,6 +73,14 @@ abstract class Field implements ModelFieldInterface
      * @var array
      */
     protected $validators = [];
+    /**
+     * @var mixed
+     */
+    protected $value;
+    /**
+     * @var mixed
+     */
+    protected $dbValue;
 
     /**
      * @return array
@@ -144,13 +152,16 @@ abstract class Field implements ModelFieldInterface
     }
 
     /**
-     * @return string
+     * @return string|bool
      */
     public function getAttributeName()
     {
         return $this->name;
     }
 
+    /**
+     * @return string
+     */
     abstract public function getSqlType();
 
     public function canBeEmpty()
@@ -158,7 +169,11 @@ abstract class Field implements ModelFieldInterface
         return !$this->required && $this->null || !is_null($this->default) || $this->autoFetch === true;
     }
 
-    public function setModel(Base $model)
+    /**
+     * @param ModelInterface $model
+     * @return $this
+     */
+    public function setModel(ModelInterface $model)
     {
         $this->_model = $model;
         return $this;
@@ -178,33 +193,50 @@ abstract class Field implements ModelFieldInterface
         return $this->_model;
     }
 
+    /**
+     * @param $value
+     */
+    public function setValue($value)
+    {
+        $this->value = $value;
+        $this->setDbValue($value);
+    }
+
+    /**
+     * @return int|mixed|null|string
+     */
     public function getValue()
     {
         if (empty($this->value)) {
-            return $this->null == true ? null : $this->default;
+            return $this->null === true ? null : $this->default;
         }
-        return  $this->value;
+        return $this->value;
     }
 
-    public function getDbPrepValue()
+    /**
+     * @param $value
+     * @return $this
+     */
+    public function setDbValue($value)
     {
-        return $this->getValue();
+        $this->dbValue = $value;
+        return $this;
+    }
+
+    /**
+     * @return int|mixed|null|string
+     */
+    public function getDbValue()
+    {
+        if (empty($this->dbValue)) {
+            return $this->null === true ? null : $this->default;
+        }
+        return $this->dbValue;
     }
 
     public function cleanValue()
     {
         $this->value = null;
-    }
-
-    public function setDbValue($value)
-    {
-        $this->value = $value;
-        return $this;
-    }
-
-    public function setValue($value)
-    {
-        return $this->value = $value;
     }
 
     public function getFormValue()

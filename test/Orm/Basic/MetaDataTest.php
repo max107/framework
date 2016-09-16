@@ -26,6 +26,8 @@ class MetaDataTest extends \PHPUnit_Framework_TestCase
     {
         $this->assertEquals('id', MetaData::getInstance(Customer::class)->getPrimaryKeyName());
         $this->assertEquals('user_id', MetaData::getInstance(MemberProfile::class)->getPrimaryKeyName());
+
+        $this->assertEquals('user', MetaData::getInstance(Customer::class)->getMappingName('user_id'));
     }
 
     public function testMapping()

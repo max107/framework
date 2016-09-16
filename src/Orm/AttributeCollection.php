@@ -61,6 +61,9 @@ class AttributeCollection
      */
     public function getAttribute($name)
     {
+        if (isset($this->mapping[$name])) {
+            $name = $this->mapping[$name];
+        }
         return $this->attributes[$name] ?? null;
     }
 
@@ -113,5 +116,13 @@ class AttributeCollection
     public function getDirtyAttributes() : array
     {
         return array_keys($this->getOldAttributes());
+    }
+
+    /**
+     * @param string $name
+     */
+    public function remove(string $name)
+    {
+        $this->setAttribute($name, null);
     }
 }

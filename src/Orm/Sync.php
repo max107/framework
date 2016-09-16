@@ -63,7 +63,7 @@ class Sync
         $columns = [];
         $indexes = [];
 
-        foreach ($model->getFieldsInit() as $name => $field) {
+        foreach ($model->getMeta()->getFields() as $name => $field) {
             if (is_a($field, OneToOneField::class) && $field->reversed) {
                 continue;
             }
@@ -115,7 +115,7 @@ class Sync
 //        $this->connection->query($sql)->execute();
 
         $schemaManager = $this->connection->getSchemaManager();
-        foreach ($model->getManyFields() as $field) {
+        foreach ($model->getMeta()->getManyToManyFields() as $field) {
             if ($field->through === null) {
                 $fieldTable = $adapter->getRawTableName($field->getTableName());
                 if ($this->hasTable($fieldTable)) {

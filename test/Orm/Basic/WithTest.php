@@ -8,48 +8,13 @@
 
 namespace Mindy\Tests\Orm\Basic;
 
-use Mindy\Orm\Fields\DateTimeField;
-use Mindy\Orm\Fields\ForeignField;
-use Mindy\Orm\Model;
 use Mindy\Tests\Orm\Models\Customer;
+use Mindy\Tests\Orm\Models\Issue;
 use Mindy\Tests\Orm\Models\ModelTyre;
 use Mindy\Tests\Orm\Models\Tyre;
 use Mindy\Tests\Orm\Models\User;
+use Mindy\Tests\Orm\Models\User1;
 use Mindy\Tests\Orm\OrmDatabaseTestCase;
-
-class User1 extends Model
-{
-    public static function tableName()
-    {
-        return "{{user1}}";
-    }
-}
-
-class Issue extends Model
-{
-    public static function getFields()
-    {
-        return [
-            'author' => [
-                'class' => ForeignField::class,
-                'modelClass' => User1::class
-            ],
-            'user' => [
-                'class' => ForeignField::class,
-                'modelClass' => User1::class
-            ],
-            'created_at' => [
-                'class' => DateTimeField::class,
-                'autoNowAdd' => true
-            ]
-        ];
-    }
-
-    public static function tableName()
-    {
-        return "{{issue}}";
-    }
-}
 
 abstract class WithTest extends OrmDatabaseTestCase
 {

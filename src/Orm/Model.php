@@ -11,7 +11,7 @@ use ReflectionClass;
  * Class Model
  * @package Mindy\Orm
  */
-class Model extends Orm
+class Model extends NewOrm
 {
     public function getVerboseName()
     {

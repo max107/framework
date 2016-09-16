@@ -19,11 +19,6 @@ class IntField extends Field
      */
     public $unsigned = false;
 
-    public function setValue($value)
-    {
-        $this->value = (int)$value;
-    }
-
     /**
      * @return string
      */
@@ -41,5 +36,36 @@ class IntField extends Field
             $options['unsigned'] = $this->unsigned;
         }
         return $options;
+    }
+
+    /**
+     * @param $value
+     * @return mixed
+     */
+    public function setValue($value)
+    {
+        parent::setValue($this->null ? $value : (int)$value);
+    }
+
+    /**
+     * @return int|null
+     */
+    public function getDbValue()
+    {
+        $value = parent::getDbValue();
+        if ($this->null === true) {
+            return $value;
+        }
+        return (int)$value;
+    }
+
+    public function convertToPHPValue($value)
+    {
+        return (int)$value;
+    }
+
+    public function convertToDatabaseValue($value)
+    {
+        return (int)$value;
     }
 }

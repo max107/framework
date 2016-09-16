@@ -23,17 +23,31 @@ class CharField extends Field
         return Type::STRING;
     }
 
+    /**
+     * @param $value
+     * @return $this
+     */
     public function setDbValue($value)
     {
         $this->value = (string)$value;
         return $this;
     }
 
-    public function getDbPrepValue()
+    /**
+     * @return string
+     */
+    public function getDbValue()
     {
-        if ($this->value === null && !$this->null && $this->default) {
-            return $this->default;
-        }
-        return $this->value;
+        return (string)parent::getDbValue();
+    }
+
+    public function convertToPHPValue($value)
+    {
+        return (string)$value;
+    }
+
+    public function convertToDatabaseValue($value)
+    {
+        return (string)$value;
     }
 }

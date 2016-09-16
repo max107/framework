@@ -429,4 +429,9 @@ class ManyToManyField extends RelatedField
     {
         return false;
     }
+
+    public function getValue()
+    {
+        return $this->getManager();
+    }
 }
