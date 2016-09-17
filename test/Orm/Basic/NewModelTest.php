@@ -53,7 +53,7 @@ class NewModelTest extends OrmDatabaseTestCase
         $this->assertSame(1, $model->pk);
 
         $model->id = '1';
-        $this->assertSame(1, $model->pk);
+        $this->assertSame('1', $model->pk);
 
         $model->pk = 2;
         $this->assertSame(2, $model->id);

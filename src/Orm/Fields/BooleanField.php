@@ -40,7 +40,7 @@ class BooleanField extends Field
      */
     public function getSqlType()
     {
-        return Type::BOOLEAN;
+        return Type::getType(Type::BOOLEAN);
     }
 
     /**

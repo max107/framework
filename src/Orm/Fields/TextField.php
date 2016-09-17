@@ -14,7 +14,7 @@ class TextField extends Field
      */
     public function getSqlType()
     {
-        return Type::TEXT;
+        return Type::getType(Type::TEXT);
     }
 
     /**

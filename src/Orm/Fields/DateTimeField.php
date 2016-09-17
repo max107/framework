@@ -31,7 +31,7 @@ class DateTimeField extends DateField
      */
     public function getSqlType()
     {
-        return Type::DATETIME;
+        return Type::getType(Type::DATETIME);
     }
 
     public function getFormField($form, $fieldClass = '\Mindy\Form\Fields\DateTimeField', array $extra = [])

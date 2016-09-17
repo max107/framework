@@ -11,6 +11,7 @@ use Mindy\QueryBuilder\Expression;
  * Class TreeModel
  * @method static \Mindy\Orm\TreeManager objects($instance = null)
  * @package Mindy\Orm
+ * @property TreeModel|null $parent
  */
 abstract class TreeModel extends Model
 {
@@ -102,7 +103,7 @@ abstract class TreeModel extends Model
      * @throws \Exception
      * @return boolean whether the saving succeeds.
      */
-    public function save(array $fields = [])
+    public function save(array $fields = []) : bool
     {
         if ($this->getIsNewRecord()) {
             if ($this->parent) {
@@ -112,7 +113,7 @@ abstract class TreeModel extends Model
             }
         } else {
             $dirtyFields = $this->getDirtyAttributes();
-            if (array_key_exists('parent_id', $dirtyFields)) {
+            if (in_array('parent_id', $dirtyFields)) {
                 $saved = parent::save($fields);
                 if ($this->parent) {
                     $this->moveAsLast($this->parent);

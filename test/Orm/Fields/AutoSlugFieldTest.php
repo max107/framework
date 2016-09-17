@@ -120,11 +120,12 @@ abstract class AutoSlugFieldTest extends OrmDatabaseTestCase
             $this->assertNotNull(NestedModel::objects()->get(['id' => $i]));
         }
 
+        /** @var \Mindy\Orm\TreeModel $model */
         $model = NestedModel::objects()->get(['name' => 'test1']);
+        $this->assertSame('test1', $model->slug);
         $model->slug = 'qwe';
-        $this->assertEquals('test1', $model->getOldAttribute('slug'));
-        $this->assertEquals('qwe', $model->getAttribute('slug'));
-        $this->assertEquals('qwe', $model->slug);
+        $this->assertSame('qwe', $model->slug);
+        $this->assertSame('test1', $model->getOldAttribute('slug'));
 
         $model->save();
         $this->assertEquals(5, NestedModel::objects()->count());

@@ -2,6 +2,7 @@
 
 namespace Mindy\Orm\Fields;
 
+use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Types\Type;
 
 /**
@@ -20,7 +21,7 @@ class CharField extends Field
      */
     public function getSqlType()
     {
-        return Type::STRING;
+        return Type::getType(Type::STRING);
     }
 
     /**
@@ -39,15 +40,5 @@ class CharField extends Field
     public function getDbValue()
     {
         return (string)parent::getDbValue();
-    }
-
-    public function convertToPHPValue($value)
-    {
-        return (string)$value;
-    }
-
-    public function convertToDatabaseValue($value)
-    {
-        return (string)$value;
     }
 }

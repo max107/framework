@@ -2,7 +2,9 @@
 
 namespace Mindy\Orm\Fields;
 
+use Cocur\Slugify\Slugify;
 use Mindy\Helper\Meta;
+use Mindy\Orm\ModelInterface;
 use Mindy\Orm\Traits\UniqueUrl;
 use Mindy\Query\ConnectionManager;
 use Mindy\Query\Expression;
@@ -16,10 +18,6 @@ class AutoSlugField extends CharField
     use UniqueUrl;
 
     /**
-     * @var bool
-     */
-    public $unique = true;
-    /**
      * @var string
      */
     public $source = 'name';
@@ -32,75 +30,108 @@ class AutoSlugField extends CharField
      */
     protected $oldValue;
 
-    public function onBeforeInsert()
+    /**
+     * Internal event
+     * @param \Mindy\Orm\TreeModel|ModelInterface $model
+     * @param $value
+     */
+    public function beforeInsert(ModelInterface $model, $value)
     {
-        $model = $this->getModel();
-        $value = empty($this->value) ? Meta::cleanString($model->{$this->source}) : ltrim($this->value, '/');
+        if (empty($value)) {
+            $slug = $this->createSlug($model->getAttribute($this->source));
+        } else {
+            $slug = $value;
+        }
+
         if ($model->parent) {
-            $url = $model->parent->{$this->name} . '/' . $value;
-        } else {
-            $url = $value;
+            $slug = $model->parent->getAttribute($this->getAttributeName()) . '/' . ltrim($slug, '/');
         }
 
-        $url = ltrim($url, '/');
-        if ($this->unique) {
-            $url = $this->uniqueUrl($url);
-        }
-
-        $model->setAttribute($this->name, $url);
+        $slug = $this->uniqueUrl(ltrim($slug, '/'));
+        $model->setAttribute($this->getAttributeName(), $slug);
     }
 
-    public function onBeforeUpdate()
+    /**
+     * @param $source
+     * @return string
+     */
+    protected function createSlug($source) : string
     {
-        /** @var $model \Mindy\Orm\TreeModel */
-        $model = $this->getModel();
-
-        // Случай когда обнулен slug, например из админки
-        if (empty($model->{$this->name})) {
-            $model->{$this->name} = Meta::cleanString($model->{$this->source});
+        static $instance;
+        if ($instance === null) {
+            $instance = new Slugify();
         }
-
-        // if remove parent (parent is null)
-        if (!$model->parent) {
-            if (strpos($model->{$this->name}, '/') === false) {
-                $url = Meta::cleanString($model->{$this->name});
-            } else {
-                if ($model->{$this->name}) {
-                    $slugs = explode('/', $model->{$this->name});
-                    $url = end($slugs);
-                } else {
-                    $url = Meta::cleanString($model->{$this->source});
-                }
-            }
-        } else {
-            $parentUrl = $model->parent->{$this->name};
-            $slugs = explode('/', $model->{$this->name});
-            $url = $parentUrl . '/' . end($slugs);
-        }
-
-        $url = ltrim($url, '/');
-        if ($this->unique) {
-            $url = $this->uniqueUrl($url, 0, $model->pk);
-        }
-
-        $model->setAttribute($this->name, $url);
-        $model->tree()->filter([
-            'lft__gt' => $model->getOldAttribute('lft'),
-            'rgt__lt' => $model->getOldAttribute('rgt'),
-            'root' => $model->getOldAttribute('root')
-        ])->update([
-            $this->name => new \Mindy\QueryBuilder\Expression("REPLACE([[" . $this->name . "]], @" . $model->getOldAttribute($this->name) . "@, @" . $url . "@)")
-        ]);
+        return $instance->slugify($source);
     }
 
+    /**
+     * Internal event
+     * @param \Mindy\Orm\TreeModel|ModelInterface $model
+     * @param $value
+     */
+    public function beforeUpdate(ModelInterface $model, $value)
+    {
+        if (empty($value)) {
+            $slug = $this->createSlug($model->getAttribute($this->source));
+        } else {
+            $slug = $value;
+        }
+
+        if ($model->parent) {
+            $parentSlug = $model->parent->getAttribute($this->getAttributeName());
+            $slugs = explode('/', $model->getAttribute($this->getAttributeName()));
+            $slug = $parentSlug . '/' . end($slugs);
+        } else {
+            $slugs = explode('/', $model->getAttribute($this->getAttributeName()));
+            $slug = end($slugs);
+        }
+
+        $slug = $this->uniqueUrl(ltrim($slug, '/'), 0, $model->pk);
+
+        if ($model->getIsNewRecord() === false && empty($model->parent)) {
+            $condition = [
+                'lft__gt' => $model->getAttribute('lft'),
+                'rgt__lt' => $model->getAttribute('rgt'),
+                'root' => $model->getAttribute('root')
+            ];
+
+            $attributeValue = $model->getOldAttribute($this->getAttributeName());
+            if (empty($attributeValue)) {
+                $attributeValue = $model->getAttribute($this->getAttributeName());
+            }
+            $expr = "REPLACE([[" . $this->getAttributeName() . "]], @" . $attributeValue . "@, @" . $slug . "@)";
+        } else {
+            $condition = [
+                'lft__gt' => $model->getOldAttribute('lft'),
+                'rgt__lt' => $model->getOldAttribute('rgt'),
+                'root' => $model->getOldAttribute('root')
+            ];
+            $expr = "REPLACE([[" . $this->getAttributeName() . "]], @" . $model->getOldAttribute($this->getAttributeName()) . "@, @" . $slug . "@)";
+        }
+
+        $model->objects()->filter($condition)->update([
+            $this->getAttributeName() => new \Mindy\QueryBuilder\Expression($expr)
+        ]);
+        $model->setAttribute($this->getAttributeName(), $slug);
+    }
+
+    /**
+     * @return mixed
+     */
     public function getFormValue()
     {
         $slugs = explode('/', $this->getValue());
         return end($slugs);
     }
 
-    public function getFormField($form, $fieldClass = null, array $extra = [])
+    /**
+     * @param $form
+     * @param string $fieldClass
+     * @param array $extra
+     * @return mixed|null
+     */
+    public function getFormField($form, $fieldClass = '\Mindy\Form\Fields\SlugField', array $extra = [])
     {
-        return parent::getFormField($form, \Mindy\Form\Fields\ShortUrlField::className(), $extra);
+        return parent::getFormField($form, $fieldClass, $extra);
     }
 }

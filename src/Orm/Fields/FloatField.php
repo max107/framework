@@ -15,6 +15,6 @@ class FloatField extends Field
      */
     public function getSqlType()
     {
-        return Type::FLOAT;
+        return Type::getType(Type::FLOAT);
     }
 }

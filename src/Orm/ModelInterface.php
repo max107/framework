@@ -8,8 +8,11 @@
 
 namespace Mindy\Orm;
 
-use Doctrine\DBAL\Driver\Connection;
-
+/**
+ * Interface ModelInterface
+ * @package Mindy\Orm
+ * @property int|string $pk
+ */
 interface ModelInterface
 {
     /**

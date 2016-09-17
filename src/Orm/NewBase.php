@@ -8,8 +8,10 @@
 
 namespace Mindy\Orm;
 
+use Doctrine\DBAL\Connection;
 use Exception;
 use ArrayAccess;
+use function Mindy\app;
 use Mindy\Orm\Fields\AutoField;
 use Mindy\Orm\Fields\HasManyField;
 use Mindy\Orm\Fields\ManyToManyField;
@@ -22,6 +24,14 @@ use Mindy\Orm\Fields\ModelFieldInterface;
  */
 abstract class NewBase implements ModelInterface, ArrayAccess
 {
+    /**
+     * @var string
+     */
+    protected $using;
+    /**
+     * @var Connection
+     */
+    protected $connection;
     /**
      * @var array
      */
@@ -117,11 +127,21 @@ abstract class NewBase implements ModelInterface, ArrayAccess
 
     /**
      * @param string $name
-     * @return ModelFieldInterface
+     * @param bool $throw
+     * @return ModelFieldInterface|null
+     * @throws Exception
      */
-    public function getField(string $name) : ModelFieldInterface
+    public function getField(string $name, $throw = false)
     {
         $name = $this->convertToPrimaryKeyName($name);
+        if (self::getMeta()->hasField($name) === false) {
+            if ($throw) {
+                throw new Exception('Unknown field');
+            } else {
+                return null;
+            }
+        }
+
         $field = self::getMeta()->getField($name);
         $field->setModel($this);
         return $field;
@@ -210,8 +230,11 @@ abstract class NewBase implements ModelInterface, ArrayAccess
      */
     public function setAttributes(array $attributes)
     {
+        $meta = self::getMeta();
+        $platform = $this->getConnection()->getDatabasePlatform();
         foreach ($attributes as $name => $value) {
-            $this->setAttribute($name, $value);
+            $field = $this->getField($meta->getMappingName($name));
+            $this->setAttribute($name, $field->convertToDatabaseValue($value, $platform));
         }
     }
 
@@ -246,6 +269,21 @@ abstract class NewBase implements ModelInterface, ArrayAccess
     }
 
     /**
+     * @param string $name
+     * @param string $tablePrefix
+     * @return string
+     */
+    public static function getRawTableName(string $name, string $tablePrefix = '') : string
+    {
+        if (strpos($name, '{{') !== false) {
+            $name = preg_replace('/\\{\\{(.*?)\\}\\}/', '\1', $name);
+            return str_replace('%', $tablePrefix, $name);
+        } else {
+            return $name;
+        }
+    }
+
+    /**
      * @param $method
      * @param $args
      * @return mixed
@@ -256,10 +294,14 @@ abstract class NewBase implements ModelInterface, ArrayAccess
         $manager = $method . 'Manager';
         $className = get_called_class();
 
-        if (method_exists($className, $manager)) {
+        if ($method === 'tableName') {
+            $tableName = call_user_func([$className, $method]);
+            return self::getRawTableName($tableName);
+
+        } else if (method_exists($className, $manager)) {
             return call_user_func_array([$className, $manager], $args);
 
-        } elseif (method_exists($className, $method)) {
+        } else if (method_exists($className, $method)) {
             return call_user_func_array([$className, $method], $args);
 
         } else {
@@ -337,6 +379,43 @@ abstract class NewBase implements ModelInterface, ArrayAccess
     abstract public function insert(array $fields = []) : bool;
 
     /**
+     * @return null|\Mindy\Event\EventManager
+     */
+    public function getEventManager()
+    {
+        return null;
+    }
+
+    /**
+     * Trigger event is event manager is available
+     */
+    public function trigger()
+    {
+        $signal = $this->getEventManager();
+        if ($signal) {
+            call_user_func_array([$signal, 'send'], func_get_args());
+        }
+    }
+
+    protected function beforeInsertInternal()
+    {
+        $meta = self::getMeta();
+        foreach ($meta->getAttributes() as $name) {
+            $field = $this->getField($name);
+            $field->beforeInsert($this, $this->getAttribute($field->getAttributeName()));
+        }
+    }
+
+    protected function beforeUpdateInternal()
+    {
+        $meta = self::getMeta();
+        foreach ($meta->getAttributes() as $name) {
+            $field = $this->getField($name);
+            $field->beforeUpdate($this, $this->getAttribute($field->getAttributeName()));
+        }
+    }
+
+    /**
      * @param array $fields
      * @return bool
      */
@@ -399,8 +478,20 @@ abstract class NewBase implements ModelInterface, ArrayAccess
     protected function getFieldValue(string $name)
     {
         $field = $this->getField($name);
-        $field->setValue($this->getAttribute($field->getAttributeName()));
-        return $field->getValue();
+
+        if (!$field->getSqlType()) {
+            return null;
+        }
+
+        $platform = $this->getConnection()->getDatabasePlatform();
+
+        $value = $this->getAttribute($field->getAttributeName());
+
+        if ($name == $field->getAttributeName()) {
+            return $field->convertToDatabaseValue($value, $platform);
+        } else {
+            return $field->convertToPHPValue($value, $platform);
+        }
     }
 
     /**
@@ -447,5 +538,34 @@ abstract class NewBase implements ModelInterface, ArrayAccess
     public function offsetUnset($offset)
     {
         $this->setAttribute($offset, null);
+    }
+
+    /**
+     * @param $connection
+     * @return $this
+     */
+    public function using(string $connection)
+    {
+        $this->using($connection);
+        return $this;
+    }
+
+    /**
+     * @return Connection
+     */
+    public function getConnection() : Connection
+    {
+        if ($this->connection === null) {
+            $this->connection = app()->db->getConnection($this->using);
+        }
+        return $this->connection;
+    }
+
+    /**
+     * @param Connection $connection
+     */
+    public function setConnection(Connection $connection)
+    {
+        $this->connection = $connection;
     }
 }

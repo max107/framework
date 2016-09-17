@@ -16,8 +16,9 @@ namespace Mindy\Tests\Orm\Basic;
 
 use Mindy\Tests\Orm\Models\Product;
 use Mindy\Tests\Orm\Models\User;
+use Mindy\Tests\Orm\OrmDatabaseTestCase;
 
-class ValidationTest extends \PHPUnit_Framework_TestCase
+class ValidationTest extends OrmDatabaseTestCase
 {
     public function testClass()
     {

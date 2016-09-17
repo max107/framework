@@ -2,6 +2,7 @@
 
 namespace Mindy\Orm\Fields;
 
+use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Types\Type;
 use Exception;
@@ -33,15 +34,6 @@ class ForeignField extends RelatedField
         if (is_subclass_of($this->modelClass, '\Mindy\Orm\Model') === false) {
             throw new InvalidArgumentException('$modelClass must be a \Mindy\Orm\Model instance in modelClass');
         }
-    }
-
-    public function getColumn()
-    {
-        return new Column(
-            $this->name . '_id',
-            Type::getType($this->getSqlType()),
-            $this->getSqlOptions()
-        );
     }
 
     public function getOnDelete()
@@ -134,9 +126,13 @@ class ForeignField extends RelatedField
             }
         }
 
-        /** @var $modelClass \Mindy\Orm\Model */
-        $modelClass = $this->modelClass;
-        return $modelClass::objects()->get(array_merge(['pk' => $value], $this->extra));
+        return $this->fetchModel($value);
+    }
+
+    protected function fetchModel($value)
+    {
+        return call_user_func([$this->modelClass, 'objects'])
+            ->get(array_merge(['pk' => $value], $this->extra));
     }
 
     public function toArray()
@@ -158,13 +154,22 @@ class ForeignField extends RelatedField
         return $this->name . '_id';
     }
 
-    public function convertToPHPValue($value)
+    public function convertToPHPValue($value, AbstractPlatform $platform)
     {
+        if ($value instanceof ModelInterface) {
+            return $value;
+        } else if (!is_null($value)) {
+            return $this->fetchModel($value);
+        }
         return $value;
     }
 
-    public function convertToDatabaseValue($value)
+    public function convertToDatabaseValue($value, AbstractPlatform $platform)
     {
+        if (is_null($value)) {
+            return $value;
+        }
+
         return $value instanceof ModelInterface ? $value->pk : $value;
     }
 }

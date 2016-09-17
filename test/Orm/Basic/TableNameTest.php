@@ -24,11 +24,11 @@ class TableNameTest extends \PHPUnit_Framework_TestCase
 {
     public function testTableName()
     {
-        $this->assertEquals('{{%table_name_model}}', TableNameModel::tableName());
+        $this->assertEquals('table_name_model', TableNameModel::tableName());
     }
 
     public function testLongTableName()
     {
-        $this->assertEquals('{{%very_long_table_name_model}}', VeryLongTableNameModel::tableName());
+        $this->assertEquals('very_long_table_name_model', VeryLongTableNameModel::tableName());
     }
 }

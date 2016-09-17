@@ -111,11 +111,11 @@ abstract class Field implements ModelFieldInterface
      */
     public function getColumn()
     {
-        return new Column(
-            $this->name,
-            Type::getType($this->getSqlType()),
-            $this->getSqlOptions()
-        );
+        $type = $this->getSqlType();
+        if ($type) {
+            return new Column($this->getAttributeName(), $type, $this->getSqlOptions());
+        }
+        return null;
     }
 
     /**
@@ -160,7 +160,7 @@ abstract class Field implements ModelFieldInterface
     }
 
     /**
-     * @return string
+     * @return Type
      */
     abstract public function getSqlType();
 
@@ -278,32 +278,56 @@ abstract class Field implements ModelFieldInterface
         }
     }
 
-    public function onAfterInsert()
+    /**
+     * @param ModelInterface $model
+     * @param $value
+     */
+    public function afterInsert(ModelInterface $model, $value)
     {
 
     }
 
-    public function onAfterUpdate()
+    /**
+     * @param ModelInterface $model
+     * @param $value
+     */
+    public function afterUpdate(ModelInterface $model, $value)
     {
 
     }
 
-    public function onAfterDelete()
+    /**
+     * @param ModelInterface $model
+     * @param $value
+     */
+    public function afterDelete(ModelInterface $model, $value)
     {
 
     }
 
-    public function onBeforeInsert()
+    /**
+     * @param ModelInterface $model
+     * @param $value
+     */
+    public function beforeInsert(ModelInterface $model, $value)
     {
 
     }
 
-    public function onBeforeUpdate()
+    /**
+     * @param ModelInterface $model
+     * @param $value
+     */
+    public function beforeUpdate(ModelInterface $model, $value)
     {
 
     }
 
-    public function onBeforeDelete()
+    /**
+     * @param ModelInterface $model
+     * @param $value
+     */
+    public function beforeDelete(ModelInterface $model, $value)
     {
 
     }
@@ -353,5 +377,25 @@ abstract class Field implements ModelFieldInterface
     public function hasChoices()
     {
         return !empty($this->choices);
+    }
+
+    /**
+     * @param $value
+     * @param AbstractPlatform $platform
+     * @return mixed
+     */
+    public function convertToPHPValue($value, AbstractPlatform $platform)
+    {
+        return $this->getSqlType()->convertToPHPValue($value, $platform);
+    }
+
+    /**
+     * @param $value
+     * @param AbstractPlatform $platform
+     * @return mixed
+     */
+    public function convertToDatabaseValue($value, AbstractPlatform $platform)
+    {
+        return $this->getSqlType()->convertToDatabaseValue($value, $platform);
     }
 }

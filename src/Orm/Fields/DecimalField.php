@@ -24,7 +24,7 @@ class DecimalField extends Field
      */
     public function getSqlType()
     {
-        return Type::DECIMAL;
+        return Type::getType(Type::DECIMAL);
     }
 
     /**

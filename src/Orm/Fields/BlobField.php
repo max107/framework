@@ -11,7 +11,7 @@ class BlobField extends Field
 {
     public function getSqlType()
     {
-        return Type::BLOB;
+        return Type::getType(Type::BLOB);
     }
 }
 

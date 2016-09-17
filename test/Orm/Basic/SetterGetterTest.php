@@ -34,9 +34,6 @@ class SetterGetterTest extends OrmDatabaseTestCase
         $this->assertSame('123', $model->type);
     }
 
-    /**
-     * @expectedException \Exception
-     */
     public function testSetForeignField()
     {
         $category = new Category();
@@ -48,7 +45,7 @@ class SetterGetterTest extends OrmDatabaseTestCase
         $this->assertNull($product->category_id);
 
         $product->category = $category;
-        $this->assertNull($product->category);
+        $this->assertInstanceOf(Category::class, $product->category);
         $this->assertNull($product->category_id);
 
         $product->category_id = 1;
@@ -69,11 +66,15 @@ class SetterGetterTest extends OrmDatabaseTestCase
         // Мы не храним полное состояние модели
         $product->category = $category;
         $this->assertInstanceOf(Category::class, $product->category);
-        $this->assertNull($product->category_id);
+        $this->assertSame('1', $product->category_id);
 
         $product->category_id = 1;
         $this->assertSame(1, $product->category_id);
+        $this->assertInstanceOf(Category::class, $product->category);
         $this->assertSame(1, $product->getAttribute('category_id'));
+
+        $this->assertFalse($category->getIsNewRecord());
+        $this->assertFalse($product->category->getIsNewRecord());
     }
 
     /**
@@ -91,7 +92,7 @@ class SetterGetterTest extends OrmDatabaseTestCase
     public function testGetFieldException()
     {
         $model = new Category();
-        $model->getField('something');
+        $model->getField('something', true);
     }
 
     public function testUnknownField()

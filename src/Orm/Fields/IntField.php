@@ -2,6 +2,7 @@
 
 namespace Mindy\Orm\Fields;
 
+use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Types\Type;
 
 /**
@@ -20,11 +21,11 @@ class IntField extends Field
     public $unsigned = false;
 
     /**
-     * @return string
+     * @return Type
      */
     public function getSqlType()
     {
-        return Type::INTEGER;
+        return Type::getType(Type::INTEGER);
     }
 
     public function getSqlOptions() : array
@@ -40,7 +41,6 @@ class IntField extends Field
 
     /**
      * @param $value
-     * @return mixed
      */
     public function setValue($value)
     {
@@ -56,16 +56,6 @@ class IntField extends Field
         if ($this->null === true) {
             return $value;
         }
-        return (int)$value;
-    }
-
-    public function convertToPHPValue($value)
-    {
-        return (int)$value;
-    }
-
-    public function convertToDatabaseValue($value)
-    {
         return (int)$value;
     }
 }

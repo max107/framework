@@ -14,6 +14,6 @@ class BigIntField extends IntField
 {
     public function getSqlType()
     {
-        return Type::BIGINT;
+        return Type::getType(Type::BIGINT);
     }
 }

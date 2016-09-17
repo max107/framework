@@ -70,9 +70,7 @@ class Sync
 
             $field->setModel($model);
 
-            if ($field instanceof HasManyField) {
-                continue;
-            } else if ($field instanceof ManyToManyField) {
+            if ($field instanceof ManyToManyField) {
                 /* @var $field \Mindy\Orm\Fields\ManyToManyField */
                 if ($field->through === null) {
                     $fieldTableName = $adapter->getRawTableName($field->getTableName());
@@ -83,12 +81,12 @@ class Sync
                     }
                 }
             } else {
-                $columnType = $field->getSqlType();
-                if (empty($columnType)) {
+                $column = $field->getColumn();
+                if (empty($column)) {
                     continue;
                 }
 
-                $columns[] = $field->getColumn();
+                $columns[] = $column;
                 $indexes = array_merge($indexes, $field->getSqlIndexes());
             }
         }

@@ -18,7 +18,7 @@ class TreeManager extends Manager
         if ($this->_qs === null) {
             $this->_qs = new TreeQuerySet([
                 'model' => $this->getModel(),
-                'modelClass' => $this->getModel()->className()
+                'modelClass' => get_class($this->getModel())
             ]);
             $this->_qs->order(['lft']);
         }

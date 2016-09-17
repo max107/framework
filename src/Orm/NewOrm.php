@@ -8,10 +8,7 @@
 
 namespace Mindy\Orm;
 
-use Doctrine\DBAL\Connection;
-use Doctrine\DBAL\Types\Type;
 use Exception;
-use function Mindy\app;
 use Mindy\QueryBuilder\QueryBuilder;
 
 /**
@@ -20,35 +17,6 @@ use Mindy\QueryBuilder\QueryBuilder;
  */
 class NewOrm extends NewBase
 {
-    /**
-     * @var string
-     */
-    protected $using;
-    /**
-     * @var Connection
-     */
-    protected $connection;
-
-    /**
-     * @return null|\Mindy\Event\EventManager
-     */
-    public function getEventManager()
-    {
-        return null;
-    }
-
-    /**
-     * Trigger event is event manager is available
-     * @param $eventName
-     */
-    public function trigger($eventName)
-    {
-        $signal = $this->getEventManager();
-        if ($signal) {
-            $signal->send($this, $eventName);
-        }
-    }
-
     /**
      * @return QueryBuilder
      * @throws Exception
@@ -127,6 +95,8 @@ class NewOrm extends NewBase
 
         $this->trigger('beforeInsert');
 
+        $this->beforeInsertInternal();
+
         $connection->beginTransaction();
         try {
             if (($inserted = $this->insertInternal($fields))) {
@@ -162,6 +132,8 @@ class NewOrm extends NewBase
 
         $this->trigger('beforeUpdate');
 
+        $this->beforeUpdateInternal();
+
         $connection->beginTransaction();
         try {
             if ($updated = $this->updateInternal($fields)) {
@@ -182,35 +154,6 @@ class NewOrm extends NewBase
             $this->attributes->resetOldAttributes();
         }
         return $updated;
-    }
-
-    /**
-     * @param $connection
-     * @return $this
-     */
-    public function using(string $connection)
-    {
-        $this->using($connection);
-        return $this;
-    }
-
-    /**
-     * @return Connection
-     */
-    public function getConnection() : Connection
-    {
-        if ($this->connection === null) {
-            $this->connection = app()->db->getConnection($this->using);
-        }
-        return $this->connection;
-    }
-
-    /**
-     * @param Connection $connection
-     */
-    public function setConnection(Connection $connection)
-    {
-        $this->connection = $connection;
     }
 
     /**
@@ -243,8 +186,8 @@ class NewOrm extends NewBase
             if (in_array($name, $dirty) && $meta->hasField($name)) {
                 $field = $this->getField($name);
                 $sqlType = $field->getSqlType();
-                if ($sqlType) {
-                    $changed[$name] = Type::getType($sqlType)->convertToDatabaseValue($attribute, $platform);
+                if ($sqlType && $value = $field->convertToDatabaseValue($attribute, $platform)) {
+                    $changed[$name] = $value;
                 }
             }
         }

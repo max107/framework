@@ -24,7 +24,7 @@ class DateField extends Field
      */
     public function getSqlType()
     {
-        return Type::DATE;
+        return Type::getType(Type::DATE);
     }
 
     public function onBeforeInsert()

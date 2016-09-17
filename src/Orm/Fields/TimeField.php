@@ -15,6 +15,6 @@ class TimeField extends Field
      */
     public function getSqlType()
     {
-        return Type::TIME;
+        return Type::getType(Type::TIME);
     }
 }

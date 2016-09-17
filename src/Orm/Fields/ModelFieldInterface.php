@@ -38,12 +38,83 @@ interface ModelFieldInterface
     public function getValue();
 
     /**
-     * @return string|null
+     * @return \Doctrine\Dbal\Types\Type|false|null
      */
     public function getSqlType();
+
+    /**
+     * @return \Doctrine\Dbal\Schema\Column|null|false
+     */
+    public function getColumn();
+
+    /**
+     * @return \Doctrine\Dbal\Schema\Index[]|array
+     */
+    public function getSqlIndexes();
 
     /**
      * @return string
      */
     public function getAttributeName();
+
+    /**
+     * @param $value
+     * @param AbstractPlatform $platform
+     * @return mixed
+     */
+    public function convertToDatabaseValue($value, AbstractPlatform $platform);
+
+    /**
+     * @param $value
+     * @param AbstractPlatform $platform
+     * @return mixed
+     */
+    public function convertToPHPValue($value, AbstractPlatform $platform);
+
+    /**
+     * internal event
+     * @param ModelInterface $model
+     * @param $value
+     * @return
+     */
+    public function afterInsert(ModelInterface $model, $value);
+
+    /**
+     * internal event
+     * @param ModelInterface $model
+     * @param $value
+     * @return
+     */
+    public function afterUpdate(ModelInterface $model, $value);
+
+    /**
+     * internal event
+     * @param ModelInterface $model
+     * @return
+     */
+    public function afterDelete(ModelInterface $model, $value);
+
+    /**
+     * internal event
+     * @param ModelInterface $model
+     * @param $value
+     * @return
+     */
+    public function beforeInsert(ModelInterface $model, $value);
+
+    /**
+     * internal event
+     * @param ModelInterface $model
+     * @param $value
+     * @return
+     */
+    public function beforeUpdate(ModelInterface $model, $value);
+
+    /**
+     * internal event
+     * @param ModelInterface $model
+     * @param $value
+     * @return
+     */
+    public function beforeDelete(ModelInterface $model, $value);
 }
