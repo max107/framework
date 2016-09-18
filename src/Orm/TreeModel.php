@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Mindy\Orm;
 
 use Exception;
@@ -12,6 +14,11 @@ use Mindy\QueryBuilder\Expression;
  * @method static \Mindy\Orm\TreeManager objects($instance = null)
  * @package Mindy\Orm
  * @property TreeModel|null $parent
+ * @property int|null $parent_id
+ * @property int $root
+ * @property int $level
+ * @property int $lft
+ * @property int $rgt
  */
 abstract class TreeModel extends Model
 {
@@ -26,29 +33,25 @@ abstract class TreeModel extends Model
         }
         return [
             'parent' => [
-                'class' => TreeForeignField::className(),
+                'class' => TreeForeignField::class,
                 'modelClass' => get_called_class(),
                 'null' => true,
                 'verboseName' => $parent
             ],
             'lft' => [
-                'class' => IntField::className(),
-                'editable' => false,
-                'null' => true
+                'class' => IntField::class,
+                'editable' => false
             ],
             'rgt' => [
-                'class' => IntField::className(),
-                'editable' => false,
-                'null' => true
+                'class' => IntField::class,
+                'editable' => false
             ],
             'level' => [
-                'class' => IntField::className(),
-                'editable' => false,
-                'null' => true
+                'class' => IntField::class,
+                'editable' => false
             ],
             'root' => [
-                'class' => IntField::className(),
-                'null' => true,
+                'class' => IntField::class,
                 'editable' => false
             ],
         ];
@@ -111,26 +114,31 @@ abstract class TreeModel extends Model
             } else {
                 $this->makeRoot();
             }
+            return parent::save($fields);
+
         } else {
-            $dirtyFields = $this->getDirtyAttributes();
-            if (in_array('parent_id', $dirtyFields)) {
-                $saved = parent::save($fields);
-                if ($this->parent) {
-                    $this->moveAsLast($this->parent);
-                } else if ($this->isRoot() == false) {
-                    $this->moveAsRoot();
+
+            if (in_array('parent_id', $this->getDirtyAttributes())) {
+                if ($saved = parent::save($fields)) {
+                    if ($this->parent) {
+                        $this->moveAsLast($this->parent);
+                    } else if ($this->isRoot() == false) {
+                        $this->moveAsRoot();
+                    }
+                    /** @var array $parent */
+                    $parent = $this->objects()->asArray()->get(['pk' => $this->pk]);
+                    if ($parent !== null) {
+                        $this->setAttributes($parent);
+                        $this->setIsNewRecord(false);
+                    }
+                    return $saved;
                 }
-                /** @var array $parent */
-                $parent = $this->objects()->asArray()->get(['pk' => $this->pk]);
-                if ($parent !== null) {
-                    $this->setAttributes($parent);
-                    $this->setIsNewRecord(false);
-                }
+
                 return $saved;
+            } else {
+                return parent::save($fields);
             }
         }
-
-        return parent::save($fields);
     }
 
     public function saveRebuild()
@@ -164,7 +172,7 @@ abstract class TreeModel extends Model
      * @throws \Exception.
      * @return boolean whether the deletion is successful.
      */
-    public function delete()
+    public function delete() : bool
     {
         if ($this->isLeaf()) {
             $result = parent::delete();
@@ -183,7 +191,7 @@ abstract class TreeModel extends Model
      * @param TreeModel $target the target.
      * @return boolean whether the prepending succeeds.
      */
-    public function prependTo($target)
+    public function prependTo(TreeModel $target)
     {
         return $this->addNode($target, $target->lft + 1, 1);
     }
@@ -193,9 +201,9 @@ abstract class TreeModel extends Model
      * @param TreeModel $target the target.
      * @return boolean whether the prepending succeeds.
      */
-    public function prepend($target)
+    public function prepend(TreeModel $target)
     {
-        return $target->prependTo($this->owner);
+        return $target->prependTo($this);
     }
 
     /**
@@ -203,9 +211,9 @@ abstract class TreeModel extends Model
      * @param TreeModel $target the target.
      * @return boolean whether the appending succeeds.
      */
-    public function appendTo($target)
+    public function appendTo(TreeModel $target)
     {
-        return $this->addNode($target, $target->rgt, 1);
+        return $this->addNode($target, (int)$target->rgt, 1);
     }
 
     /**
@@ -213,9 +221,9 @@ abstract class TreeModel extends Model
      * @param TreeModel $target the target.
      * @return boolean whether the appending succeeds.
      */
-    public function append($target)
+    public function append(TreeModel $target)
     {
-        return $target->appendTo($this->owner);
+        return $target->appendTo($this);
     }
 
     /**
@@ -224,7 +232,7 @@ abstract class TreeModel extends Model
      * @throws \Exception
      * @return boolean whether the inserting succeeds.
      */
-    public function insertBefore($target)
+    public function insertBefore(TreeModel $target)
     {
         return $this->addNode($target, $target->lft, 0);
     }
@@ -234,7 +242,7 @@ abstract class TreeModel extends Model
      * @param TreeModel $target the target.
      * @return boolean whether the inserting succeeds.
      */
-    public function insertAfter($target)
+    public function insertAfter(TreeModel $target)
     {
         return $this->addNode($target, $target->rgt + 1, 0);
     }
@@ -244,7 +252,7 @@ abstract class TreeModel extends Model
      * @param TreeModel $target the target.
      * @return boolean whether the moving succeeds.
      */
-    public function moveBefore($target)
+    public function moveBefore(TreeModel $target)
     {
         return $this->moveNode($target, $target->lft, 0);
     }
@@ -254,7 +262,7 @@ abstract class TreeModel extends Model
      * @param TreeModel $target the target.
      * @return boolean whether the moving succeeds.
      */
-    public function moveAfter($target)
+    public function moveAfter(TreeModel $target)
     {
         return $this->moveNode($target, $target->rgt + 1, 0);
     }
@@ -264,7 +272,7 @@ abstract class TreeModel extends Model
      * @param TreeModel $target the target.
      * @return boolean whether the moving succeeds.
      */
-    public function moveAsFirst($target)
+    public function moveAsFirst(TreeModel $target)
     {
         return $this->moveNode($target, $target->lft + 1, 1);
     }
@@ -274,7 +282,7 @@ abstract class TreeModel extends Model
      * @param TreeModel $target the target.
      * @return boolean whether the moving succeeds.
      */
-    public function moveAsLast($target)
+    public function moveAsLast(TreeModel $target)
     {
         return $this->moveNode($target, $target->rgt, 1);
     }
@@ -367,38 +375,43 @@ abstract class TreeModel extends Model
     }
 
     /**
-     * @param int $key .
-     * @param int $delta .
+     * @param int $value
+     * @param int $delta
      */
-    private function shiftLeftRight($key, $delta)
+    private function shiftLeftRight($value, $delta)
     {
+        $conditions = ['root' => $this->root];
+
         foreach (['lft', 'rgt'] as $attribute) {
-            $qs = $this->objects()->filter([$attribute . '__gte' => $key, 'root' => $this->root]);
+            $qs = $this->objects()->filter(array_merge($conditions, [
+                $attribute . '__gte' => $value
+            ]));
+
             $qs->update([
-                $attribute => new Expression($attribute . sprintf('%+d', $delta))
+                $attribute => new Expression('[[' . $attribute . ']]' . sprintf('%+d', $delta))
             ]);
         }
     }
 
     /**
-     * @param TreeModel $target .
-     * @param int $key .
-     * @param int $levelUp .
-     * @throws \Exception .
-     * @return boolean.
+     * @param TreeModel $target
+     * @param int $rgt
+     * @param int $levelUp
+     * @throws \Exception
+     * @return boolean
      */
-    private function addNode($target, $key, $levelUp)
+    private function addNode(TreeModel $target, int $rgt, int $levelUp)
     {
         if (!$this->getIsNewRecord()) {
-            throw new Exception('The node can\'t be inserted because it is not new.');
+            throw new Exception("The node can't be inserted because it is not new.");
         }
 
         if ($this->getIsDeletedRecord()) {
-            throw new Exception('The node can\'t be inserted because it is deleted.');
+            throw new Exception("The node can't be inserted because it is deleted.");
         }
 
         if ($target->getIsDeletedRecord()) {
-            throw new Exception('The node can\'t be inserted because target node is deleted.');
+            throw new Exception("The node can't be inserted because target node is deleted.");
         }
 
         if ($this->pk == $target->pk) {
@@ -411,10 +424,14 @@ abstract class TreeModel extends Model
 
         $this->root = $target->root;
 
-        $this->shiftLeftRight($key, 2);
-        $this->lft = $key;
-        $this->rgt = $key + 1;
-        $this->level = $target->level + $levelUp;
+        $this->shiftLeftRight($rgt, 2);
+
+        $this->setAttributes([
+            'lft' => $rgt,
+            'rgt' => $rgt + 1,
+            'level' => $target->level + $levelUp
+        ]);
+
         return $this;
     }
 
@@ -444,7 +461,7 @@ abstract class TreeModel extends Model
      * @throws \Exception.
      * @return boolean.
      */
-    private function moveNode($target, $key, $levelUp)
+    private function moveNode(TreeModel $target, $key, $levelUp)
     {
         if ($this->getIsNewRecord()) {
             throw new Exception('The node should not be new record.');

@@ -49,10 +49,10 @@ class Sync
     }
 
     /**
-     * @param $model \Mindy\Orm\Model
+     * @param $model ModelInterface
      * @return int
      */
-    public function createTable(Model $model)
+    public function createTable(ModelInterface $model)
     {
         $i = 0;
 
@@ -101,10 +101,10 @@ class Sync
     }
 
     /**
-     * @param $model \Mindy\Orm\Model
+     * @param $model ModelInterface
      * @return int
      */
-    public function dropTable(Model $model)
+    public function dropTable(ModelInterface $model)
     {
         $i = 0;
 

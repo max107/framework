@@ -102,6 +102,28 @@ class NewModelTest extends OrmDatabaseTestCase
         $this->assertNull($model->getOldAttribute('username'));
     }
 
+    public function testSelectedAttributes()
+    {
+        $this->initModels([new User], $this->getConnection());
+
+        $model = new User(['username' => 'foo']);
+        $this->assertTrue($model->save());
+        $this->assertEquals(1, User::objects()->count());
+
+        $model->username = 'bar';
+        $model->password = 'example';
+        $this->assertTrue($model->save(['password']));
+
+        $this->assertSame('bar', $model->username);
+        $this->assertSame('example', $model->password);
+
+        /** @var \Mindy\Orm\Model $model */
+        $model = User::objects()->get(['password' => 'example']);
+        $this->assertSame('foo', $model->username);
+
+        $this->dropModels([new User], $this->getConnection());
+    }
+
     public function testDirtyAttributes()
     {
         $user = new NewModel();

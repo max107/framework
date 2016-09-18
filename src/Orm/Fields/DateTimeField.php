@@ -3,6 +3,7 @@
 namespace Mindy\Orm\Fields;
 
 use Doctrine\DBAL\Types\Type;
+use Mindy\Orm\ModelInterface;
 use Mindy\QueryBuilder\QueryBuilder;
 
 /**
@@ -11,21 +12,6 @@ use Mindy\QueryBuilder\QueryBuilder;
  */
 class DateTimeField extends DateField
 {
-    public function getValue()
-    {
-        /** @var \Mindy\QueryBuilder\BaseAdapter $db */
-        $db = QueryBuilder::getInstance($this->getModel()->getConnection())->getAdapter();
-        if ($this->autoNowAdd && $this->getModel()->getIsNewRecord() || $this->autoNow) {
-            return $db->getDateTime();
-        }
-
-        if (is_numeric($this->value)) {
-            return $db->getDateTime($this->value);
-        }
-
-        return $this->value;
-    }
-
     /**
      * @return string
      */

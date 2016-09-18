@@ -4,6 +4,7 @@ namespace Mindy\Orm\Fields;
 
 use Exception;
 use Mindy\Orm\HasManyManager;
+use Mindy\Orm\Manager;
 use Mindy\Orm\ManagerInterface;
 use Mindy\Orm\Model;
 use Mindy\Orm\QuerySet;
@@ -46,6 +47,10 @@ class HasManyField extends RelatedField
     public $modelClass;
 
     public $through;
+    /**
+     * @var array
+     */
+    public $link = [];
 
     public $null = true;
 
@@ -59,13 +64,16 @@ class HasManyField extends RelatedField
      */
     public function getManager() : ManagerInterface
     {
-        return new HasManyManager($this->getRelatedModel(), [
-            'primaryModel' => $this->getModel(),
-            'from' => $this->getTo(),
-            'to' => $this->getFrom(),
-            'extra' => $this->extra,
-            'through' => $this->through
-        ]);
+        list($from, $to) = $this->link;
+
+        $manager = new Manager($this->getRelatedModel());
+        $manager->filter(array_merge([$from => $this->getModel()->getAttribute($to)], $this->extra));
+
+        if ($this->getModel()->getIsNewRecord()) {
+            $manager->distinct();
+        }
+
+        return $manager;
     }
 
     public function setValue($value)
@@ -77,9 +85,10 @@ class HasManyField extends RelatedField
     {
         $tableName = $this->getRelatedTable();
         $alias = $qb->makeAliasKey($tableName);
+        list($from, $to) = $this->link;
 
         return [
-            ['LEFT JOIN', $tableName, [$alias . '.' . $this->getFrom() => $topAlias . '.' . $this->getTo()], $alias]
+            ['LEFT JOIN', $tableName, [$alias . '.' . $from => $topAlias . '.' . $to], $alias]
         ];
     }
 

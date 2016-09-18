@@ -53,7 +53,6 @@ class Product extends Model
                 'class' => ForeignField::class,
                 'modelClass' => Category::class,
                 'null' => true,
-                'relatedName' => 'products'
             ],
             'lists' => [
                 'class' => ManyToManyField::class,

@@ -16,6 +16,7 @@ namespace Mindy\Tests\Orm\Basic;
 
 use Mindy\Orm\Manager;
 use Mindy\Orm\Model;
+use Mindy\Tests\Orm\OrmDatabaseTestCase;
 
 class DefaultManagerModel extends Model
 {
@@ -41,7 +42,7 @@ class CustomManagerModel extends Model
     }
 }
 
-class ManagerTest extends \PHPUnit_Framework_TestCase
+class ManagerTest extends OrmDatabaseTestCase
 {
     public function testDefaultManager()
     {

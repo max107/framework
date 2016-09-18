@@ -37,8 +37,8 @@ class Category extends Model
                 'class' => HasManyField::class,
                 'modelClass' => Product::class,
                 'null' => true,
-                'relatedName' => 'category',
-                'editable' => false
+                'editable' => false,
+                'link' => ['category_id', 'id']
             ],
         ];
     }

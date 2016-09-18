@@ -25,10 +25,10 @@ abstract class ManagerBase
 
     /**
      * ManagerBase constructor.
-     * @param Model $model
+     * @param ModelInterface $model
      * @param array $config
      */
-    public function __construct(Model $model, $config = [])
+    public function __construct(ModelInterface $model, $config = [])
     {
         $this->_model = $model;
         foreach ($config as $key => $value) {

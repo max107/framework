@@ -32,7 +32,6 @@ class Book extends Model
                 'class' => ForeignField::class,
                 'modelClass' => BookCategory::class,
                 'null' => true,
-                'relatedName' => 'categories',
                 'editable' => false
             ]
         ];

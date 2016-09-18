@@ -85,10 +85,10 @@ abstract class QuerySetBase implements IteratorAggregate, ArrayAccess, Serializa
     }
 
     /**
-     * @param Model $model
+     * @param ModelInterface $model
      * @return $this
      */
-    public function setModel(Model $model)
+    public function setModel(ModelInterface $model)
     {
         $this->_model = $model;
         return $this;

@@ -37,11 +37,13 @@ class Cup extends Model
             ],
             'designs' => [
                 'class' => HasManyField::class,
-                'modelClass' => Design::class
+                'modelClass' => Design::class,
+                'link' => ['cup_id', 'id']
             ],
             'colors' => [
                 'class' => HasManyField::class,
-                'modelClass' => Color::class
+                'modelClass' => Color::class,
+                'link' => ['cup_id', 'id']
             ]
         ];
     }

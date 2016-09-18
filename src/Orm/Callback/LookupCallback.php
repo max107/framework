@@ -11,7 +11,7 @@ namespace Mindy\Orm\Callback;
 use Mindy\Orm\Fields\ManyToManyField;
 use Mindy\Orm\Fields\RelatedField;
 use Mindy\Orm\Model;
-use Mindy\QueryBuilder\LookupBuilder\Legacy;
+use Mindy\Orm\ModelInterface;
 use Mindy\QueryBuilder\LookupBuilder\LookupBuilder;
 use Mindy\QueryBuilder\QueryBuilder;
 
@@ -26,7 +26,7 @@ class LookupCallback
      * LookupCallback constructor.
      * @param Model $model
      */
-    public function __construct(Model $model)
+    public function __construct(ModelInterface $model)
     {
         $this->model = $model;
     }

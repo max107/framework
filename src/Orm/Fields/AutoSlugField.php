@@ -40,15 +40,14 @@ class AutoSlugField extends CharField
         if (empty($value)) {
             $slug = $this->createSlug($model->getAttribute($this->source));
         } else {
-            $slug = $value;
+            $slug = $this->getLastSegment($value);
         }
 
         if ($model->parent) {
             $slug = $model->parent->getAttribute($this->getAttributeName()) . '/' . ltrim($slug, '/');
         }
 
-        $slug = $this->uniqueUrl(ltrim($slug, '/'));
-        $model->setAttribute($this->getAttributeName(), $slug);
+        $model->setAttribute($this->getAttributeName(), $this->uniqueUrl(ltrim($slug, '/')));
     }
 
     /**
@@ -65,6 +64,32 @@ class AutoSlugField extends CharField
     }
 
     /**
+     * @param $slug
+     * @return string
+     */
+    protected function getLastSegment($slug) : string
+    {
+        if (strpos($slug, '/') === false) {
+            return $slug;
+        } else {
+            return substr($slug, strrpos($slug, '/', -1) + 1);
+        }
+    }
+
+    /**
+     * @param $slug
+     * @return string
+     */
+    protected function getParentSegment($slug) : string
+    {
+        if (strpos($slug, '/') === false) {
+            return $slug;
+        } else {
+            return substr($slug, 0, strrpos($slug, '/', -1));
+        }
+    }
+
+    /**
      * Internal event
      * @param \Mindy\Orm\TreeModel|ModelInterface $model
      * @param $value
@@ -74,52 +99,35 @@ class AutoSlugField extends CharField
         if (empty($value)) {
             $slug = $this->createSlug($model->getAttribute($this->source));
         } else {
-            $slug = $value;
+            $slug = $this->getLastSegment($value);
         }
 
         if ($model->parent) {
-            $parentSlug = $model->parent->getAttribute($this->getAttributeName());
-            $slugs = explode('/', $model->getAttribute($this->getAttributeName()));
-            $slug = $parentSlug . '/' . end($slugs);
-        } else {
-            $slugs = explode('/', $model->getAttribute($this->getAttributeName()));
-            $slug = end($slugs);
+            $slug = implode('/', [
+                $this->getParentSegment($model->parent->getAttribute($this->getAttributeName())),
+                $slug
+            ]);
         }
 
         $slug = $this->uniqueUrl(ltrim($slug, '/'), 0, $model->pk);
 
-        if ($model->getIsNewRecord() === false && empty($model->parent)) {
-            $condition = [
-                'lft__gt' => $model->getAttribute('lft'),
-                'rgt__lt' => $model->getAttribute('rgt'),
-                'root' => $model->getAttribute('root')
-            ];
+        $conditions = [
+            'lft__gte' => $model->getAttribute('lft'),
+            'rgt__lte' => $model->getAttribute('rgt'),
+            'root' => $model->getAttribute('root')
+        ];
 
-            $attributeValue = $model->getOldAttribute($this->getAttributeName());
-            if (empty($attributeValue)) {
-                $attributeValue = $model->getAttribute($this->getAttributeName());
-            }
-            $expr = "REPLACE([[" . $this->getAttributeName() . "]], @" . $attributeValue . "@, @" . $slug . "@)";
-        } else {
-            if (empty($model->getOldAttribute('lft'))) {
-                $condition = [
-                    'lft__gt' => $model->getAttribute('lft'),
-                    'rgt__lt' => $model->getAttribute('rgt'),
-                    'root' => $model->getAttribute('root')
-                ];
-            } else {
-                $condition = [
-                    'lft__gt' => $model->getOldAttribute('lft'),
-                    'rgt__lt' => $model->getOldAttribute('rgt'),
-                    'root' => $model->getOldAttribute('root')
-                ];
-            }
-            $expr = "REPLACE([[" . $this->getAttributeName() . "]], @" . $model->getOldAttribute($this->getAttributeName()) . "@, @" . $slug . "@)";
+        $attributeValue = $model->getOldAttribute($this->getAttributeName());
+        if (empty($attributeValue)) {
+            $attributeValue = $model->getAttribute($this->getAttributeName());
         }
+        $expr = "REPLACE([[" . $this->getAttributeName() . "]], @" . $attributeValue . "@, @" . $slug . "@)";
 
-        $model->objects()->filter($condition)->update([
+        $qs = $model->objects()->filter($conditions);
+        $qs->update([
             $this->getAttributeName() => new \Mindy\QueryBuilder\Expression($expr)
         ]);
+
         $model->setAttribute($this->getAttributeName(), $slug);
     }
 

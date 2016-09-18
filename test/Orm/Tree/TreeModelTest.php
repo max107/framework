@@ -21,194 +21,348 @@ abstract class TreeModelTest extends OrmDatabaseTestCase
         return [new NestedModel];
     }
 
+    public function testSaveNewRoot()
+    {
+        $model = new NestedModel(['name' => 'root']);
+        $this->assertTrue($model->save());
+        $this->assertEquals(1, $model->level);
+        $this->assertEquals(1, $model->pk);
+        $this->assertEquals(1, $model->id);
+        $this->assertEquals(1, $model->lft);
+        $this->assertEquals(1, $model->level);
+        $this->assertEquals(1, $model->root);
+        $this->assertEquals(2, $model->rgt);
+    }
+
+    public function testSaveNewChildToRoot()
+    {
+        $model = new NestedModel(['name' => 'root']);
+        $this->assertTrue($model->save());
+        $this->assertEquals(1, $model->level);
+        $this->assertEquals(1, $model->pk);
+        $this->assertEquals(1, $model->id);
+        $this->assertEquals(1, $model->root);
+        $this->assertEquals(1, $model->lft);
+        $this->assertEquals(2, $model->rgt);
+
+        $child = new NestedModel(['name' => 'child', 'parent' => $model]);
+        $this->assertTrue($child->save());
+        $this->assertEquals(2, $child->pk);
+        $this->assertEquals(2, $child->id);
+        $this->assertEquals(2, $child->level);
+        $this->assertEquals(1, $child->root);
+        $this->assertEquals(2, $child->lft);
+        $this->assertEquals(3, $child->rgt);
+
+        /** @var \Mindy\Orm\TreeModel $root */
+        $root = NestedModel::objects()->get(['pk' => 1]);
+        $this->assertEquals(1, $root->level);
+        $this->assertEquals(1, $root->pk);
+        $this->assertEquals(1, $root->id);
+        $this->assertEquals(1, $root->root);
+        $this->assertEquals(1, $root->lft);
+        $this->assertEquals(4, $root->rgt);
+    }
+
+    public function testMoveChildFromRootToRoot()
+    {
+        $model = new NestedModel(['name' => 'root']);
+        $this->assertTrue($model->save());
+        $this->assertEquals(1, $model->level);
+        $this->assertEquals(1, $model->pk);
+        $this->assertEquals(1, $model->id);
+        $this->assertEquals(1, $model->root);
+        $this->assertEquals(1, $model->lft);
+        $this->assertEquals(2, $model->rgt);
+
+        $child = new NestedModel(['name' => 'child', 'parent' => $model]);
+        $this->assertTrue($child->save());
+        $this->assertEquals(2, $child->pk);
+        $this->assertEquals(2, $child->id);
+        $this->assertEquals(2, $child->level);
+        $this->assertEquals(1, $child->root);
+        $this->assertEquals(2, $child->lft);
+        $this->assertEquals(3, $child->rgt);
+
+        /** @var \Mindy\Orm\TreeModel $root */
+        $root = NestedModel::objects()->get(['pk' => 1]);
+        $this->assertEquals(1, $root->level);
+        $this->assertEquals(1, $root->pk);
+        $this->assertEquals(1, $root->id);
+        $this->assertEquals(1, $root->root);
+        $this->assertEquals(1, $root->lft);
+        $this->assertEquals(4, $root->rgt);
+
+        $newRoot = new NestedModel(['name' => 'new_root']);
+        $this->assertTrue($newRoot->save());
+
+        $child->parent = $newRoot;
+        $this->assertTrue($child->save());
+        $this->assertEquals(2, $child->pk);
+        $this->assertEquals(2, $child->id);
+        $this->assertEquals(2, $child->level);
+        $this->assertEquals(2, $child->root);
+        $this->assertEquals(2, $child->lft);
+        $this->assertEquals(3, $child->rgt);
+
+        /** @var \Mindy\Orm\TreeModel $firstRoot */
+        $firstRoot = NestedModel::objects()->get(['pk' => 1]);
+        $this->assertEquals(1, $firstRoot->level);
+        $this->assertEquals(1, $firstRoot->pk);
+        $this->assertEquals(1, $firstRoot->id);
+        $this->assertEquals(1, $firstRoot->root);
+        $this->assertEquals(1, $firstRoot->lft);
+        $this->assertEquals(2, $firstRoot->rgt);
+    }
+
+    public function testMoveChildFromRootToAnotherNode()
+    {
+        $model = new NestedModel(['name' => 'root']);
+        $this->assertTrue($model->save());
+        $this->assertEquals(1, $model->level);
+        $this->assertEquals(1, $model->pk);
+        $this->assertEquals(1, $model->id);
+        $this->assertEquals(1, $model->root);
+        $this->assertEquals(1, $model->lft);
+        $this->assertEquals(2, $model->rgt);
+
+        $child = new NestedModel(['name' => 'child', 'parent' => $model]);
+        $this->assertTrue($child->save());
+        $this->assertEquals(2, $child->pk);
+        $this->assertEquals(2, $child->id);
+        $this->assertEquals(2, $child->level);
+        $this->assertEquals(1, $child->root);
+        $this->assertEquals(2, $child->lft);
+        $this->assertEquals(3, $child->rgt);
+
+        $level1 = new NestedModel(['name' => 'level1']);
+        $this->assertTrue($level1->save());
+        $this->assertEquals(2, $level1->root);
+
+        $level2 = new NestedModel(['name' => 'level2', 'parent' => $level1]);
+        $this->assertTrue($level2->save());
+
+        $child->parent = $level2;
+        $this->assertTrue($child->save());
+        $this->assertEquals(2, $child->pk);
+        $this->assertEquals(2, $child->id);
+        $this->assertEquals(3, $child->level);
+        $this->assertEquals(2, $child->root);
+        $this->assertEquals(3, $child->lft);
+        $this->assertEquals(4, $child->rgt);
+
+        /** @var \Mindy\Orm\TreeModel $level1 */
+        $level1 = NestedModel::objects()->get(['name' => 'level1']);
+        $this->assertTrue($level1->save());
+        $this->assertEquals(3, $level1->pk);
+        $this->assertEquals(3, $level1->id);
+        $this->assertEquals(1, $level1->level);
+        $this->assertEquals(2, $level1->root);
+        $this->assertEquals(1, $level1->lft);
+        $this->assertEquals(6, $level1->rgt);
+    }
+
+    public function testMoveRootToAnotherRoot()
+    {
+        $model = new NestedModel(['name' => 'root1']);
+        $this->assertTrue($model->save());
+        $this->assertEquals(1, $model->level);
+        $this->assertEquals(1, $model->pk);
+        $this->assertEquals(1, $model->id);
+        $this->assertEquals(1, $model->root);
+        $this->assertEquals(1, $model->lft);
+        $this->assertEquals(2, $model->rgt);
+
+        $child = new NestedModel(['name' => 'child']);
+        $this->assertTrue($child->save());
+        $this->assertEquals(1, $child->level);
+        $this->assertEquals(2, $child->pk);
+        $this->assertEquals(2, $child->id);
+        $this->assertEquals(2, $child->root);
+        $this->assertEquals(1, $child->lft);
+        $this->assertEquals(2, $child->rgt);
+
+        $child->parent = $model;
+        $this->assertTrue($child->save());
+        $this->assertEquals(2, $child->level);
+        $this->assertEquals(2, $child->pk);
+        $this->assertEquals(2, $child->id);
+        $this->assertEquals(1, $child->root);
+        $this->assertEquals(2, $child->lft);
+        $this->assertEquals(3, $child->rgt);
+
+        /** @var \Mindy\Orm\TreeModel $root */
+        $root = NestedModel::objects()->get(['pk' => 1]);
+        $this->assertTrue($root->save());
+        $this->assertEquals(1, $root->level);
+        $this->assertEquals(1, $root->pk);
+        $this->assertEquals(1, $root->id);
+        $this->assertEquals(1, $root->root);
+        $this->assertEquals(1, $root->lft);
+        $this->assertEquals(4, $root->rgt);
+    }
+
+    public function testDeleteRoot()
+    {
+        $root1 = new NestedModel(['name' => 'root1']);
+        $this->assertTrue($root1->save());
+        $this->assertEquals(1, $root1->level);
+        $this->assertEquals(1, $root1->pk);
+        $this->assertEquals(1, $root1->id);
+        $this->assertEquals(1, $root1->root);
+        $this->assertEquals(1, $root1->lft);
+        $this->assertEquals(2, $root1->rgt);
+
+        $root2 = new NestedModel(['name' => 'root2']);
+        $this->assertTrue($root2->save());
+        $this->assertEquals(1, $root2->level);
+        $this->assertEquals(2, $root2->pk);
+        $this->assertEquals(2, $root2->id);
+        $this->assertEquals(2, $root2->root);
+        $this->assertEquals(1, $root2->lft);
+        $this->assertEquals(2, $root2->rgt);
+
+        $root1->delete();
+
+        /** @var \Mindy\Orm\TreeModel $root2 */
+        $root2 = NestedModel::objects()->get(['name' => 'root2']);
+        $this->assertTrue($root2->save());
+        $this->assertEquals(1, $root2->level);
+        $this->assertEquals(2, $root2->pk);
+        $this->assertEquals(2, $root2->id);
+        $this->assertEquals(2, $root2->root);
+        $this->assertEquals(1, $root2->lft);
+        $this->assertEquals(2, $root2->rgt);
+    }
+
+    public function testDeleteNodeFromRoot()
+    {
+        $root1 = new NestedModel(['name' => 'root1']);
+        $this->assertTrue($root1->save());
+        $this->assertEquals(1, $root1->level);
+        $this->assertEquals(1, $root1->pk);
+        $this->assertEquals(1, $root1->id);
+        $this->assertEquals(1, $root1->root);
+        $this->assertEquals(1, $root1->lft);
+        $this->assertEquals(2, $root1->rgt);
+
+        $child = new NestedModel(['name' => 'child', 'parent' => $root1]);
+        $this->assertTrue($child->save());
+        $this->assertEquals(2, $child->level);
+        $this->assertEquals(2, $child->pk);
+        $this->assertEquals(2, $child->id);
+        $this->assertEquals(1, $child->root);
+        $this->assertEquals(2, $child->lft);
+        $this->assertEquals(3, $child->rgt);
+
+        $child->delete();
+
+        /** @var \Mindy\Orm\TreeModel $root1 */
+        $root1 = NestedModel::objects()->get(['name' => 'root1']);
+        $this->assertTrue($root1->save());
+        $this->assertEquals(1, $root1->level);
+        $this->assertEquals(1, $root1->pk);
+        $this->assertEquals(1, $root1->id);
+        $this->assertEquals(1, $root1->root);
+        $this->assertEquals(1, $root1->lft);
+        $this->assertEquals(2, $root1->rgt);
+    }
+
+    public function testDeleteNodeFromRootViaQuerySet()
+    {
+        $root1 = new NestedModel(['name' => 'root1']);
+        $this->assertTrue($root1->save());
+        $this->assertEquals(1, $root1->level);
+        $this->assertEquals(1, $root1->pk);
+        $this->assertEquals(1, $root1->id);
+        $this->assertEquals(1, $root1->root);
+        $this->assertEquals(1, $root1->lft);
+        $this->assertEquals(2, $root1->rgt);
+
+        $child = new NestedModel(['name' => 'child', 'parent' => $root1]);
+        $this->assertTrue($child->save());
+        $this->assertEquals(2, $child->level);
+        $this->assertEquals(2, $child->pk);
+        $this->assertEquals(2, $child->id);
+        $this->assertEquals(1, $child->root);
+        $this->assertEquals(2, $child->lft);
+        $this->assertEquals(3, $child->rgt);
+
+        NestedModel::objects()->filter(['name' => 'child'])->delete();
+
+        /** @var \Mindy\Orm\TreeModel $root1 */
+        $root1 = NestedModel::objects()->get(['name' => 'root1']);
+        $this->assertTrue($root1->save());
+        $this->assertEquals(1, $root1->level);
+        $this->assertEquals(1, $root1->pk);
+        $this->assertEquals(1, $root1->id);
+        $this->assertEquals(1, $root1->root);
+        $this->assertEquals(1, $root1->lft);
+        $this->assertEquals(2, $root1->rgt);
+    }
+
+    public function testDeleteRootWithChildren()
+    {
+        $root1 = new NestedModel(['name' => 'root1']);
+        $this->assertTrue($root1->save());
+        $this->assertEquals(1, $root1->level);
+        $this->assertEquals(1, $root1->pk);
+        $this->assertEquals(1, $root1->id);
+        $this->assertEquals(1, $root1->root);
+        $this->assertEquals(1, $root1->lft);
+        $this->assertEquals(2, $root1->rgt);
+
+        $child = new NestedModel(['name' => 'child', 'parent' => $root1]);
+        $this->assertTrue($child->save());
+        $this->assertEquals(2, $child->level);
+        $this->assertEquals(2, $child->pk);
+        $this->assertEquals(2, $child->id);
+        $this->assertEquals(1, $child->root);
+        $this->assertEquals(2, $child->lft);
+        $this->assertEquals(3, $child->rgt);
+
+        $root1->delete();
+
+        $count = NestedModel::objects()->count();
+        $this->assertEquals(0, $count);
+    }
+
     public function testInit()
     {
         $model = new NestedModel;
-        $fields = $model->getFieldsInit();
+        $fields = $model->getMeta()->getFields();
         $this->assertTrue(array_key_exists("id", $fields));
         $this->assertTrue(array_key_exists("name", $fields));
-        $this->assertTrue(array_key_exists("slug", $fields));
         $this->assertTrue(array_key_exists("lft", $fields));
         $this->assertTrue(array_key_exists("rgt", $fields));
         $this->assertTrue(array_key_exists("level", $fields));
         $this->assertTrue(array_key_exists("root", $fields));
         $this->assertTrue(array_key_exists("parent", $fields));
-        $this->assertEquals(8, count($fields));
-    }
-
-    public function testInsert()
-    {
-        list($rootModel, $created) = NestedModel::objects()->getOrCreate(['name' => 'test']);
-        $this->assertEquals(1, $rootModel->pk);
-
-        $this->assertEquals(1, $rootModel->lft);
-        $this->assertEquals(2, $rootModel->rgt);
-        $this->assertEquals(1, $rootModel->level);
-        $this->assertEquals(1, $rootModel->root);
-        $this->assertNull($rootModel->parent);
-
-        list($rootModelTwo, $created) = NestedModel::objects()->getOrCreate(['name' => 'test1']);
-        $this->assertEquals(2, $rootModelTwo->pk);
-
-        $this->assertEquals(1, $rootModelTwo->lft);
-        $this->assertEquals(2, $rootModelTwo->rgt);
-        $this->assertEquals(1, $rootModelTwo->level);
-        $this->assertEquals(2, $rootModelTwo->root);
-        $this->assertNull($rootModelTwo->parent);
-
-        list($nestedModel, $created) = NestedModel::objects()->getOrCreate(['name' => 'test2', 'parent' => $rootModelTwo]);
-        $this->assertEquals(3, $nestedModel->pk);
-
-        $this->assertEquals(2, $nestedModel->lft);
-        $this->assertEquals(3, $nestedModel->rgt);
-        $this->assertEquals(2, $nestedModel->level);
-        $this->assertEquals(2, $nestedModel->root);
-        $this->assertNotNull($nestedModel->parent);
-
-        $this->assertEquals(4, NestedModel::objects()->get(['pk' => 2])->rgt);
-
-        list($nestedTwo, $created) = NestedModel::objects()->getOrCreate(['name' => 'test3', 'parent' => $rootModelTwo]);
-        $this->assertEquals(4, $nestedTwo->pk);
-
-        $this->assertEquals(4, $nestedTwo->lft);
-        $this->assertEquals(5, $nestedTwo->rgt);
-        $this->assertEquals(2, $nestedTwo->level);
-        $this->assertEquals(2, $nestedTwo->root);
-        $this->assertNotNull($nestedTwo->parent);
-
-        $this->assertEquals(6, NestedModel::objects()->get(['pk' => 2])->rgt);
-
-        list($threeLevelModel, $created) = NestedModel::objects()->getOrCreate(['name' => 'test4', 'parent' => $nestedTwo]);
-        $this->assertEquals(5, $threeLevelModel->pk);
-
-        $this->assertEquals(5, $threeLevelModel->lft);
-        $this->assertEquals(6, $threeLevelModel->rgt);
-        $this->assertEquals(3, $threeLevelModel->level);
-        $this->assertEquals(2, $threeLevelModel->root);
-        $this->assertNotNull($threeLevelModel->parent);
-
-        $model = NestedModel::objects()->get(['pk' => 2]);
-        $this->assertEquals(2, $model->objects()->filter(['lft__gte' => 3, 'rgt__lte' => 10])->count());
-
-        $model = NestedModel::tree()->get(['pk' => 2]);
-        $this->assertEquals(3, $model->tree()->descendants()->count());
-        $this->assertEquals(4, $model->tree()->descendants($includeSelf = true)->count());
-
-        // DELETE tests
-
-        list($rootModelTwo, $created) = NestedModel::objects()->getOrCreate(['name' => 'test1']);
-        $this->assertEquals(2, $rootModelTwo->pk);
-        $this->assertEquals(1, $rootModelTwo->lft);
-        $this->assertEquals(8, $rootModelTwo->rgt);
-        $this->assertEquals(4, $rootModelTwo->delete());
-
-        list($rootModel, $created) = NestedModel::objects()->getOrCreate(['name' => 'test']);
-        $this->assertEquals(1, $rootModel->pk);
-
-        $this->assertEquals(1, $rootModel->lft);
-        $this->assertEquals(2, $rootModel->rgt);
-        $this->assertEquals(1, $rootModel->level);
-        $this->assertEquals(1, $rootModel->root);
-        $this->assertNull($rootModel->parent);
-
-        $this->assertEquals(1, $rootModel->delete());
-    }
-
-    public function testUpdate()
-    {
-        list($rootModel, $created) = NestedModel::objects()->getOrCreate(['name' => 'test']);
-        list($rootModelTwo, $created) = NestedModel::objects()->getOrCreate(['name' => 'test1']);
-        list($nestedModel, $created) = NestedModel::objects()->getOrCreate(['name' => 'test2', 'parent' => $rootModelTwo]);
-        list($nestedTwo, $created) = NestedModel::objects()->getOrCreate(['name' => 'test3', 'parent' => $rootModelTwo]);
-        list($threeLevelModel, $created) = NestedModel::objects()->getOrCreate(['name' => 'test4', 'parent' => $nestedTwo]);
-
-        $threeLevelModel->parent = $rootModel;
-        $threeLevelModel->save();
-        $this->assertEquals(2, $threeLevelModel->lft);
-        $this->assertEquals(3, $threeLevelModel->rgt);
-        $this->assertEquals(2, $threeLevelModel->level);
-        $this->assertEquals(1, $threeLevelModel->root);
-
-        $this->assertNotNull($threeLevelModel->parent);
-        $threeLevelModel->parent = null;
-        $this->assertNull($threeLevelModel->parent);
-        $threeLevelModel->save();
-
-        $this->assertEquals(3, $threeLevelModel->root);
-
-        $rootModel = NestedModel::objects()->filter(['name' => 'test'])->get();
-        $rootModel->parent = $rootModelTwo;
-        $rootModel->save();
-        $this->assertEquals(2, $rootModel->root);
+        $this->assertEquals(7, count($fields));
     }
 
     public function testTree()
     {
-        list($rootModel, $created) = NestedModel::objects()->getOrCreate(['name' => 'test']);
-        list($rootModelTwo, $created) = NestedModel::objects()->getOrCreate(['name' => 'test1']);
-        list($nestedModel, $created) = NestedModel::objects()->getOrCreate(['name' => 'test2', 'parent' => $rootModelTwo]);
-        list($nestedTwo, $created) = NestedModel::objects()->getOrCreate(['name' => 'test3', 'parent' => $rootModelTwo]);
-        list($threeLevelModel, $created) = NestedModel::objects()->getOrCreate(['name' => 'test4', 'parent' => $nestedTwo]);
+        $attrs = [
+            ['name' => '1'],
+            ['name' => '2'],
+            ['name' => '3', 'parent' => 2],
+            ['name' => '4', 'parent' => 2],
+            ['name' => '5', 'parent' => 4]
+        ];
+        foreach ($attrs as $item) {
+            $this->assertTrue((new NestedModel($item))->save());
+        }
 
-        $data = NestedModel::tree()->asTree()->all();
+        $data = NestedModel::objects()->asTree()->all();
         $this->assertEquals([
-            [
-                'id' => 1,
-                'parent_id' => null,
-                'lft' => 1,
-                'rgt' => 2,
-                'level' => 1,
-                'root' => 1,
-                'name' => 'test',
-                'slug' => 'test',
-                'items' => [],
-            ],
-            [
-                'id' => 2,
-                'parent_id' => null,
-                'lft' => 1,
-                'rgt' => 8,
-                'level' => 1,
-                'root' => 2,
-                'name' => 'test1',
-                'slug' => 'test1',
-                'items' => [
-                    [
-                        'id' => 3,
-                        'parent_id' => 2,
-                        'lft' => 2,
-                        'rgt' => 3,
-                        'level' => 2,
-                        'root' => 2,
-                        'name' => 'test2',
-                        'slug' => 'test1/test2',
-                        'items' => [],
-                    ],
-                    [
-                        'id' => 4,
-                        'parent_id' => 2,
-                        'lft' => 4,
-                        'rgt' => 7,
-                        'level' => 2,
-                        'root' => 2,
-                        'name' => 'test3',
-                        'slug' => 'test1/test3',
-                        'items' => [
-                            [
-                                'id' => 5,
-                                'parent_id' => 4,
-                                'lft' => 5,
-                                'rgt' => 6,
-                                'level' => 3,
-                                'root' => 2,
-                                'name' => 'test4',
-                                'slug' => 'test1/test3/test4',
-                                'items' => [],
-                            ]
-                        ]
-                    ]
-                ]
-            ]
+            ['id' => '1', 'parent_id' => null, 'lft' => '1', 'rgt' => '2', 'level' => '1', 'root' => '1', 'name' => '1', 'items' => []],
+            ['id' => '2', 'parent_id' => null, 'lft' => '1', 'rgt' => '8', 'level' => '1', 'root' => '2', 'name' => '2', 'items' => [
+                ['id' => '3', 'parent_id' => '2', 'lft' => '2', 'rgt' => '3', 'level' => '2', 'root' => '2', 'name' => '3', 'items' => []],
+                ['id' => '4', 'parent_id' => '2', 'lft' => '4', 'rgt' => '7', 'level' => '2', 'root' => '2', 'name' => '4', 'items' => [
+                    ['id' => '5', 'parent_id' => '4', 'lft' => '5', 'rgt' => '6', 'level' => '3', 'root' => '2', 'name' => '5', 'items' => []]
+                ]]
+            ]]
         ], $data);
     }
 
@@ -217,29 +371,25 @@ abstract class TreeModelTest extends OrmDatabaseTestCase
      */
     public function testFixIsLeaf()
     {
-        // Create root
-        list($root1, $created) = NestedModel::objects()->getOrCreate(['name' => 'root1']);
-        $this->assertTrue(NestedModel::objects()->filter(['name' => 'root1'])->get()->getIsLeaf());
+        NestedModel::objects()->getOrCreate(['name' => 'root1']);
+        $this->assertTrue(NestedModel::objects()->get(['name' => 'root1'])->getIsLeaf());
 
-        // Create root2
-        list($root2, $created) = NestedModel::objects()->getOrCreate(['name' => 'root2']);
-        $this->assertTrue(NestedModel::objects()->filter(['name' => 'root2'])->get()->getIsLeaf());
+        NestedModel::objects()->getOrCreate(['name' => 'root2']);
+        $this->assertTrue(NestedModel::objects()->get(['name' => 'root2'])->getIsLeaf());
 
-        // Create nested record for root2
-        list($nested, $created) = NestedModel::objects()->getOrCreate(['name' => 'nested', 'parent' => $root2]);
-        // root1 is leaf = true
-        $this->assertTrue(NestedModel::objects()->filter(['name' => 'root1'])->get()->getIsLeaf());
+        NestedModel::objects()->getOrCreate(['name' => 'nested', 'parent' => 2]);
+        $this->assertTrue(NestedModel::objects()->get(['name' => 'root1'])->getIsLeaf());
         // root2 is leaf = false (nested)
-        $this->assertFalse(NestedModel::objects()->filter(['name' => 'root2'])->get()->getIsLeaf());
+        $this->assertFalse(NestedModel::objects()->get(['name' => 'root2'])->getIsLeaf());
         // nested is leaf
-        $this->assertTrue(NestedModel::objects()->filter(['name' => 'nested'])->get()->getIsLeaf());
+        $this->assertTrue(NestedModel::objects()->get(['name' => 'nested'])->getIsLeaf());
 
         // Remove nested from root2
-        NestedModel::tree()->filter(['name' => 'nested'])->delete();
+        NestedModel::objects()->filter(['name' => 'nested'])->delete();
         // Root1 is leaf - true
-        $this->assertTrue(NestedModel::objects()->filter(['name' => 'root1'])->get()->getIsLeaf());
+        $this->assertTrue(NestedModel::objects()->get(['name' => 'root1'])->getIsLeaf());
         // Root2 is leaf - true
-        $this->assertTrue(NestedModel::objects()->filter(['name' => 'root2'])->get()->getIsLeaf());
+        $this->assertTrue(NestedModel::objects()->get(['name' => 'root2'])->getIsLeaf());
     }
 
     private function buildTree()
@@ -286,7 +436,7 @@ abstract class TreeModelTest extends OrmDatabaseTestCase
         $this->assertFalse(NestedModel::objects()->get(['name' => 'nested1'])->getIsLeaf());
 
         // remove nested1 from nested
-        NestedModel::tree()->filter(['name' => 'nested2'])->delete();
+        NestedModel::objects()->filter(['name' => 'nested2'])->delete();
         $this->assertTrue(NestedModel::objects()->get(['name' => 'root1'])->getIsLeaf());
         // root2 isleaf == false (nested1)
         $this->assertFalse(NestedModel::objects()->get(['name' => 'root2'])->getIsLeaf());
@@ -299,354 +449,5 @@ abstract class TreeModelTest extends OrmDatabaseTestCase
         $this->assertTrue(NestedModel::objects()->get(['name' => 'root1'])->getIsLeaf());
         // Root2 is not leaf (nested)
         $this->assertFalse(NestedModel::objects()->get(['name' => 'root2'])->getIsLeaf());
-    }
-
-    public function testRemoveTree()
-    {
-        list($rootModel, $created) = NestedModel::objects()->getOrCreate(['name' => 'test']);
-        list($rootModelTwo, $created) = NestedModel::objects()->getOrCreate(['name' => 'test1']);
-        list($nestedModel, $created) = NestedModel::objects()->getOrCreate(['name' => 'test2', 'parent' => $rootModelTwo]);
-        list($threeLevelFirstModel, $created) = NestedModel::objects()->getOrCreate(['name' => 'test3', 'parent' => $nestedModel]);
-        list($nestedTwo, $created) = NestedModel::objects()->getOrCreate(['name' => 'test4', 'parent' => $rootModelTwo]);
-        list($nestedThree, $created) = NestedModel::objects()->getOrCreate(['name' => 'test5', 'parent' => $rootModelTwo]);
-        list($threeLevelModel, $created) = NestedModel::objects()->getOrCreate(['name' => 'test6', 'parent' => $nestedThree]);
-
-        $data = NestedModel::tree()->asTree()->all();
-        $this->assertEquals([
-            [
-                'id' => 1,
-                'parent_id' => null,
-                'lft' => 1,
-                'rgt' => 2,
-                'level' => 1,
-                'root' => 1,
-                'name' => 'test',
-                'slug' => 'test',
-                'items' => [],
-            ],
-            [
-                'id' => 2,
-                'parent_id' => null,
-                'lft' => 1,
-                'rgt' => 12,
-                'level' => 1,
-                'root' => 2,
-                'name' => 'test1',
-                'slug' => 'test1',
-                'items' => [
-                    [
-                        'id' => 3,
-                        'parent_id' => 2,
-                        'lft' => 2,
-                        'rgt' => 5,
-                        'level' => 2,
-                        'root' => 2,
-                        'name' => 'test2',
-                        'slug' => 'test1/test2',
-                        'items' => [
-                            [
-                                'id' => 4,
-                                'parent_id' => 3,
-                                'lft' => 3,
-                                'rgt' => 4,
-                                'level' => 3,
-                                'root' => 2,
-                                'name' => 'test3',
-                                'slug' => 'test1/test2/test3',
-                                'items' => [],
-                            ],
-                        ],
-                    ],
-                    [
-                        'id' => 5,
-                        'parent_id' => 2,
-                        'lft' => 6,
-                        'rgt' => 7,
-                        'level' => 2,
-                        'root' => 2,
-                        'name' => 'test4',
-                        'slug' => 'test1/test4',
-                        'items' => [],
-                    ],
-                    [
-                        'id' => 6,
-                        'parent_id' => 2,
-                        'lft' => 8,
-                        'rgt' => 11,
-                        'level' => 2,
-                        'root' => 2,
-                        'name' => 'test5',
-                        'slug' => 'test1/test5',
-                        'items' => [
-                            [
-                                'id' => 7,
-                                'parent_id' => 6,
-                                'lft' => 9,
-                                'rgt' => 10,
-                                'level' => 3,
-                                'root' => 2,
-                                'name' => 'test6',
-                                'slug' => 'test1/test5/test6',
-                                'items' => [],
-                            ]
-                        ]
-                    ]
-                ]
-            ]
-        ], $data);
-
-        $nested = NestedModel::objects()->filter(['id' => 5])->get();
-        $nested->delete();
-
-        $root = NestedModel::objects()->get(['id' => 2]);
-        $this->assertEquals($root->lft, 1);
-        $this->assertEquals($root->rgt, 12);
-
-        $root = NestedModel::objects()->get(['id' => 6]);
-        $this->assertEquals($root->lft, 8);
-        $this->assertEquals($root->rgt, 11);
-
-        NestedModel::objects()->filter(['id' => 7])->delete();
-        $root = NestedModel::objects()->get(['id' => 6]);
-        $this->assertEquals($root->lft, 8);
-        $this->assertEquals($root->rgt, 9);
-
-        $nested = NestedModel::objects()->filter(['id' => 3])->delete();
-        $this->assertNull(NestedModel::objects()->filter(['id' => 4])->get());
-    }
-
-    public function testRemoveTreeAnother()
-    {
-        list($rootModel, $created) = NestedModel::objects()->getOrCreate(['name' => 'test']);
-
-        list($nestedModelFirst, $created) = NestedModel::objects()->getOrCreate(['name' => 'test5', 'parent' => $rootModel]);
-        list($nestedTwoSecond, $created) = NestedModel::objects()->getOrCreate(['name' => 'test6', 'parent' => $rootModel]);
-        list($nestedThreeThird, $created) = NestedModel::objects()->getOrCreate(['name' => 'test7', 'parent' => $rootModel]);
-
-
-        list($rootModelThree, $created) = NestedModel::objects()->getOrCreate(['name' => 'test8']);
-
-        list($rootModelTwo, $created) = NestedModel::objects()->getOrCreate(['name' => 'test1']);
-
-        list($nestedModel, $created) = NestedModel::objects()->getOrCreate(['name' => 'test2', 'parent' => $rootModelTwo]);
-        list($nestedTwo, $created) = NestedModel::objects()->getOrCreate(['name' => 'test3', 'parent' => $rootModelTwo]);
-        list($nestedThree, $created) = NestedModel::objects()->getOrCreate(['name' => 'test4', 'parent' => $rootModelTwo]);
-
-
-        $data = NestedModel::tree()->asTree()->all();
-        $this->assertEquals([
-            [
-                'id' => 1,
-                'parent_id' => null,
-                'lft' => 1,
-                'rgt' => 8,
-                'level' => 1,
-                'root' => 1,
-                'name' => 'test',
-                'slug' => 'test',
-                'items' => [
-                    [
-                        'id' => 2,
-                        'parent_id' => 1,
-                        'lft' => 2,
-                        'rgt' => 3,
-                        'level' => 2,
-                        'root' => 1,
-                        'name' => 'test5',
-                        'slug' => 'test/test5',
-                        'items' => [],
-                    ],
-                    [
-                        'id' => 3,
-                        'parent_id' => 1,
-                        'lft' => 4,
-                        'rgt' => 5,
-                        'level' => 2,
-                        'root' => 1,
-                        'name' => 'test6',
-                        'slug' => 'test/test6',
-                        'items' => [],
-                    ],
-                    [
-                        'id' => 4,
-                        'parent_id' => 1,
-                        'lft' => 6,
-                        'rgt' => 7,
-                        'level' => 2,
-                        'root' => 1,
-                        'name' => 'test7',
-                        'slug' => 'test/test7',
-                        'items' => []
-                    ]
-                ],
-            ],
-            [
-                'id' => 5,
-                'parent_id' => null,
-                'lft' => 1,
-                'rgt' => 2,
-                'level' => 1,
-                'root' => 2,
-                'name' => 'test8',
-                'slug' => 'test8',
-                'items' => [],
-            ],
-            [
-                'id' => 6,
-                'parent_id' => null,
-                'lft' => 1,
-                'rgt' => 8,
-                'level' => 1,
-                'root' => 3,
-                'name' => 'test1',
-                'slug' => 'test1',
-                'items' => [
-                    [
-                        'id' => 7,
-                        'parent_id' => 6,
-                        'lft' => 2,
-                        'rgt' => 3,
-                        'level' => 2,
-                        'root' => 3,
-                        'name' => 'test2',
-                        'slug' => 'test1/test2',
-                        'items' => [],
-                    ],
-                    [
-                        'id' => 8,
-                        'parent_id' => 6,
-                        'lft' => 4,
-                        'rgt' => 5,
-                        'level' => 2,
-                        'root' => 3,
-                        'name' => 'test3',
-                        'slug' => 'test1/test3',
-                        'items' => [],
-                    ],
-                    [
-                        'id' => 9,
-                        'parent_id' => 6,
-                        'lft' => 6,
-                        'rgt' => 7,
-                        'level' => 2,
-                        'root' => 3,
-                        'name' => 'test4',
-                        'slug' => 'test1/test4',
-                        'items' => []
-                    ]
-                ]
-            ]
-        ], $data);
-
-        $nested = NestedModel::objects()->filter(['id' => 4])->get();
-        $nested->delete();
-
-        $this->assertEquals([
-                [
-                    'id' => '1',
-                    'parent_id' => NULL,
-                    'lft' => '1',
-                    'rgt' => '8',
-                    'level' => '1',
-                    'root' => '1',
-                    'name' => 'test',
-                    'slug' => 'test',
-                    'items' =>
-                        [
-                                [
-                                    'id' => '2',
-                                    'parent_id' => '1',
-                                    'lft' => '2',
-                                    'rgt' => '3',
-                                    'level' => '2',
-                                    'root' => '1',
-                                    'name' => 'test5',
-                                    'slug' => 'test/test5',
-                                    'items' =>
-                                        [
-                                        ],
-                                ],
-                                [
-                                    'id' => '3',
-                                    'parent_id' => '1',
-                                    'lft' => '4',
-                                    'rgt' => '5',
-                                    'level' => '2',
-                                    'root' => '1',
-                                    'name' => 'test6',
-                                    'slug' => 'test/test6',
-                                    'items' =>
-                                        [
-                                        ],
-                                ],
-                        ],
-                ],
-                [
-                    'id' => '5',
-                    'parent_id' => NULL,
-                    'lft' => '1',
-                    'rgt' => '2',
-                    'level' => '1',
-                    'root' => '2',
-                    'name' => 'test8',
-                    'slug' => 'test8',
-                    'items' =>
-                        [
-                        ],
-                ],
-                [
-                    'id' => '6',
-                    'parent_id' => NULL,
-                    'lft' => '1',
-                    'rgt' => '8',
-                    'level' => '1',
-                    'root' => '3',
-                    'name' => 'test1',
-                    'slug' => 'test1',
-                    'items' =>
-                        [
-                                [
-                                    'id' => '7',
-                                    'parent_id' => '6',
-                                    'lft' => '2',
-                                    'rgt' => '3',
-                                    'level' => '2',
-                                    'root' => '3',
-                                    'name' => 'test2',
-                                    'slug' => 'test1/test2',
-                                    'items' =>
-                                        [
-                                        ],
-                                ],
-                                [
-                                    'id' => '8',
-                                    'parent_id' => '6',
-                                    'lft' => '4',
-                                    'rgt' => '5',
-                                    'level' => '2',
-                                    'root' => '3',
-                                    'name' => 'test3',
-                                    'slug' => 'test1/test3',
-                                    'items' =>
-                                        [
-                                        ],
-                                ],
-                                [
-                                    'id' => '9',
-                                    'parent_id' => '6',
-                                    'lft' => '6',
-                                    'rgt' => '7',
-                                    'level' => '2',
-                                    'root' => '3',
-                                    'name' => 'test4',
-                                    'slug' => 'test1/test4',
-                                    'items' =>
-                                        [
-                                        ],
-                                ],
-                        ],
-                ],
-        ],NestedModel::tree()->asTree()->all());
-
     }
 }

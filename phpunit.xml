@@ -1,4 +1,4 @@
-<phpunit colors="true" strict="true" stopOnError="true" backupGlobals="false"
+<phpunit colors="true" strict="true" stopOnError="false" backupGlobals="false"
          bootstrap="vendor/autoload.php">
     <testsuites>
         <!--<testsuite name="All">-->

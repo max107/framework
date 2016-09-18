@@ -14,6 +14,7 @@
 
 namespace Mindy\Tests\Orm\QueryBuilder;
 
+use Mindy\QueryBuilder\Expression;
 use Mindy\QueryBuilder\Q\QAnd;
 use Mindy\QueryBuilder\Q\QOr;
 use Mindy\Tests\Orm\OrmDatabaseTestCase;
@@ -41,6 +42,7 @@ abstract class LookupTest extends OrmDatabaseTestCase
     public function testExact()
     {
         $this->assertTrue((new Product())->save());
+        $this->assertEquals(1, Product::objects()->count());
         $qs = Product::objects()->filter(['id' => 1]);
         $this->assertSql("SELECT COUNT(*) FROM [[product]] AS [[product_1]] WHERE ([[product_1]].[[id]]=1)", $qs->countSql());
         $this->assertEquals(1, $qs->count());
@@ -191,7 +193,7 @@ abstract class LookupTest extends OrmDatabaseTestCase
     public function testMonth()
     {
         $this->assertTrue((new ProductList(['name' => 'foo', 'date_action' => '2014-04-29 10:35:45']))->save());
-        $this->assertTrue((new ProductList(['name' => 'bar', 'date_action' => '2013-02-29 10:35:45']))->save());
+        $this->assertTrue((new ProductList(['name' => 'bar', 'date_action' => '2013-01-29 10:35:45']))->save());
 
         $qs = ProductList::objects()->filter(['date_action__month' => 4]);
         $this->assertSql("SELECT COUNT(*) FROM [[product_list]] AS [[product_list_1]] WHERE (strftime('%m', [[product_list_1]].[[date_action]])=@04@)", $qs->countSql());

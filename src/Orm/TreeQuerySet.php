@@ -149,6 +149,8 @@ class TreeQuerySet extends QuerySet
 
     public function asTree($key = 'items')
     {
+        $this->asArray(true);
+
         $this->treeKey = $key;
         return $this->order(['root', 'lft']);
     }
@@ -322,14 +324,11 @@ class TreeQuerySet extends QuerySet
     public function toHierarchy($collection)
     {
         // Trees mapped
-        $trees = array();
+        $trees = [];
         if (count($collection) > 0) {
             // Node Stack. Used to help building the hierarchy
             $stack = [];
             foreach ($collection as $item) {
-                if ($item instanceof Arrayable) {
-                    $item = $item->toArray();
-                }
                 $item[$this->treeKey] = [];
                 // Number of stack items
                 $l = count($stack);

@@ -51,6 +51,7 @@ class User extends Model
             'addresses' => [
                 'class' => HasManyField::class,
                 'modelClass' => Customer::class,
+                'link' => ['user_id', 'id'],
                 'editable' => false,
             ],
         ];

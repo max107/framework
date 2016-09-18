@@ -54,7 +54,7 @@ class ForeignField extends RelatedField
             [
                 'LEFT JOIN',
                 $this->getRelatedTable(false),
-                [$topAlias . '.' . $this->name . '_id' => $alias . '.' . $this->getRelatedModel()->getPkName()],
+                [$topAlias . '.' . $this->name . '_id' => $alias . '.' . $this->getRelatedModel()->getPrimaryKeyName()],
                 $alias
             ]
         ];

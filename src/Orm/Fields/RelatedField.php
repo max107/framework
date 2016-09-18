@@ -15,10 +15,6 @@ abstract class RelatedField extends IntField
     /**
      * @var string
      */
-    public $relatedName;
-    /**
-     * @var string
-     */
     public $modelClass;
 
     protected $_model;
@@ -28,14 +24,6 @@ abstract class RelatedField extends IntField
      * @var Connection
      */
     protected $connection;
-
-    public function getRelatedName()
-    {
-        if (!$this->relatedName) {
-            $this->relatedName = $this->name . '_set';
-        }
-        return $this->relatedName;
-    }
 
     abstract public function getJoin(QueryBuilder $qb, $topAlias);
     

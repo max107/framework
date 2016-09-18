@@ -34,6 +34,10 @@ class NewOrm extends NewBase
         return $this->getQueryBuilder()->getAdapter();
     }
 
+    /**
+     * @param array $fields
+     * @return bool
+     */
     protected function updateInternal(array $fields = [])
     {
         $values = $this->getChangedAttributes($fields);
@@ -58,7 +62,6 @@ class NewOrm extends NewBase
     protected function insertInternal(array $fields = [])
     {
         $values = $this->getChangedAttributes($fields);
-
         if (empty($values)) {
             return true;
         }
@@ -187,11 +190,15 @@ class NewOrm extends NewBase
 
         $meta = self::getMeta();
         foreach ($this->getAttributes() as $name => $attribute) {
-            if (in_array($name, $dirty) && $meta->hasField($name)) {
+            if (in_array($name, $fields) && in_array($name, $dirty) && $meta->hasField($name)) {
                 $field = $this->getField($name);
                 $sqlType = $field->getSqlType();
-                if ($sqlType && $value = $field->convertToDatabaseValue($attribute, $platform)) {
-                    $changed[$name] = $value;
+                if ($sqlType) {
+                    if ($value = $field->convertToDatabaseValue($attribute, $platform)) {
+                        $changed[$name] = $value;
+                    } else {
+                        $changed[$name] = $field->default;
+                    }
                 }
             }
         }

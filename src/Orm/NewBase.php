@@ -25,18 +25,6 @@ use Mindy\Orm\Fields\ModelFieldInterface;
 abstract class NewBase implements ModelInterface, ArrayAccess
 {
     /**
-     * @var string
-     */
-    protected $using;
-    /**
-     * @var Connection
-     */
-    protected $connection;
-    /**
-     * @var array
-     */
-    protected $errors = [];
-    /**
      * @var bool
      */
     protected $isNewRecord = true;
@@ -45,9 +33,21 @@ abstract class NewBase implements ModelInterface, ArrayAccess
      */
     protected $attributes;
     /**
+     * @var string
+     */
+    protected $using;
+    /**
+     * @var array
+     */
+    protected $errors = [];
+    /**
      * @var array
      */
     protected $related = [];
+    /**
+     * @var Connection
+     */
+    protected $connection;
 
     /**
      * NewOrm constructor.
@@ -458,6 +458,19 @@ abstract class NewBase implements ModelInterface, ArrayAccess
     }
 
     /**
+     * @return bool
+     */
+    public function delete() : bool
+    {
+//        $this->onBeforeDeleteInternal();
+        $result = $this->objects()->delete(['pk' => $this->pk]);
+        if ($result) {
+//            $this->onAfterDeleteInternal();
+        }
+        return $result;
+    }
+
+    /**
      * @param array $row
      * @return ModelInterface
      */
@@ -489,6 +502,9 @@ abstract class NewBase implements ModelInterface, ArrayAccess
     public function setIsNewRecord(bool $value)
     {
         $this->isNewRecord = $value;
+        if ($value === false) {
+            $this->attributes->resetOldAttributes();
+        }
     }
 
     /**

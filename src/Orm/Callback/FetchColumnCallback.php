@@ -9,14 +9,14 @@
 namespace Mindy\Orm\Callback;
 
 use Mindy\Orm\MetaData;
-use Mindy\Orm\Model;
+use Mindy\Orm\ModelInterface;
 
 class FetchColumnCallback
 {
     protected $model;
     protected $meta;
 
-    public function __construct(Model $model, MetaData $meta)
+    public function __construct(ModelInterface $model, MetaData $meta)
     {
         $this->model = $model;
         $this->meta = $meta;

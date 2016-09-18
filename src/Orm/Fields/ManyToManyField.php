@@ -95,7 +95,7 @@ class ManyToManyField extends RelatedField
     public function getRelatedModelPk()
     {
         if (!$this->_relatedModelPk) {
-            $this->_relatedModelPk = $this->getRelatedModel()->getPkName();
+            $this->_relatedModelPk = $this->getRelatedModel()->getPrimaryKeyName();
         }
         return $this->_relatedModelPk;
     }

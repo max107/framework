@@ -49,12 +49,12 @@ class Manager extends ManyToManyManager implements IteratorAggregate, ArrayAcces
     }
 
     /**
-     * @param array|string|Expression $q
-     * @return \Mindy\Orm\Manager
+     * @param $conditions
+     * @return Manager|ManagerInterface
      */
-    public function filter($q)
+    public function filter($conditions) : ManagerInterface
     {
-        $this->getQuerySet()->filter($q);
+        $this->getQuerySet()->filter($conditions);
         return $this;
     }
 
@@ -100,12 +100,12 @@ class Manager extends ManyToManyManager implements IteratorAggregate, ArrayAcces
     }
 
     /**
-     * @param array $q
+     * @param $conditions
      * @return ModelInterface|array|null
      */
-    public function get(array $q = [])
+    public function get($conditions = [])
     {
-        $this->filter($q);
+        $this->filter($conditions);
         return $this->getQuerySet()->get();
     }
 
@@ -346,7 +346,9 @@ class Manager extends ManyToManyManager implements IteratorAggregate, ArrayAcces
 
     public function create(array $attributes)
     {
-        return $this->getModel()->setAttributes($attributes)->save();
+        $model = $this->getModel();
+        $model->setAttributes($attributes);
+        return $model->save();
     }
 
     /**

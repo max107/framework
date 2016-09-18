@@ -15,135 +15,125 @@
 namespace Mindy\Tests\Orm\Fields;
 
 use Mindy\Tests\Orm\OrmDatabaseTestCase;
-use Mindy\Tests\Orm\Models\NestedModel;
+use Mindy\Tests\Orm\Models\AutoSlugModel;
 
 abstract class AutoSlugFieldTest extends OrmDatabaseTestCase
 {
     protected function getModels()
     {
-        return [new NestedModel];
+        return [new AutoSlugModel];
     }
 
     public function tearDown()
     {
-        
+
     }
 
-    public function testInit()
+    public function testCreate()
     {
-        list($rootModel, $created) = NestedModel::objects()->getOrCreate(['name' => 'test']);
-        $this->assertEquals(1, $rootModel->pk);
-        $this->assertEquals('test', $rootModel->slug);
+        $model = new AutoSlugModel(['name' => 'test']);
+        $this->assertTrue($model->save());
+        $this->assertEquals('test', $model->slug);
 
-        list($rootModelTwo, $created) = NestedModel::objects()->getOrCreate(['name' => 'test1']);
-        $this->assertEquals(2, $rootModelTwo->pk);
-        $this->assertEquals('test1', $rootModelTwo->slug);
-
-        list($nestedModel, $created) = NestedModel::objects()->getOrCreate(['name' => 'test2', 'parent' => $rootModelTwo]);
-        $this->assertEquals(3, $nestedModel->pk);
-        $this->assertEquals('test1/test2', $nestedModel->slug);
-
-        list($nestedTwo, $created) = NestedModel::objects()->getOrCreate(['name' => 'test3', 'parent' => $rootModelTwo]);
-        $this->assertEquals(4, $nestedTwo->pk);
-        $this->assertEquals('test1/test3', $nestedTwo->slug);
-
-        list($threeLevelModel, $created) = NestedModel::objects()->getOrCreate(['name' => 'test4', 'parent' => $nestedTwo]);
-        $this->assertEquals(5, $threeLevelModel->pk);
-        $this->assertEquals('test1/test3/test4', $threeLevelModel->slug);
-
-        $this->assertEquals(5, NestedModel::objects()->count());
+        $model = new AutoSlugModel(['name' => 'привет мир!']);
+        $this->assertTrue($model->save());
+        $this->assertEquals('privet-mir', $model->slug);
     }
 
-    public function testInitTwo()
+    public function testClear()
     {
-        $rootModel = new NestedModel(['name' => 'test']);
-        $rootModel->save();
-        $this->assertEquals('test', $rootModel->slug);
+        $model = new AutoSlugModel(['name' => 'test']);
+        $this->assertTrue($model->save());
+        $this->assertEquals('test', $model->slug);
 
-        $rootModelTwo = new NestedModel(['name' => 'test1']);
-        $rootModelTwo->save();
-        $this->assertEquals('test1', $rootModelTwo->slug);
-
-        $nestedModel = new NestedModel(['name' => 'test2', 'parent' => $rootModelTwo]);
-        $nestedModel->save();
-        $this->assertEquals('test1/test2', $nestedModel->slug);
-
-        $nestedTwo = new NestedModel(['name' => 'test3', 'parent' => $rootModelTwo]);
-        $nestedTwo->save();
-        $this->assertEquals('test1/test3', $nestedTwo->slug);
-
-        $threeLevelModel = new NestedModel(['name' => 'test4', 'parent' => $nestedTwo]);
-        $threeLevelModel->save();
-        $this->assertEquals('test1/test3/test4', $threeLevelModel->slug);
-
-        // Play with parent attribute, bro.
-        $threeLevelModel->parent = null;
-        $this->assertNull($threeLevelModel->parent);
-        $threeLevelModel->save();
-        $this->assertEquals('test4', $threeLevelModel->slug);
-
-        $threeLevelModel->parent = $nestedTwo;
-        $this->assertEquals($nestedTwo->pk, $threeLevelModel->parent->pk);
-        $threeLevelModel->save();
-        $this->assertEquals('test1/test3/test4', $threeLevelModel->slug);
+        $model->name = 'Привет мир!';
+        $model->slug = '';
+        $this->assertTrue($model->save());
+        $this->assertEquals('privet-mir', $model->slug);
     }
 
-    private function prepareTree()
+    public function testUpdate()
     {
-        list($rootModel, $created) = NestedModel::objects()->getOrCreate(['name' => 'test']);
-        $this->assertEquals(1, $rootModel->pk);
-        $this->assertEquals('test', $rootModel->slug);
+        $model = new AutoSlugModel(['name' => 'test']);
+        $this->assertTrue($model->save());
+        $this->assertEquals('test', $model->slug);
 
-        list($rootModelTwo, $created) = NestedModel::objects()->getOrCreate(['name' => 'test1']);
-        $this->assertEquals(2, $rootModelTwo->pk);
-        $this->assertEquals('test1', $rootModelTwo->slug);
-
-        list($nestedModel, $created) = NestedModel::objects()->getOrCreate(['name' => 'test2', 'parent' => $rootModelTwo]);
-        $this->assertEquals(3, $nestedModel->pk);
-        $this->assertEquals('test1/test2', $nestedModel->slug);
-
-        list($nestedTwo, $created) = NestedModel::objects()->getOrCreate(['name' => 'test3', 'parent' => $rootModelTwo]);
-        $this->assertEquals(4, $nestedTwo->pk);
-        $this->assertEquals('test1/test3', $nestedTwo->slug);
-
-        list($threeLevelModel, $created) = NestedModel::objects()->getOrCreate(['name' => 'test4', 'parent' => $nestedTwo]);
-        $this->assertEquals(5, $threeLevelModel->pk);
-        $this->assertEquals('test1/test3/test4', $threeLevelModel->slug);
-
-        $this->assertEquals(5, NestedModel::objects()->count());
+        $model->name = 'Привет мир!';
+        $this->assertTrue($model->save());
+        $this->assertEquals('test', $model->slug);
     }
 
-    public function testReplace()
+    public function testCreateParent()
     {
-        $this->prepareTree();
-        foreach (range(1, 5) as $i) {
-            $this->assertNotNull(NestedModel::objects()->get(['id' => $i]));
-        }
+        $parent = new AutoSlugModel(['name' => 'parent']);
+        $this->assertTrue($parent->save());
 
-        /** @var \Mindy\Orm\TreeModel $model */
-        $model = NestedModel::objects()->get(['name' => 'test1']);
-        $this->assertSame('test1', $model->slug);
-        $model->slug = 'qwe';
-        $this->assertSame('qwe', $model->slug);
-        $this->assertSame('test1', $model->getOldAttribute('slug'));
+        $model = new AutoSlugModel(['name' => 'child', 'parent' => $parent]);
+        $this->assertTrue($model->save());
+        $this->assertEquals('parent/child', $model->slug);
+    }
 
-        $model->save();
-        $this->assertEquals(5, NestedModel::objects()->count());
+    public function testMoveFromParentToRoot()
+    {
+        $parent = new AutoSlugModel(['name' => 'parent']);
+        $this->assertTrue($parent->save());
 
-        $test2 = NestedModel::objects()->get(['name' => 'test2']);
-        $this->assertEquals('qwe/test2', $test2->slug);
-        $this->assertEquals('qwe', $model->slug);
+        $model = new AutoSlugModel(['name' => 'child', 'parent' => $parent]);
+        $this->assertTrue($model->save());
+        $this->assertEquals('parent/child', $model->slug);
 
-        $test4 = NestedModel::objects()->get(['name' => 'test4']);
-        $this->assertEquals('qwe/test3/test4', $test4->slug);
+        $model->parent = null;
+        $this->assertTrue($model->save());
+        $this->assertEquals('child', $model->slug);
+    }
 
-        $test3 = NestedModel::objects()->get(['name' => 'test3']);
-        $this->assertEquals('qwe/test3', $test3->slug);
+    public function testMoveFromParentToAnotherParent()
+    {
+        $parent1 = new AutoSlugModel(['name' => 'parent1']);
+        $this->assertTrue($parent1->save());
 
-        $test3->slug = 'www';
-        $test3->save(['slug']);
+        $parent2 = new AutoSlugModel(['name' => 'parent2']);
+        $this->assertTrue($parent2->save());
 
-        $test4 = NestedModel::objects()->get(['name' => 'test4']);
-        $this->assertEquals('qwe/www/test4', $test4->slug);
+        $model = new AutoSlugModel(['name' => 'child', 'parent' => $parent1]);
+        $this->assertTrue($model->save());
+        $this->assertEquals('parent1/child', $model->slug);
+
+        $model->parent = $parent2;
+        $this->assertTrue($model->save());
+        $this->assertEquals('parent2/child', $model->slug);
+    }
+
+    public function testMoveRootToAnotherRoot()
+    {
+        $parent1 = new AutoSlugModel(['name' => 'parent1']);
+        $this->assertTrue($parent1->save());
+
+        $parent2 = new AutoSlugModel(['name' => 'parent2']);
+        $this->assertTrue($parent2->save());
+
+        $parent1->parent = $parent2;
+        $this->assertTrue($parent1->save());
+        $this->assertEquals('parent2/parent1', $parent1->slug);
+    }
+
+    public function testUpdateParent()
+    {
+        $parent = new AutoSlugModel(['name' => 'parent']);
+        $this->assertTrue($parent->save());
+        $this->assertSame('parent', $parent->slug);
+
+        $child = new AutoSlugModel(['name' => 'child', 'parent' => $parent]);
+        $this->assertTrue($child->save());
+        $this->assertSame('parent/child', $child->slug);
+
+        $parent = AutoSlugModel::objects()->get(['name' => 'parent']);
+        $parent->slug = 'tools';
+        $this->assertTrue($parent->save());
+        $this->assertSame('tools', $parent->slug);
+
+        /** @var \Mindy\Orm\Model $child */
+        $child = AutoSlugModel::objects()->get(['name' => 'child']);
+        $this->assertSame('tools/child', $child->slug);
     }
 }

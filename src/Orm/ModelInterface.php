@@ -85,4 +85,10 @@ interface ModelInterface
      * @param array $attributes
      */
     public function setAttributes(array $attributes);
+
+    /**
+     * @param string $name
+     * @param $value
+     */
+    public function setAttribute(string $name, $value);
 }

@@ -1,7 +1,10 @@
 <?php
 
 namespace Mindy\Orm\Fields;
+
+use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Types\Type;
+use Mindy\Orm\ModelInterface;
 use Mindy\QueryBuilder\QueryBuilder;
 
 /**
@@ -20,17 +23,24 @@ class DateField extends Field
     public $autoNow = false;
 
     /**
-     * @return string
+     * @return Type
      */
     public function getSqlType()
     {
         return Type::getType(Type::DATE);
     }
 
-    public function onBeforeInsert()
+    public function beforeInsert(ModelInterface $model, $value)
     {
-        if ($this->autoNowAdd) {
-            $this->getModel()->setAttribute($this->name, $this->getValue());
+        if ($this->autoNowAdd && $model->getIsNewRecord()) {
+            $model->setAttribute($this->getAttributeName(), new \DateTime());
+        }
+    }
+
+    public function beforeUpdate(ModelInterface $model, $value)
+    {
+        if ($this->autoNow && $model->getIsNewRecord() === false) {
+            $model->setAttribute($this->getAttributeName(), new \DateTime());
         }
     }
 
@@ -39,27 +49,37 @@ class DateField extends Field
         return ($this->autoNowAdd || $this->autoNow) || !$this->required && $this->null || !is_null($this->default);
     }
 
-    public function onBeforeUpdate()
-    {
-        if ($this->autoNow) {
-            $this->getModel()->setAttribute($this->name, $this->getValue());
-        }
-    }
-
     public function getValue()
     {
         $adapter = QueryBuilder::getInstance($this->getModel()->getConnection())->getAdapter();
-        if ($this->autoNowAdd && $this->getModel()->getIsNewRecord() || $this->autoNow) {
-            return $adapter->getDate();
-        }
-        if (is_numeric($this->value)) {
-            return $adapter->getDate($this->value);
-        }
-        return $this->value;
+        return $adapter->getDate($this->value);
     }
 
     public function getFormField($form, $fieldClass = '\Mindy\Form\Fields\DateField', array $extra = [])
     {
         return parent::getFormField($form, $fieldClass, $extra);
+    }
+
+    /**
+     * @param $value
+     * @param AbstractPlatform $platform
+     * @return mixed
+     */
+    public function convertToPHPValue($value, AbstractPlatform $platform)
+    {
+        return $this->getSqlType()->convertToPHPValue($value, $platform);
+    }
+
+    /**
+     * @param $value
+     * @param AbstractPlatform $platform
+     * @return mixed
+     */
+    public function convertToDatabaseValue($value, AbstractPlatform $platform)
+    {
+        if (!is_object($value)) {
+            $value = (new \DateTime())->setTimestamp(is_numeric($value) ? $value : strtotime($value));
+        }
+        return $this->getSqlType()->convertToDatabaseValue($value, $platform);
     }
 }

@@ -99,7 +99,7 @@ class QuerySet extends QuerySetBase
      */
     public function update(array $attributes)
     {
-        return $this->getConnection()->query($this->updateSql($attributes))->execute();
+        return $this->getConnection()->executeUpdate($this->updateSql($attributes));
     }
 
     /**

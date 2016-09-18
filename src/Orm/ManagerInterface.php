@@ -11,8 +11,14 @@ namespace Mindy\Orm;
 interface ManagerInterface
 {
     /**
-     * @param array $condition
+     * @param $conditions
      * @return mixed
      */
-    public function get(array $condition = []);
+    public function get($conditions = []);
+
+    /**
+     * @param array $conditions
+     * @return ManagerInterface
+     */
+    public function filter($conditions) : ManagerInterface;
 }

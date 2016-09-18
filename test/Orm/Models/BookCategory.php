@@ -28,8 +28,7 @@ class BookCategory extends Model
             ],
             'categories' => [
                 'class' => HasManyField::class,
-                'modelClass' => Book::class,
-                'relatedName' => 'category_new'
+                'modelClass' => Book::class
             ]
         ];
     }

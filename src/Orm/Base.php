@@ -321,7 +321,7 @@ abstract class Base implements ArrayAccess, ModelInterface
      * @throws InvalidParamException if the named attribute does not exist.
      * @see hasAttribute()
      */
-    public function setAttribute($name, $value)
+    public function setAttribute(string $name, $value)
     {
         if ($this->hasAttribute($name)) {
             if ($this->isPrimaryKey($name) && $this->getAttribute($name) !== $value) {
