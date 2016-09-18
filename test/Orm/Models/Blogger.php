@@ -42,7 +42,7 @@ class Blogger extends Model
             'subscribers' => [
                 'class' => ManyToManyField::class,
                 'modelClass' => self::class,
-                'throughLink' => ['blogger_to_id', 'blogger_from_id']
+                'link' => ['blogger_to_id', 'blogger_from_id']
             ],
             /**
              * Blogger has these subscriptions
@@ -50,7 +50,7 @@ class Blogger extends Model
             'subscribes' => [
                 'class' => ManyToManyField::class,
                 'modelClass' => self::class,
-                'throughLink' => ['blogger_from_id', 'blogger_to_id']
+                'link' => ['blogger_from_id', 'blogger_to_id']
             ],
         ];
     }

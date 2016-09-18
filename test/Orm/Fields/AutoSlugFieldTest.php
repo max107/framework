@@ -24,11 +24,6 @@ abstract class AutoSlugFieldTest extends OrmDatabaseTestCase
         return [new AutoSlugModel];
     }
 
-    public function tearDown()
-    {
-
-    }
-
     public function testCreate()
     {
         $model = new AutoSlugModel(['name' => 'test']);

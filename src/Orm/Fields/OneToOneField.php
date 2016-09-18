@@ -4,9 +4,10 @@ namespace Mindy\Orm\Fields;
 
 use Doctrine\DBAL\Schema\Index;
 use Exception;
-use Mindy\Orm\Model;
-use Mindy\QueryBuilder\Expression;
-use Mindy\Validation\UniqueValidator;
+use Mindy\Orm\ModelInterface;
+use Mindy\Tests\Orm\Models\MemberProfile;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
 /**
  * Class OneToOneField
@@ -15,11 +16,7 @@ use Mindy\Validation\UniqueValidator;
 class OneToOneField extends ForeignField
 {
     /**
-     * @var bool virtual or real field
-     */
-    public $reversed = false;
-    /**
-     * @var
+     * @var string
      */
     public $to;
 
@@ -27,20 +24,43 @@ class OneToOneField extends ForeignField
     {
         parent::init();
 
-        if ($this->reversed) {
-            $this->null = true;
-        } else {
-            $this->primary = true;
+        if ($this->primary) {
             $this->unique = true;
+        } else {
+            $this->null = true;
         }
+    }
+
+    public function getValidationConstraints() : array
+    {
+        $constraints = [];
+
+        if ($this->primary) {
+            $constraints = [
+                new Assert\NotBlank(),
+                new Assert\Callback(function ($value, ExecutionContextInterface $context, $payload) {
+                    $qs = $this->getModel()->objects()->filter(['pk' => $value]);
+                    if ($qs->count() > 0) {
+                        $context->buildViolation('The value must be unique')->addViolation();
+                    }
+                })
+            ];
+        } else {
+            $constraints = [
+                new Assert\Callback(function ($value, ExecutionContextInterface $context, $payload) {
+                    $qs = $this->getRelatedModel()->objects()->filter(['pk' => $value]);
+                    if ($qs->count() > 0) {
+                        $context->buildViolation('The value must be unique')->addViolation();
+                    }
+                })
+            ];
+        }
+
+        return $constraints;
     }
 
     public function reversedTo()
     {
-        if (!$this->to) {
-            $model = $this->getModel();
-            return $model->normalizeTableName($model->classNameShort()) . '_' . $model->getPkName();
-        }
         return $this->to;
     }
 
@@ -62,22 +82,27 @@ class OneToOneField extends ForeignField
 
     public function setValue($value)
     {
-        if ($this->reversed) {
+        if ($this->primary === false) {
             $model = $this->getModel();
             $modelClass = $this->modelClass;
+
+            $valueRaw = $value instanceof ModelInterface ? $value->pk : $value;
+
             if ($value) {
-                $count = $modelClass::objects()->filter([
+                $count = call_user_func([$modelClass, 'objects'])->filter([
                     $this->reversedTo() => $model->pk
                 ])->exclude([
-                    $this->reversedTo() => $value
+                    $this->reversedTo() => $valueRaw
                 ])->count();
+
                 if ($count > 0) {
                     throw new Exception(get_class($this->getRelatedModel()) . ' must have unique key');
                 }
+
                 $value->pk = $model->pk;
                 $value->save();
             } else {
-                $modelClass::objects()->filter([
+                call_user_func([$modelClass, 'objects'])->filter([
                     $this->reversedTo() => $model->pk
                 ])->delete();
             }
@@ -100,12 +125,12 @@ class OneToOneField extends ForeignField
 
     public function getValue()
     {
-        if ($this->reversed) {
+        if ($this->primary) {
+            return $this->getModel()->pk;
+        } else {
             return $this->getRelatedModel()->objects()->get([
                 $this->to => $this->getModel()->pk
             ]);
-        } else {
-            return parent::getValue();
         }
     }
 
@@ -130,7 +155,7 @@ class OneToOneField extends ForeignField
             $primaryKeyName = call_user_func([$this->modelClass, 'getPrimaryKeyName']);
             return $this->name . '_' . $primaryKeyName;
         } else {
-            return $this->name;
+            return $this->name . '_id';
         }
     }
 }

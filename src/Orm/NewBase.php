@@ -16,6 +16,7 @@ use Mindy\Orm\Fields\AutoField;
 use Mindy\Orm\Fields\HasManyField;
 use Mindy\Orm\Fields\ManyToManyField;
 use Mindy\Orm\Fields\ModelFieldInterface;
+use Mindy\Orm\Fields\OneToOneField;
 
 /**
  * Class NewBase
@@ -79,11 +80,11 @@ abstract class NewBase implements ModelInterface, ArrayAccess
     {
         $name = $this->convertToPrimaryKeyName($name);
         if ($this->hasField($name)) {
-             if ($this->getField($name) instanceof ManyToManyField) {
-                 $this->related[$name] = $value;
-             } else {
+            if ($this->getField($name) instanceof ManyToManyField) {
+                $this->related[$name] = $value;
+            } else {
                 $this->setAttribute($name, $value);
-             }
+            }
         } else {
             throw new Exception("Setting unknown property " . get_class($this) . "::" . $name);
         }
@@ -350,7 +351,9 @@ abstract class NewBase implements ModelInterface, ArrayAccess
         $meta = self::getMeta();
 
         /* @var $field \Mindy\Orm\Fields\Field */
-        foreach ($meta->getFields() as $name => $field) {
+        foreach ($meta->getAttributes() as $name) {
+            $field = $this->getField($name);
+
             if (
                 $field instanceof AutoField ||
                 $field instanceof ManyToManyField ||
@@ -359,9 +362,7 @@ abstract class NewBase implements ModelInterface, ArrayAccess
                 continue;
             }
 
-            $value = $this->getAttribute($name);
-            $field->setModel($this);
-            $field->setValue($value);
+            $field->setValue($this->getAttribute($field->getAttributeName()));
             if ($field->isValid() === false) {
                 $errors[$name] = $field->getErrors();
             }
@@ -527,7 +528,11 @@ abstract class NewBase implements ModelInterface, ArrayAccess
         if ($field->getSqlType()) {
             $platform = $this->getConnection()->getDatabasePlatform();
 
-            $value = $this->getAttribute($field->getAttributeName());
+            if ($field instanceof OneToOneField && $field->primary === false) {
+                $value = $field->getValue();
+            } else {
+                $value = $this->getAttribute($field->getAttributeName());
+            }
 
             if ($name == $field->getAttributeName()) {
                 return $field->convertToDatabaseValue($value, $platform);
@@ -545,7 +550,15 @@ abstract class NewBase implements ModelInterface, ArrayAccess
     public static function tableName() : string
     {
         $classMap = explode('\\', get_called_class());
-        $tableName = end($classMap);
+        return self::normalizeTableName(end($classMap));
+    }
+
+    /**
+     * @param string $tableName
+     * @return string
+     */
+    public static function normalizeTableName(string $tableName) : string
+    {
         return trim(strtolower(preg_replace('/(?<![A-Z])[A-Z]/', '_\0', $tableName)), '_');
     }
 

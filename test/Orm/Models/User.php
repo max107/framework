@@ -46,7 +46,7 @@ class User extends Model
                 'class' => ManyToManyField::class,
                 'modelClass' => Group::class,
                 'through' => Membership::class,
-                'throughLink' => ['user_id', 'group_id']
+                'link' => ['user_id', 'group_id']
             ],
             'addresses' => [
                 'class' => HasManyField::class,

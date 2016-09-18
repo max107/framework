@@ -36,7 +36,7 @@ class ProductList extends Model
             'products' => [
                 'class' => ManyToManyField::class,
                 'modelClass' => Product::class,
-                'throughLink' => ['product_list_id', 'product_id']
+                'link' => ['product_list_id', 'product_id']
             ],
             'date_action' => [
                 'class' => DateTimeField::class,

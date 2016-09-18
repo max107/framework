@@ -26,7 +26,7 @@ abstract class OneToOneFieldTest extends OrmDatabaseTestCase
         $this->assertTrue($member->hasField('id'));
         $this->assertTrue($member->hasField('profile'));
         $this->assertTrue($member->hasAttribute('profile_id'));
-        $this->assertEquals('id', $member->primaryKeyName());
+        $this->assertEquals('id', $member->getPrimaryKeyName());
         $this->assertTrue($member->hasField('pk'));
         $this->assertTrue($member->save());
         $this->assertEquals(1, $member->pk);
@@ -35,7 +35,7 @@ abstract class OneToOneFieldTest extends OrmDatabaseTestCase
         $profile->user = $member;
         $this->assertTrue($profile->hasField('user'));
         $this->assertTrue($profile->hasAttribute('user_id'));
-        $this->assertEquals(1, $profile->getAttribute('user_id'));
+        $this->assertEquals(1, $profile->user_id);
         $this->assertTrue($profile->save());
         $this->assertEquals(1, $profile->getAttribute('user_id'));
         $this->assertEquals(1, $profile->user_id);
@@ -50,7 +50,8 @@ abstract class OneToOneFieldTest extends OrmDatabaseTestCase
     public function testOneToOne()
     {
         $member = new Member();
-        $member->save();
+        $this->assertTrue($member->save());
+        $this->assertEquals(1, $member->pk);
 
         $profile = new MemberProfile();
         $profile->user = $member;
@@ -60,43 +61,52 @@ abstract class OneToOneFieldTest extends OrmDatabaseTestCase
         $profile2 = new MemberProfile();
         $profile2->user = $member;
         $this->assertFalse($profile2->isValid());
-        $profile2->save();
+        $this->assertEquals(['user_id' => ['The value must be unique']], $profile2->getErrors());
 
-        $this->assertEquals(2, MemberProfile::objects()->count());
+        $this->assertEquals(1, MemberProfile::objects()->count());
         $this->assertEquals(1, Member::objects()->count());
     }
 
     public function testOneToOneReverseException()
     {
-        $this->setExpectedException(Exception::class);
         $member = new Member();
-        $member->save();
+        $this->assertTrue($member->save());
+        $this->assertEquals(1, $member->pk);
 
         $member2 = new Member();
-        $member2->save();
+        $this->assertTrue($member2->save());
+        $this->assertEquals(2, $member2->pk);
 
         $profile = new MemberProfile();
         $profile->user = $member;
-        $profile->save();
+        $this->assertTrue($profile->save());
+        $this->assertEquals(1, $profile->pk);
 
-        $profile2 = new MemberProfile();
-        $profile2->user = $member2;
-        $profile2->save();
-
-        $member->profile = $profile2;
-        $member->save();
+        $member2->profile = $profile;
+        $this->assertFalse($member2->isValid());
+        $this->assertEquals(['profile_id' => ['The value must be unique']], $member2->getErrors());
     }
 
     public function testOneToOneKeyInt()
     {
         $member = new Member();
-        $member->save();
+        $this->assertTrue($member->save());
+        $this->assertEquals(1, $member->id);
+        $this->assertEquals(1, $member->pk);
 
         $profile = new MemberProfile();
         $profile->user_id = 1;
         $profile->save();
+        $this->assertTrue($profile->save());
+        $this->assertEquals(1, $profile->user_id);
+        $this->assertEquals(1, $profile->pk);
 
+        $this->assertEquals(1, Member::objects()->count());
         $this->assertEquals(1, MemberProfile::objects()->filter(['user' => $member->id])->count());
+
+        $this->assertInstanceOf(Member::class, $profile->user);
+
+        $this->assertInstanceOf(MemberProfile::class, $member->profile);
         $this->assertEquals(1, $member->profile->pk);
         $profile->delete();
         $this->assertNull($member->profile);

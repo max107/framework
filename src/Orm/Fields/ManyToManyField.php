@@ -5,7 +5,7 @@ namespace Mindy\Orm\Fields;
 use Exception;
 use Mindy\Orm\MetaData;
 use Mindy\Orm\Model;
-use Mindy\Orm\Orm;
+use Mindy\Orm\NewOrm;
 use Mindy\QueryBuilder\QueryBuilder;
 use Mindy\Orm\ManagerInterface;
 
@@ -33,7 +33,7 @@ class ManyToManyField extends RelatedField
     /**
      * @var array
      */
-    public $throughLink = [];
+    public $link = [];
     /**
      * Related model class
      * @var string
@@ -105,8 +105,8 @@ class ManyToManyField extends RelatedField
      */
     public function getRelatedModelColumn()
     {
-        if (!empty($this->throughLink)) {
-            list($fromId, $toId) = $this->throughLink;
+        if (!empty($this->link)) {
+            list($fromId, $toId) = $this->link;
             return $toId;
         }
 
@@ -117,7 +117,7 @@ class ManyToManyField extends RelatedField
                 $end = $this->reversed ? 'from_id' : 'to_id';
             }
             $tmp = explode('\\', $cls);
-            $column = Orm::normalizeTableName(end($tmp));
+            $column = NewOrm::normalizeTableName(end($tmp));
             $this->_relatedModelColumn = $column . '_' . $end;
         }
         return $this->_relatedModelColumn;
@@ -126,10 +126,10 @@ class ManyToManyField extends RelatedField
     /**
      * @return string PK name of model
      */
-    public function getModelPk()
+    public function getModelPk() : string
     {
         if (!$this->_modelPk) {
-            $this->_modelPk = MetaData::getInstance($this->ownerClassName)->getPkName($this->ownerClassName);
+            $this->_modelPk = MetaData::getInstance($this->ownerClassName)->getPrimaryKeyName();
         }
         return $this->_modelPk;
     }
@@ -142,9 +142,9 @@ class ManyToManyField extends RelatedField
     {
         if (empty($this->_modelColumn)) {
             if (!empty($this->through)) {
-                if (empty($this->throughLink)) {
+                if (empty($this->link)) {
                     $throughClass = $this->through;
-                    $through = new $throughClass;
+                    $through = call_user_func([$throughClass, 'create']);
 
                     $name = '';
                     foreach ($through->getFields() as $fieldName => $params) {
@@ -156,8 +156,8 @@ class ManyToManyField extends RelatedField
 
                     $this->_modelColumn = $name . '_id';
                 } else {
-                    list($fromId, $toId) = $this->throughLink;
-                    if (empty($this->throughLink)) {
+                    list($fromId, $toId) = $this->link;
+                    if (empty($this->link)) {
                         throw new Exception('throughLink is missing in configutaion');
                     }
 
@@ -170,7 +170,7 @@ class ManyToManyField extends RelatedField
                     $end = $this->reversed ? 'to_id' : 'from_id';
                 }
                 $tmp = explode('\\', $cls);
-                $column = Orm::normalizeTableName(end($tmp));
+                $column = NewOrm::normalizeTableName(end($tmp));
                 $this->_modelColumn = $column . '_' . $end;
             }
         }
@@ -181,11 +181,11 @@ class ManyToManyField extends RelatedField
     {
         $throughAlias = $qb->makeAliasKey($this->getTableName());
         $alias = $qb->makeAliasKey($this->getRelatedTable());
-        if (empty($this->throughLink)) {
+        if (empty($this->link)) {
             $to = $this->getRelatedModelColumn();
             $from = $this->getModelColumn();
         } else {
-            list($to, $from) = $this->throughLink;
+            list($to, $from) = $this->link;
         }
         return [
             ['LEFT JOIN', $this->getTableName(), [
@@ -198,11 +198,11 @@ class ManyToManyField extends RelatedField
     {
         $throughAlias = $qb->makeAliasKey($this->getTableName());
         $alias = $qb->makeAliasKey($this->getRelatedTable());
-        if (empty($this->throughLink)) {
+        if (empty($this->link)) {
             $from = $this->getRelatedModelColumn();
             $to = $this->getModelColumn();
         } else {
-            list($from, $to) = $this->throughLink;
+            list($from, $to) = $this->link;
         }
         return [
             [
@@ -229,13 +229,13 @@ class ManyToManyField extends RelatedField
             'relatedTable' => $this->getTableName(),
             'extra' => $this->extra,
             'through' => $this->through,
-            'throughLink' => $this->throughLink
+            'throughLink' => $this->link
         ];
         /** @var \Mindy\Orm\Manager $manager */
         $manager = new $className($this->getRelatedModel(), $config);
 
-        if (!empty($this->throughLink)) {
-            list($from, $to) = $this->throughLink;
+        if (!empty($this->link)) {
+            list($from, $to) = $this->link;
             $throughAlias = $manager->getQueryBuilder()->makeAliasKey($this->getTableName());
             $this->buildSelectQuery($manager->getQueryBuilder(), $manager->getQueryBuilder()->makeAliasKey($this->getModel()->tableName()));
             if (empty($this->getModel()->pk)) {
@@ -300,11 +300,11 @@ class ManyToManyField extends RelatedField
      */
     public function getColumns()
     {
-        if (empty($this->throughLink)) {
+        if (empty($this->link)) {
             $from = $this->getRelatedModelColumn();
             $to = $this->getModelColumn();
         } else {
-            list($from, $to) = $this->throughLink;
+            list($from, $to) = $this->link;
         }
 
         return [
@@ -392,11 +392,11 @@ class ManyToManyField extends RelatedField
         $relatedModel = $this->getRelatedModel();
         $throughAlias = $qb->makeAliasKey($this->getTableName());
         $alias = $qb->makeAliasKey($this->getRelatedTable());
-        if (empty($this->throughLink)) {
+        if (empty($this->link)) {
             $to = $this->getRelatedModelColumn();
             $from = $this->getModelColumn();
         } else {
-            list($to, $from) = $this->throughLink;
+            list($to, $from) = $this->link;
         }
         return [
             ['LEFT JOIN', $this->getTableName(), [

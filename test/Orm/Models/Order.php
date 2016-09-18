@@ -38,7 +38,7 @@ class Order extends Model
             'products' => [
                 'class' => ManyToManyField::class,
                 'modelClass' => Product::class,
-                'throughLink' => ['order_id', 'product_id']
+                'link' => ['order_id', 'product_id']
             ],
             'discount' => [
                 'class' => IntField::class,

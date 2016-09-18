@@ -61,6 +61,8 @@ class NewOrm extends NewBase
 
     protected function insertInternal(array $fields = [])
     {
+        $dirty = $this->getDirtyAttributes();
+
         $values = $this->getChangedAttributes($fields);
         if (empty($values)) {
             return true;
@@ -76,7 +78,7 @@ class NewOrm extends NewBase
         }
 
         foreach (self::getMeta()->getPrimaryKeyName(true) as $primaryKeyName) {
-            if (array_key_exists($primaryKeyName, $values) === false) {
+            if (in_array($primaryKeyName, $dirty) === false) {
                 $id = $connection->lastInsertId();
                 $this->setAttribute($primaryKeyName, $id);
                 $values[$primaryKeyName] = $id;

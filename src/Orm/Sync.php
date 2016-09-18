@@ -64,10 +64,6 @@ class Sync
         $indexes = [];
 
         foreach ($model->getMeta()->getFields() as $name => $field) {
-            if (is_a($field, OneToOneField::class) && $field->reversed) {
-                continue;
-            }
-
             $field->setModel($model);
 
             if ($field instanceof ManyToManyField) {

@@ -57,7 +57,7 @@ class Product extends Model
             'lists' => [
                 'class' => ManyToManyField::class,
                 'modelClass' => ProductList::class,
-                'throughLink' => ['product_id', 'product_list_id']
+                'link' => ['product_id', 'product_list_id']
             ]
         ];
     }

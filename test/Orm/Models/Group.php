@@ -37,7 +37,7 @@ class Group extends Model
                 'class' => ManyToManyField::class,
                 'modelClass' => User::class,
                 'through' => Membership::class,
-                'throughLink' => ['group_id', 'user_id']
+                'link' => ['group_id', 'user_id']
             ]
         ];
     }

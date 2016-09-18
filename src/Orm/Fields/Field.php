@@ -10,11 +10,9 @@ use Doctrine\DBAL\Types\Type;
 use Mindy\Helper\Creator;
 use Mindy\Helper\Traits\Accessors;
 use Mindy\Helper\Traits\Configurator;
-use Mindy\Orm\Base;
 use Mindy\Orm\Model;
 use Mindy\Orm\ModelInterface;
 use Symfony\Component\Validator\Constraints as Assert;
-use Mindy\Validation\UniqueValidator;
 use Mindy\Validation\ValidationAwareTrait;
 
 /**
@@ -94,7 +92,7 @@ abstract class Field implements ModelFieldInterface
         if ($this->unique) {
             // TODO
             $constraints[] = new Assert\Callback(function () {
-                return $this->getModel()->objects()->filter([$this->name => $this->getValue()])->count() > 0;
+                return $this->getModel()->objects()->filter([$this->getAttributeName() => $this->getValue()])->count() > 0;
             });
         }
         if (!empty($this->choices)) {
