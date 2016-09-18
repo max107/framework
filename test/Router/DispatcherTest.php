@@ -6,6 +6,7 @@ use Mindy\Router\Dispatcher;
 use Mindy\Router\Exception\HttpMethodNotAllowedException;
 use Mindy\Router\RouteCollector;
 use Mindy\Router\RouteParser;
+use ReflectionFunction;
 
 class DispatcherTest extends \PHPUnit_Framework_TestCase
 {

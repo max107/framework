@@ -16,12 +16,14 @@ use ReflectionMethod;
 
 class HandlerResolver
 {
-    public function resolve($data)
+    public function __invoke($data)
     {
         list($handler, $vars, $params) = $data;
 
-        $request = app()->http->getRequest();
-        app()->http->setRequest($request->withQueryParams(array_merge($request->getQueryParams(), $vars)));
+        if (app()) {
+            $request = app()->http->getRequest();
+            app()->http->setRequest($request->withQueryParams(array_merge($request->getQueryParams(), $vars)));
+        }
 
         if ($handler instanceof \Closure) {
             $method = new ReflectionFunction($handler);
@@ -51,14 +53,13 @@ class HandlerResolver
     protected function parseParams(ReflectionFunctionAbstract $method, $params) : array
     {
         $ps = [];
+
         foreach ($method->getParameters() as $i => $param) {
             if ($param->isDefaultValueAvailable()) {
-                $value = $param->getDefaultValue();
+                $ps[] = $param->getDefaultValue();
+            } else if (isset($params[$param->getName()]) && $params[$param->getName()] !== '') {
+                $ps[] = $params[$param->getName()];
             }
-            if (isset($params[$param->getName()]) && $params[$param->getName()] !== '') {
-                $value = $params[$param->getName()];
-            }
-            $ps[] = $value;
         }
 
         return $ps;

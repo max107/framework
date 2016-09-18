@@ -40,16 +40,18 @@ class Dispatcher
      */
     private $variableRouteData;
     /**
-     * @var bool
+     * @var callable
      */
-    public $trailingSlash = true;
+    protected $handlerResolver;
 
     /**
      * Dispatcher constructor.
      * @param RouteCollector $collector
+     * @param callable $handlerResolver
      */
-    public function __construct(RouteCollector $collector)
+    public function __construct(RouteCollector $collector, callable $handlerResolver = null)
     {
+        $this->handlerResolver = $handlerResolver ?? new HandlerResolver();
         $this->collector = $collector;
         list($this->staticRouteMap, $this->variableRouteData) = $collector->getData();
     }
@@ -67,54 +69,31 @@ class Dispatcher
     /**
      * @param $httpMethod
      * @param $uri
-     * @return bool|mixed
+     * @return mixed
      */
     public function dispatch($httpMethod, $uri)
     {
-        $cleanUri = ltrim(strtok($uri, '?'), '/');
-        $data = $this->dispatchRoute($httpMethod, $cleanUri);
+        $data = $this->dispatchRoute($httpMethod, ltrim(strtok($uri, '?'), '/'));
         if ($data === false) {
-            if ($this->trailingSlash && substr($cleanUri, -1) !== '/') {
-                $data = $this->dispatchRoute($httpMethod, $cleanUri . '/');
-                if ($data === false) {
-                    return false;
-                } else {
-                    $query = ltrim(str_replace($cleanUri, '', $uri), '/');
-                    $this->trailingSlashCallback('/' . $cleanUri . '/' . $query);
-                }
-            } else {
-                return false;
-            }
+            return false;
         }
 
         return $this->getResponse($data);
     }
 
     /**
-     * Redirect to new url
-     * @param $uri
-     */
-    public function trailingSlashCallback($uri)
-    {
-        header("HTTP/1.1 301 Moved Permanently");
-        header("Location: " . $uri);
-        die();
-    }
-
-    /**
-     * @param $data
+     * @param array $data
      * @return mixed
-     * @throws Exception
      */
-    public function getResponse($data)
+    public function getResponse(array $data)
     {
-        return (new HandlerResolver())->resolve($data);
+        return $this->handlerResolver->__invoke($data);
     }
 
     /**
      * @param $httpMethod
      * @param $uri
-     * @return bool
+     * @return mixed
      */
     public function dispatchRoute($httpMethod, $uri)
     {

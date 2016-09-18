@@ -14,9 +14,9 @@ use Mindy\Base\Application;
 use Mindy\Base\Mindy;
 
 /**
- * @return \Mindy\Base\Application
+ * @return \Mindy\Base\Application|null
  */
-function app() : Application
+function app()
 {
     return Mindy::app();
 }

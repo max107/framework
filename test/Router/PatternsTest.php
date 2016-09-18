@@ -72,8 +72,10 @@ class PatternsTest extends \PHPUnit_Framework_TestCase
         $d = new CustomDispatcher($c);
 
         $this->assertNotNull($d->dispatch('GET', '/blog/'));
-        $this->assertEquals(301, $d->dispatch('GET', '/blog'));
-        $this->assertNotNull($d->dispatch('GET', '/page/'));
-        $this->assertEquals(301, $d->dispatch('GET', '/page'));
+        $this->assertFalse($d->dispatch('GET', '/blog'));
+        $this->assertTrue($d->dispatch('GET', '/blog/'));
+
+        $this->assertFalse($d->dispatch('GET', '/page'));
+        $this->assertTrue($d->dispatch('GET', '/page/'));
     }
 }
