@@ -13,7 +13,7 @@ use Traversable;
  * Class Manager
  * @package Mindy\Orm
  */
-class Manager extends ManyToManyManager implements IteratorAggregate, ArrayAccess
+class Manager extends ManyToManyManager implements IteratorAggregate, ArrayAccess, ManagerInterface
 {
     /**
      * @param string|array $value

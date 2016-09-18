@@ -4,6 +4,7 @@ namespace Mindy\Orm\Fields;
 
 use Exception;
 use Mindy\Orm\HasManyManager;
+use Mindy\Orm\ManagerInterface;
 use Mindy\Orm\Model;
 use Mindy\Orm\QuerySet;
 use Mindy\QueryBuilder\QueryBuilder;
@@ -53,7 +54,10 @@ class HasManyField extends RelatedField
         return false;
     }
 
-    public function getManager()
+    /**
+     * @return ManagerInterface
+     */
+    public function getManager() : ManagerInterface
     {
         return new HasManyManager($this->getRelatedModel(), [
             'primaryModel' => $this->getModel(),
@@ -81,14 +85,15 @@ class HasManyField extends RelatedField
 
     protected function getTo()
     {
-        return $this->getModel()->getPkName();
+        return $this->getModel()->getMeta()->getPrimaryKeyName();
     }
 
     protected function getFrom()
     {
-        $model = $this->getModel();
-        $related = $this->getRelatedModel();
-        return Model::normalizeTableName($model->classNameShort()) . '_' . $related->getPkName();
+        return implode('_', [
+            $this->getModel()->tableName(),
+            $this->getRelatedModel()->getMeta()->getPrimaryKeyName()
+        ]);
     }
 
     public function fetch($value)

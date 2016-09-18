@@ -101,11 +101,19 @@ class AutoSlugField extends CharField
             }
             $expr = "REPLACE([[" . $this->getAttributeName() . "]], @" . $attributeValue . "@, @" . $slug . "@)";
         } else {
-            $condition = [
-                'lft__gt' => $model->getOldAttribute('lft'),
-                'rgt__lt' => $model->getOldAttribute('rgt'),
-                'root' => $model->getOldAttribute('root')
-            ];
+            if (empty($model->getOldAttribute('lft'))) {
+                $condition = [
+                    'lft__gt' => $model->getAttribute('lft'),
+                    'rgt__lt' => $model->getAttribute('rgt'),
+                    'root' => $model->getAttribute('root')
+                ];
+            } else {
+                $condition = [
+                    'lft__gt' => $model->getOldAttribute('lft'),
+                    'rgt__lt' => $model->getOldAttribute('rgt'),
+                    'root' => $model->getOldAttribute('root')
+                ];
+            }
             $expr = "REPLACE([[" . $this->getAttributeName() . "]], @" . $model->getOldAttribute($this->getAttributeName()) . "@, @" . $slug . "@)";
         }
 

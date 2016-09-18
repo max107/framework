@@ -28,7 +28,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @property string price
  * @property string description
  * @property \Mindy\Tests\Orm\Models\Category category
- * @property \Mindy\Orm\ManyToManyManager lists
+ * @property \Mindy\Orm\Manager lists
  */
 class Product extends Model
 {

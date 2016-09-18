@@ -3,7 +3,6 @@
 namespace Mindy\Orm;
 
 use function Mindy\app;
-use Mindy\Base\Mindy;
 use Mindy\Helper\Alias;
 use ReflectionClass;
 

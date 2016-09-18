@@ -65,8 +65,12 @@ abstract class ManyToManyFieldTest extends OrmDatabaseTestCase
         $product->category = $category;
 
         $this->assertNull($product->pk);
+
+        // TODO тут нужно выбрасывать исключение потому что обращаемся к связанным данным у новой(!) не сохраненной модели
         $this->assertEquals(0, $product->lists->count());
         $this->assertEquals([], $product->lists->all());
+        // TODO тут нужно выбрасывать исключение потому что обращаемся к связанным данным у новой(!) не сохраненной модели
+
         $this->assertTrue($product->save());
         $this->assertEquals(1, $product->pk);
         $this->assertEquals(1, $product->id);

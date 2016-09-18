@@ -3,6 +3,7 @@
 namespace Mindy\Orm\Fields;
 
 use Doctrine\DBAL\Connection;
+use Mindy\Orm\ManagerInterface;
 use Mindy\QueryBuilder\QueryBuilder;
 
 /**
@@ -55,8 +56,7 @@ abstract class RelatedField extends IntField
 
     public function getTable()
     {
-        $cls = $this->ownerClassName;
-        return $cls::tableName();
+        return call_user_func([$this->ownerClassName, 'tableName']);
     }
 
     /**
@@ -79,8 +79,7 @@ abstract class RelatedField extends IntField
 
     public function getRelatedTable()
     {
-        $cls = $this->modelClass;
-        return $cls::tableName();
+        return call_user_func([$this->modelClass, 'tableName']);
     }
 
     public function buildSelectQuery(QueryBuilder $qb, $topAlias)
@@ -112,4 +111,6 @@ abstract class RelatedField extends IntField
         }
         return $joinAlias;
     }
+
+    abstract public function getManager() : ManagerInterface;
 }

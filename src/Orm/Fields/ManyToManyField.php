@@ -6,8 +6,8 @@ use Exception;
 use Mindy\Orm\MetaData;
 use Mindy\Orm\Model;
 use Mindy\Orm\Orm;
-use Mindy\Query\Schema\Schema;
 use Mindy\QueryBuilder\QueryBuilder;
+use Mindy\Orm\ManagerInterface;
 
 /**
  * Class ManyToManyField
@@ -189,7 +189,7 @@ class ManyToManyField extends RelatedField
         }
         return [
             ['LEFT JOIN', $this->getTableName(), [
-                $throughAlias . '.' . $from => $alias . '.' . $this->getModel()->getPkName()
+                $throughAlias . '.' . $from => $alias . '.' . $this->getModel()->getMeta()->getPrimaryKeyName()
             ], $throughAlias]
         ];
     }
@@ -209,7 +209,7 @@ class ManyToManyField extends RelatedField
                 'LEFT JOIN',
                 $this->getTableName(),
                 [
-                    $throughAlias . '.' . $from => $topAlias . '.' . $this->getModel()->getPkName()
+                    $throughAlias . '.' . $from => $topAlias . '.' . $this->getModel()->getPrimaryKeyName()
                 ],
                 $throughAlias
             ]
@@ -217,9 +217,9 @@ class ManyToManyField extends RelatedField
     }
 
     /**
-     * @return \Mindy\Orm\ManyToManyManager QuerySet of related objects
+     * @return ManagerInterface
      */
-    public function getManager()
+    public function getManager() : ManagerInterface
     {
         $className = get_class($this->getRelatedModel()->objects());
         $config = [
@@ -316,7 +316,7 @@ class ManyToManyField extends RelatedField
     /**
      * @return bool|string
      */
-    public function sqlType()
+    public function getSqlType()
     {
         return false;
     }
@@ -400,11 +400,11 @@ class ManyToManyField extends RelatedField
         }
         return [
             ['LEFT JOIN', $this->getTableName(), [
-                $throughAlias . '.' . $to => $topAlias . '.' . $relatedModel->getPkName()
+                $throughAlias . '.' . $to => $topAlias . '.' . $relatedModel->getPrimaryKeyName()
             ], $throughAlias],
 
             ['LEFT JOIN', $this->getRelatedTable(), [
-                $alias . '.' . $this->getModel()->getPkName() => $throughAlias . '.' . $from
+                $alias . '.' . $this->getModel()->getPrimaryKeyName() => $throughAlias . '.' . $from
             ], $alias]
         ];
     }

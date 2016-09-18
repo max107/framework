@@ -10,5 +10,9 @@ namespace Mindy\Orm;
 
 interface ManagerInterface
 {
-
+    /**
+     * @param array $condition
+     * @return mixed
+     */
+    public function get(array $condition = []);
 }

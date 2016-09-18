@@ -69,6 +69,10 @@ class NewModelTest extends OrmDatabaseTestCase
 
         $custom = new DefaultPrimaryKeyModel();
         $this->assertInstanceOf(AutoField::class, $custom->getField('pk'));
+
+        $custom->pk = 1;
+        $this->assertSame(1, $custom->pk);
+        $this->assertFalse(empty($custom->pk));
     }
 
     public function testGetHasField()

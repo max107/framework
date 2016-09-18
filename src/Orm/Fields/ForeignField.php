@@ -3,15 +3,11 @@
 namespace Mindy\Orm\Fields;
 
 use Doctrine\DBAL\Platforms\AbstractPlatform;
-use Doctrine\DBAL\Schema\Column;
-use Doctrine\DBAL\Types\Type;
 use Exception;
 use InvalidArgumentException;
 use Mindy\Orm\Base;
-use Mindy\Orm\Model;
 use Mindy\Orm\ModelInterface;
-use Mindy\Orm\Orm;
-use Mindy\Orm\RelatedManager;
+use Mindy\Orm\ManagerInterface;
 use Mindy\QueryBuilder\QueryBuilder;
 
 /**
@@ -131,8 +127,7 @@ class ForeignField extends RelatedField
 
     protected function fetchModel($value)
     {
-        return call_user_func([$this->modelClass, 'objects'])
-            ->get(array_merge(['pk' => $value], $this->extra));
+        return $this->getManager()->get(array_merge(['pk' => $value], $this->extra));
     }
 
     public function toArray()
@@ -171,5 +166,13 @@ class ForeignField extends RelatedField
         }
 
         return $value instanceof ModelInterface ? $value->pk : $value;
+    }
+
+    /**
+     * @return ManagerInterface
+     */
+    public function getManager() : ManagerInterface
+    {
+        return call_user_func([$this->modelClass, 'objects']);
     }
 }

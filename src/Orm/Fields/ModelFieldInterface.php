@@ -9,6 +9,7 @@
 namespace Mindy\Orm\Fields;
 
 use Doctrine\DBAL\Platforms\AbstractPlatform;
+use Mindy\Orm\ManagerInterface;
 use Mindy\Orm\ModelInterface;
 
 /**

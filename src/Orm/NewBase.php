@@ -44,6 +44,10 @@ abstract class NewBase implements ModelInterface, ArrayAccess
      * @var AttributeCollection
      */
     protected $attributes;
+    /**
+     * @var array
+     */
+    protected $related = [];
 
     /**
      * NewOrm constructor.
@@ -75,9 +79,28 @@ abstract class NewBase implements ModelInterface, ArrayAccess
     {
         $name = $this->convertToPrimaryKeyName($name);
         if ($this->hasField($name)) {
-            $this->setAttribute($name, $value);
+             if ($this->getField($name) instanceof ManyToManyField) {
+                 $this->related[$name] = $value;
+             } else {
+                $this->setAttribute($name, $value);
+             }
         } else {
             throw new Exception("Setting unknown property " . get_class($this) . "::" . $name);
+        }
+    }
+
+    /**
+     * Checks if a property value is null.
+     * This method overrides the parent implementation by checking if the named attribute is null or not.
+     * @param string $name the property name or the event name
+     * @return boolean whether the property value is null
+     */
+    public function __isset($name)
+    {
+        try {
+            return $this->__get($name) !== null;
+        } catch (\Exception $e) {
+            return false;
         }
     }
 
@@ -87,8 +110,9 @@ abstract class NewBase implements ModelInterface, ArrayAccess
     public function __unset($name)
     {
         $name = $this->convertToPrimaryKeyName($name);
-        if ($this->hasAttribute($name)) {
-            $this->setAttribute($name, null);
+        $meta = self::getMeta();
+        if ($meta->hasField($name)) {
+            $this->setAttribute($meta->getField($name)->getAttributeName(), null);
         }
     }
 
@@ -353,7 +377,12 @@ abstract class NewBase implements ModelInterface, ArrayAccess
      */
     public function getAttribute(string $name)
     {
-        return $this->attributes->getAttribute($name);
+        if ($this->hasAttribute($name)) {
+            return $this->attributes->getAttribute($name);
+        } else if (isset($this->related[$name])) {
+            return $this->related[$name];
+        }
+        return null;
     }
 
     /**
@@ -479,18 +508,18 @@ abstract class NewBase implements ModelInterface, ArrayAccess
     {
         $field = $this->getField($name);
 
-        if (!$field->getSqlType()) {
-            return null;
-        }
+        if ($field->getSqlType()) {
+            $platform = $this->getConnection()->getDatabasePlatform();
 
-        $platform = $this->getConnection()->getDatabasePlatform();
+            $value = $this->getAttribute($field->getAttributeName());
 
-        $value = $this->getAttribute($field->getAttributeName());
-
-        if ($name == $field->getAttributeName()) {
-            return $field->convertToDatabaseValue($value, $platform);
+            if ($name == $field->getAttributeName()) {
+                return $field->convertToDatabaseValue($value, $platform);
+            } else {
+                return $field->convertToPHPValue($value, $platform);
+            }
         } else {
-            return $field->convertToPHPValue($value, $platform);
+            return $field->getValue();
         }
     }
 
@@ -567,5 +596,28 @@ abstract class NewBase implements ModelInterface, ArrayAccess
     public function setConnection(Connection $connection)
     {
         $this->connection = $connection;
+    }
+
+    /**
+     * Update related models
+     */
+    public function updateRelated()
+    {
+        $meta = static::getMeta();
+        foreach ($this->related as $name => $value) {
+            if ($value instanceof Manager) {
+                continue;
+            }
+
+            /** @var \Mindy\Orm\Fields\RelatedField $field */
+            $field = $this->getField($name);
+            if (empty($value)) {
+                // TODO clean method
+                $field->getManager()->clean();
+            } else {
+                $field->setValue($value);
+            }
+        }
+        $this->related = [];
     }
 }

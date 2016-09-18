@@ -95,8 +95,8 @@ abstract class ManyToManyManager extends ManagerBase
     protected function linkUnlinkProcess(Model $model, $link = true, array $extra = [])
     {
         $primaryModel = $this->getPrimaryModel();
-        if (($primaryModel && $primaryModel->getIsNewRecord()) || empty($primaryModel->pk)) {
-            throw new Exception('Unable to ' . ($link ? 'link' : 'unlink') . ' models: the primary key of ' . get_class($primaryModel) . ' is null.');
+        if ($primaryModel && empty($primaryModel->pk)) {
+            throw new Exception('Unable to ' . ($link ? 'link' : 'unlink') . ' models: the primary key of ' . get_class($primaryModel) . ' is ' . $primaryModel->pk . '.');
         }
 
         if ($this->through && $link) {

@@ -50,6 +50,8 @@ class NewOrm extends NewBase
         }
         $this->attributes->resetOldAttributes();
 
+        $this->updateRelated();
+
         return $rows >= 0;
     }
 
@@ -80,6 +82,8 @@ class NewOrm extends NewBase
 
         $this->setAttributes($values);
         $this->attributes->resetOldAttributes();
+
+        $this->updateRelated();
 
         return true;
     }

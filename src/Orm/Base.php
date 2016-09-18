@@ -41,23 +41,6 @@ abstract class Base implements ArrayAccess, ModelInterface
     use Accessors, Configurator;
 
     /**
-     * The insert operation. This is mainly used when overriding [[transactions()]] to specify which operations are transactional.
-     */
-    const OP_INSERT = 0x01;
-    /**
-     * The update operation. This is mainly used when overriding [[transactions()]] to specify which operations are transactional.
-     */
-    const OP_UPDATE = 0x02;
-    /**
-     * The delete operation. This is mainly used when overriding [[transactions()]] to specify which operations are transactional.
-     */
-    const OP_DELETE = 0x04;
-    /**
-     * All three operations: insert, update, delete.
-     * This is a shortcut of the expression: OP_INSERT | OP_UPDATE | OP_DELETE.
-     */
-    const OP_ALL = 0x07;
-    /**
      * @var array
      */
     protected $errors = [];
@@ -266,12 +249,7 @@ abstract class Base implements ArrayAccess, ModelInterface
         }
     }
 
-    /**
-     * TODO wtf, refactoring
-     * Returns a value indicating whether the current record is new.
-     * @return boolean whether the record is new and should be inserted when calling [[save()]].
-     */
-    public function getIsNewRecord()
+    public function getIsNewRecord() : bool
     {
         return $this->_isNewRecord;
     }
@@ -459,7 +437,7 @@ abstract class Base implements ArrayAccess, ModelInterface
      * Override this method for custom table name.
      * @return string
      */
-    public static function tableName()
+    public static function tableName() : string
     {
         $className = get_called_class();
         $normalizeClass = rtrim(str_replace('\\', '/', $className), '/\\');
@@ -522,7 +500,7 @@ abstract class Base implements ArrayAccess, ModelInterface
      * meaning all attributes that are loaded from DB will be saved.
      * @return boolean whether the saving succeeds
      */
-    public function save(array $fields = [])
+    public function save(array $fields = []) : bool
     {
         if ($this->getIsNewRecord()) {
             return $this->insert($fields);
@@ -536,7 +514,7 @@ abstract class Base implements ArrayAccess, ModelInterface
      * @return bool
      * @throws Exception
      */
-    public function insert(array $fields = [])
+    public function insert(array $fields = []) : bool
     {
         $connection = static::getConnection();
 

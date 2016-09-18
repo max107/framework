@@ -2,8 +2,6 @@
 
 namespace Mindy\Orm;
 
-use Mindy\Helper\Creator;
-
 /**
  * Class HasManyManager
  * @package Mindy\Orm
