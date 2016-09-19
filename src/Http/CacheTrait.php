@@ -8,7 +8,7 @@
 
 namespace Mindy\Http;
 
-use Micheh\Cache\CacheUtil;
+use Mindy\Http\Cache\CacheUtil;
 
 /**
  * Class CacheTrait

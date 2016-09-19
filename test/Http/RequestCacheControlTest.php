@@ -6,19 +6,19 @@
  * @license http://www.opensource.org/licenses/BSD-3-Clause The BSD-3-Clause License
  */
 
-namespace MichehTest\Cache\Header;
+namespace Mindy\Tests\Http;
 
-use Micheh\Cache\Header\RequestCacheControl;
+use Mindy\Http\Cache\RequestCacheControl;
 
 class RequestCacheControlTest extends CacheControlTestCase
 {
     /**
      * @var string
      */
-    protected $controlClass = 'Micheh\Cache\Header\RequestCacheControl';
+    protected $controlClass = 'Mindy\Http\Cache\RequestCacheControl';
 
     /**
-     * @covers Micheh\Cache\Header\RequestCacheControl::fromString
+     * @covers Mindy\Http\Cache\RequestCacheControl::fromString
      */
     public function testFromString()
     {
@@ -27,7 +27,7 @@ class RequestCacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\RequestCacheControl::withMaxStale
+     * @covers Mindy\Http\Cache\RequestCacheControl::withMaxStale
      */
     public function testWithMaxStale()
     {
@@ -36,7 +36,7 @@ class RequestCacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\RequestCacheControl::getMaxStale
+     * @covers Mindy\Http\Cache\RequestCacheControl::getMaxStale
      */
     public function testGetMaxStale()
     {
@@ -45,7 +45,7 @@ class RequestCacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\RequestCacheControl::withMinFresh
+     * @covers Mindy\Http\Cache\RequestCacheControl::withMinFresh
      */
     public function testWithMinFresh()
     {
@@ -54,7 +54,7 @@ class RequestCacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\RequestCacheControl::getMinFresh
+     * @covers Mindy\Http\Cache\RequestCacheControl::getMinFresh
      */
     public function testGetMinFresh()
     {
@@ -63,7 +63,7 @@ class RequestCacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\RequestCacheControl::withOnlyIfCached
+     * @covers Mindy\Http\Cache\RequestCacheControl::withOnlyIfCached
      */
     public function testWithOnlyIfCached()
     {
@@ -72,7 +72,7 @@ class RequestCacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\RequestCacheControl::hasOnlyIfCached
+     * @covers Mindy\Http\Cache\RequestCacheControl::hasOnlyIfCached
      */
     public function testHasOnlyIfCached()
     {

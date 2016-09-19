@@ -6,12 +6,12 @@
  * @license http://www.opensource.org/licenses/BSD-3-Clause The BSD-3-Clause License
  */
 
-namespace MichehTest\Cache;
+namespace Mindy\Tests\Http;
 
 use DateTime;
 use DateTimeZone;
-use Micheh\Cache\CacheUtil;
-use Micheh\Cache\Header\ResponseCacheControl;
+use Mindy\Http\Cache\CacheUtil;
+use Mindy\Http\Cache\ResponseCacheControl;
 use Psr\Http\Message\ResponseInterface;
 use ReflectionMethod;
 
@@ -28,11 +28,11 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Micheh\Cache\CacheUtil::withCache
+     * @covers Mindy\Http\Cache\CacheUtil::withCache
      */
     public function testWithCache()
     {
-        $util = $this->getMock('Micheh\Cache\CacheUtil', ['withCacheControl']);
+        $util = $this->getMock('Mindy\Http\Cache\CacheUtil', ['withCacheControl']);
         $response = $this->getResponse();
 
         $util->expects($this->once())->method('withCacheControl')
@@ -44,11 +44,11 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Micheh\Cache\CacheUtil::withCache
+     * @covers Mindy\Http\Cache\CacheUtil::withCache
      */
     public function testWithCacheCustomParameters()
     {
-        $util = $this->getMock('Micheh\Cache\CacheUtil', ['withCacheControl']);
+        $util = $this->getMock('Mindy\Http\Cache\CacheUtil', ['withCacheControl']);
         $response = $this->getResponse();
 
         $util->expects($this->once())->method('withCacheControl')
@@ -58,11 +58,11 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Micheh\Cache\CacheUtil::withCachePrevention
+     * @covers Mindy\Http\Cache\CacheUtil::withCachePrevention
      */
     public function testWithCachePrevention()
     {
-        $util = $this->getMock('Micheh\Cache\CacheUtil', ['withCacheControl']);
+        $util = $this->getMock('Mindy\Http\Cache\CacheUtil', ['withCacheControl']);
         $response = $this->getResponse();
 
         $util->expects($this->once())->method('withCacheControl')
@@ -74,7 +74,7 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Micheh\Cache\CacheUtil::withCacheControl
+     * @covers Mindy\Http\Cache\CacheUtil::withCacheControl
      */
     public function testWithCacheControl()
     {
@@ -88,8 +88,8 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Micheh\Cache\CacheUtil::withExpires
-     * @covers Micheh\Cache\CacheUtil::getTimeFromValue
+     * @covers Mindy\Http\Cache\CacheUtil::withExpires
+     * @covers Mindy\Http\Cache\CacheUtil::getTimeFromValue
      */
     public function testWithExpires()
     {
@@ -101,8 +101,8 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Micheh\Cache\CacheUtil::withExpires
-     * @covers Micheh\Cache\CacheUtil::getTimeFromValue
+     * @covers Mindy\Http\Cache\CacheUtil::withExpires
+     * @covers Mindy\Http\Cache\CacheUtil::getTimeFromValue
      */
     public function testWithExpiresString()
     {
@@ -119,8 +119,8 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Micheh\Cache\CacheUtil::withExpires
-     * @covers Micheh\Cache\CacheUtil::getTimeFromValue
+     * @covers Mindy\Http\Cache\CacheUtil::withExpires
+     * @covers Mindy\Http\Cache\CacheUtil::getTimeFromValue
      */
     public function testWithExpiresDateTime()
     {
@@ -132,8 +132,8 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Micheh\Cache\CacheUtil::withRelativeExpires
-     * @covers Micheh\Cache\CacheUtil::getTimeFromValue
+     * @covers Mindy\Http\Cache\CacheUtil::withRelativeExpires
+     * @covers Mindy\Http\Cache\CacheUtil::getTimeFromValue
      */
     public function testWithRelativeExpires()
     {
@@ -146,7 +146,7 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
 
 
     /**
-     * @covers Micheh\Cache\CacheUtil::withRelativeExpires
+     * @covers Mindy\Http\Cache\CacheUtil::withRelativeExpires
      */
     public function testWithRelativeExpiresAndString()
     {
@@ -160,7 +160,7 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Micheh\Cache\CacheUtil::withETag
+     * @covers Mindy\Http\Cache\CacheUtil::withETag
      */
     public function testWithETag()
     {
@@ -171,7 +171,7 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Micheh\Cache\CacheUtil::withETag
+     * @covers Mindy\Http\Cache\CacheUtil::withETag
      */
     public function testWithETagWeak()
     {
@@ -182,7 +182,7 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Micheh\Cache\CacheUtil::withETag
+     * @covers Mindy\Http\Cache\CacheUtil::withETag
      */
     public function testWithETagAlreadyQuoted()
     {
@@ -193,8 +193,8 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Micheh\Cache\CacheUtil::withLastModified
-     * @covers Micheh\Cache\CacheUtil::getTimeFromValue
+     * @covers Mindy\Http\Cache\CacheUtil::withLastModified
+     * @covers Mindy\Http\Cache\CacheUtil::getTimeFromValue
      */
     public function testWithLastModified()
     {
@@ -206,7 +206,7 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Micheh\Cache\CacheUtil::hasStateValidator
+     * @covers Mindy\Http\Cache\CacheUtil::hasStateValidator
      * @dataProvider stateValidators
      * @param string $ifMatch
      * @param string $ifUnmodified
@@ -240,8 +240,8 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Micheh\Cache\CacheUtil::hasCurrentState
-     * @covers Micheh\Cache\CacheUtil::matchesETag
+     * @covers Mindy\Http\Cache\CacheUtil::hasCurrentState
+     * @covers Mindy\Http\Cache\CacheUtil::matchesETag
      * @dataProvider currentStateETags
      * @param string $ifMatch
      * @param string $eTag
@@ -283,8 +283,8 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Micheh\Cache\CacheUtil::hasCurrentState
-     * @covers Micheh\Cache\CacheUtil::matchesModified
+     * @covers Mindy\Http\Cache\CacheUtil::hasCurrentState
+     * @covers Mindy\Http\Cache\CacheUtil::matchesModified
      * @dataProvider currentTimes
      * @param string $ifUnmodified
      * @param string $lastModified
@@ -320,8 +320,8 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Micheh\Cache\CacheUtil::hasCurrentState
-     * @covers Micheh\Cache\CacheUtil::matchesETag
+     * @covers Mindy\Http\Cache\CacheUtil::hasCurrentState
+     * @covers Mindy\Http\Cache\CacheUtil::matchesETag
      * @dataProvider currentStateNoneMatches
      * @param string $ifNoneMatch
      * @param string $eTag
@@ -357,7 +357,7 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Micheh\Cache\CacheUtil::hasCurrentState
+     * @covers Mindy\Http\Cache\CacheUtil::hasCurrentState
      */
     public function testHasCurrentStateWithNoneMatchAndSafe()
     {
@@ -376,8 +376,8 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Micheh\Cache\CacheUtil::isNotModified
-     * @covers Micheh\Cache\CacheUtil::matchesETag
+     * @covers Mindy\Http\Cache\CacheUtil::isNotModified
+     * @covers Mindy\Http\Cache\CacheUtil::matchesETag
      * @dataProvider notModifiedETags
      * @param string $ifNoneMatch
      * @param string $eTag
@@ -415,8 +415,8 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Micheh\Cache\CacheUtil::isNotModified
-     * @covers Micheh\Cache\CacheUtil::matchesModified
+     * @covers Mindy\Http\Cache\CacheUtil::isNotModified
+     * @covers Mindy\Http\Cache\CacheUtil::matchesModified
      * @dataProvider notModifiedTimes
      * @param string $ifModifiedSince
      * @param string $lastModified
@@ -449,7 +449,7 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Micheh\Cache\CacheUtil::isNotModified
+     * @covers Mindy\Http\Cache\CacheUtil::isNotModified
      */
     public function testIsNotModifiedWithModifiedUnsafe()
     {
@@ -461,7 +461,7 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Micheh\Cache\CacheUtil::isCacheable
+     * @covers Mindy\Http\Cache\CacheUtil::isCacheable
      */
     public function testIsCacheable()
     {
@@ -476,7 +476,7 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Micheh\Cache\CacheUtil::isCacheable
+     * @covers Mindy\Http\Cache\CacheUtil::isCacheable
      */
     public function testIsCacheableWithPrivate()
     {
@@ -491,7 +491,7 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Micheh\Cache\CacheUtil::isCacheable
+     * @covers Mindy\Http\Cache\CacheUtil::isCacheable
      */
     public function testIsCacheableWithUncacheableStatus()
     {
@@ -503,7 +503,7 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Micheh\Cache\CacheUtil::isCacheable
+     * @covers Mindy\Http\Cache\CacheUtil::isCacheable
      */
     public function testIsCacheableWithoutLifetime()
     {
@@ -515,14 +515,14 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Micheh\Cache\CacheUtil::isFresh
+     * @covers Mindy\Http\Cache\CacheUtil::isFresh
      */
     public function testIsFresh()
     {
         $response = $this->getResponse();
 
         /** @var CacheUtil|\PHPUnit_Framework_MockObject_MockObject $util */
-        $util = $this->getMock('Micheh\Cache\CacheUtil', ['getLifetime', 'getAge']);
+        $util = $this->getMock('Mindy\Http\Cache\CacheUtil', ['getLifetime', 'getAge']);
         $util->expects($this->once())->method('getLifetime')
             ->with($response)->willReturn(20);
 
@@ -533,14 +533,14 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Micheh\Cache\CacheUtil::isFresh
+     * @covers Mindy\Http\Cache\CacheUtil::isFresh
      */
     public function testIsFreshWithOlderAge()
     {
         $response = $this->getResponse();
 
         /** @var CacheUtil|\PHPUnit_Framework_MockObject_MockObject $util */
-        $util = $this->getMock('Micheh\Cache\CacheUtil', ['getLifetime', 'getAge']);
+        $util = $this->getMock('Mindy\Http\Cache\CacheUtil', ['getLifetime', 'getAge']);
         $util->expects($this->once())->method('getLifetime')
             ->with($response)->willReturn(20);
 
@@ -550,14 +550,14 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
         $this->assertFalse($util->isFresh($response));
     }
     /**
-     * @covers Micheh\Cache\CacheUtil::isFresh
+     * @covers Mindy\Http\Cache\CacheUtil::isFresh
      */
     public function testIsFreshWithZeroAge()
     {
         $response = $this->getResponse();
 
         /** @var CacheUtil|\PHPUnit_Framework_MockObject_MockObject $util */
-        $util = $this->getMock('Micheh\Cache\CacheUtil', ['getLifetime', 'getAge']);
+        $util = $this->getMock('Mindy\Http\Cache\CacheUtil', ['getLifetime', 'getAge']);
         $util->expects($this->once())->method('getLifetime')
             ->with($response)->willReturn(0);
 
@@ -568,14 +568,14 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Micheh\Cache\CacheUtil::isFresh
+     * @covers Mindy\Http\Cache\CacheUtil::isFresh
      */
     public function testIsFreshWithoutLifetime()
     {
         $response = $this->getResponse();
 
         /** @var CacheUtil|\PHPUnit_Framework_MockObject_MockObject $util */
-        $util = $this->getMock('Micheh\Cache\CacheUtil', ['getLifetime']);
+        $util = $this->getMock('Mindy\Http\Cache\CacheUtil', ['getLifetime']);
         $util->expects($this->once())->method('getLifetime')
             ->with($response)->willReturn(null);
 
@@ -583,7 +583,7 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Micheh\Cache\CacheUtil::getLifetime
+     * @covers Mindy\Http\Cache\CacheUtil::getLifetime
      */
     public function testGetLifetime()
     {
@@ -594,7 +594,7 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Micheh\Cache\CacheUtil::getLifetime
+     * @covers Mindy\Http\Cache\CacheUtil::getLifetime
      */
     public function testGetLifetimeWithZero()
     {
@@ -605,7 +605,7 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Micheh\Cache\CacheUtil::getLifetime
+     * @covers Mindy\Http\Cache\CacheUtil::getLifetime
      */
     public function testGetLifetimeWithoutSharedAge()
     {
@@ -616,7 +616,7 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Micheh\Cache\CacheUtil::getLifetime
+     * @covers Mindy\Http\Cache\CacheUtil::getLifetime
      */
     public function testGetLifetimeWithOtherCacheControlHeader()
     {
@@ -627,7 +627,7 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Micheh\Cache\CacheUtil::getLifetime
+     * @covers Mindy\Http\Cache\CacheUtil::getLifetime
      */
     public function testGetLifetimeWithExpires()
     {
@@ -636,7 +636,7 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Micheh\Cache\CacheUtil::getLifetime
+     * @covers Mindy\Http\Cache\CacheUtil::getLifetime
      */
     public function testGetLifetimeWithExpiresInPast()
     {
@@ -645,7 +645,7 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Micheh\Cache\CacheUtil::getLifetime
+     * @covers Mindy\Http\Cache\CacheUtil::getLifetime
      */
     public function testGetLifetimeWithoutAnything()
     {
@@ -654,7 +654,7 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Micheh\Cache\CacheUtil::getAge
+     * @covers Mindy\Http\Cache\CacheUtil::getAge
      */
     public function testGetAge()
     {
@@ -663,7 +663,7 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Micheh\Cache\CacheUtil::getAge
+     * @covers Mindy\Http\Cache\CacheUtil::getAge
      */
     public function testGetAgeWithDate()
     {
@@ -678,7 +678,7 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Micheh\Cache\CacheUtil::getAge
+     * @covers Mindy\Http\Cache\CacheUtil::getAge
      */
     public function testGetAgeWithoutHeaders()
     {
@@ -690,11 +690,11 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Micheh\Cache\CacheUtil::getTimeFromValue
+     * @covers Mindy\Http\Cache\CacheUtil::getTimeFromValue
      */
     public function testGetTimeFromValueInvalidType()
     {
-        $method = new ReflectionMethod('Micheh\Cache\CacheUtil', 'getTimeFromValue');
+        $method = new ReflectionMethod('Mindy\Http\Cache\CacheUtil', 'getTimeFromValue');
         $method->setAccessible(true);
 
         $this->setExpectedException(
@@ -705,12 +705,12 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Micheh\Cache\CacheUtil::getTimestampFromValue
+     * @covers Mindy\Http\Cache\CacheUtil::getTimestampFromValue
      * @dataProvider timestamps
      */
     public function testGetTimestampFromValue($value)
     {
-        $method = new ReflectionMethod('Micheh\Cache\CacheUtil', 'getTimestampFromValue');
+        $method = new ReflectionMethod('Mindy\Http\Cache\CacheUtil', 'getTimestampFromValue');
         $method->setAccessible(true);
 
         $this->assertSame(
@@ -732,11 +732,11 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Micheh\Cache\CacheUtil::getTimestampFromValue
+     * @covers Mindy\Http\Cache\CacheUtil::getTimestampFromValue
      */
     public function testGetTimestampFromValueInvalidType()
     {
-        $method = new ReflectionMethod('Micheh\Cache\CacheUtil', 'getTimestampFromValue');
+        $method = new ReflectionMethod('Mindy\Http\Cache\CacheUtil', 'getTimestampFromValue');
         $method->setAccessible(true);
 
         $this->setExpectedException(
@@ -747,17 +747,17 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Micheh\Cache\CacheUtil::getCacheControl
+     * @covers Mindy\Http\Cache\CacheUtil::getCacheControl
      */
     public function testGetCacheControl()
     {
-        $method = new ReflectionMethod('Micheh\Cache\CacheUtil', 'getCacheControl');
+        $method = new ReflectionMethod('Mindy\Http\Cache\CacheUtil', 'getCacheControl');
         $method->setAccessible(true);
 
         $response = $this->getResponseWithHeader('Cache-Control', 'public');
 
         $cacheControl = $method->invoke($this->cacheUtil, $response);
-        $this->assertInstanceOf('Micheh\Cache\Header\ResponseCacheControl', $cacheControl);
+        $this->assertInstanceOf('Mindy\Http\Cache\ResponseCacheControl', $cacheControl);
     }
 
     /**

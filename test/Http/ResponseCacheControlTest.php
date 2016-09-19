@@ -6,9 +6,9 @@
  * @license http://www.opensource.org/licenses/BSD-3-Clause The BSD-3-Clause License
  */
 
-namespace MichehTest\Cache\Header;
+namespace Mindy\Tests\Http;
 
-use Micheh\Cache\Header\ResponseCacheControl;
+use Mindy\Http\Cache\ResponseCacheControl;
 
 class ResponseCacheControlTest extends CacheControlTestCase
 {
@@ -20,10 +20,10 @@ class ResponseCacheControlTest extends CacheControlTestCase
     /**
      * @var string
      */
-    protected $controlClass = 'Micheh\Cache\Header\ResponseCacheControl';
+    protected $controlClass = 'Mindy\Http\Cache\ResponseCacheControl';
 
     /**
-     * @covers Micheh\Cache\Header\ResponseCacheControl::fromString
+     * @covers Mindy\Http\Cache\ResponseCacheControl::fromString
      */
     public function testFromString()
     {
@@ -32,8 +32,8 @@ class ResponseCacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\ResponseCacheControl::withPublic
-     * @covers Micheh\Cache\Header\ResponseCacheControl::withPublicPrivate
+     * @covers Mindy\Http\Cache\ResponseCacheControl::withPublic
+     * @covers Mindy\Http\Cache\ResponseCacheControl::withPublicPrivate
      */
     public function testWithPublic()
     {
@@ -42,8 +42,8 @@ class ResponseCacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\ResponseCacheControl::withPrivate
-     * @covers Micheh\Cache\Header\ResponseCacheControl::withPublicPrivate
+     * @covers Mindy\Http\Cache\ResponseCacheControl::withPrivate
+     * @covers Mindy\Http\Cache\ResponseCacheControl::withPublicPrivate
      */
     public function testWithPrivate()
     {
@@ -52,9 +52,9 @@ class ResponseCacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\ResponseCacheControl::withPublic
-     * @covers Micheh\Cache\Header\ResponseCacheControl::withPrivate
-     * @covers Micheh\Cache\Header\ResponseCacheControl::withPublicPrivate
+     * @covers Mindy\Http\Cache\ResponseCacheControl::withPublic
+     * @covers Mindy\Http\Cache\ResponseCacheControl::withPrivate
+     * @covers Mindy\Http\Cache\ResponseCacheControl::withPublicPrivate
      */
     public function testWithPublicOverridesPrivate()
     {
@@ -63,9 +63,9 @@ class ResponseCacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\ResponseCacheControl::withPublic
-     * @covers Micheh\Cache\Header\ResponseCacheControl::withPrivate
-     * @covers Micheh\Cache\Header\ResponseCacheControl::withPublicPrivate
+     * @covers Mindy\Http\Cache\ResponseCacheControl::withPublic
+     * @covers Mindy\Http\Cache\ResponseCacheControl::withPrivate
+     * @covers Mindy\Http\Cache\ResponseCacheControl::withPublicPrivate
      */
     public function testWithPrivateOverridesPublic()
     {
@@ -74,9 +74,9 @@ class ResponseCacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\ResponseCacheControl::withPublic
-     * @covers Micheh\Cache\Header\ResponseCacheControl::withPrivate
-     * @covers Micheh\Cache\Header\ResponseCacheControl::withPublicPrivate
+     * @covers Mindy\Http\Cache\ResponseCacheControl::withPublic
+     * @covers Mindy\Http\Cache\ResponseCacheControl::withPrivate
+     * @covers Mindy\Http\Cache\ResponseCacheControl::withPublicPrivate
      */
     public function testWithPublicDoesNotOverwriteFalse()
     {
@@ -85,7 +85,7 @@ class ResponseCacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\ResponseCacheControl::isPublic
+     * @covers Mindy\Http\Cache\ResponseCacheControl::isPublic
      */
     public function testIsPublic()
     {
@@ -94,7 +94,7 @@ class ResponseCacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\ResponseCacheControl::isPrivate
+     * @covers Mindy\Http\Cache\ResponseCacheControl::isPrivate
      */
     public function testIsPrivate()
     {
@@ -103,7 +103,7 @@ class ResponseCacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\ResponseCacheControl::withSharedMaxAge
+     * @covers Mindy\Http\Cache\ResponseCacheControl::withSharedMaxAge
      */
     public function testWithSharedMaxAge()
     {
@@ -112,7 +112,7 @@ class ResponseCacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\ResponseCacheControl::getSharedMaxAge
+     * @covers Mindy\Http\Cache\ResponseCacheControl::getSharedMaxAge
      */
     public function testGetSharedMaxAge()
     {
@@ -121,7 +121,7 @@ class ResponseCacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\ResponseCacheControl::getLifetime
+     * @covers Mindy\Http\Cache\ResponseCacheControl::getLifetime
      */
     public function testGetLifetimeWithNormal()
     {
@@ -130,7 +130,7 @@ class ResponseCacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\ResponseCacheControl::getLifetime
+     * @covers Mindy\Http\Cache\ResponseCacheControl::getLifetime
      */
     public function testGetLifetimeWithShared()
     {
@@ -139,7 +139,7 @@ class ResponseCacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\ResponseCacheControl::getLifetime
+     * @covers Mindy\Http\Cache\ResponseCacheControl::getLifetime
      */
     public function testGetLifetimeWithBoth()
     {
@@ -148,7 +148,7 @@ class ResponseCacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\ResponseCacheControl::getLifetime
+     * @covers Mindy\Http\Cache\ResponseCacheControl::getLifetime
      */
     public function testGetLifetimeWithoutDirective()
     {
@@ -156,7 +156,7 @@ class ResponseCacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\ResponseCacheControl::withStaleWhileRevalidate
+     * @covers Mindy\Http\Cache\ResponseCacheControl::withStaleWhileRevalidate
      */
     public function testWithStaleWhileRevalidate()
     {
@@ -165,7 +165,7 @@ class ResponseCacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\ResponseCacheControl::getStaleWhileRevalidate
+     * @covers Mindy\Http\Cache\ResponseCacheControl::getStaleWhileRevalidate
      */
     public function testGetStaleWhileRevalidate()
     {
@@ -174,7 +174,7 @@ class ResponseCacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\ResponseCacheControl::withStaleIfError
+     * @covers Mindy\Http\Cache\ResponseCacheControl::withStaleIfError
      */
     public function testWithStaleIfError()
     {
@@ -183,7 +183,7 @@ class ResponseCacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\ResponseCacheControl::getStaleIfError
+     * @covers Mindy\Http\Cache\ResponseCacheControl::getStaleIfError
      */
     public function testGetStaleIfError()
     {
@@ -192,7 +192,7 @@ class ResponseCacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\ResponseCacheControl::withMustRevalidate
+     * @covers Mindy\Http\Cache\ResponseCacheControl::withMustRevalidate
      */
     public function testWithMustRevalidate()
     {
@@ -201,7 +201,7 @@ class ResponseCacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\ResponseCacheControl::hasMustRevalidate
+     * @covers Mindy\Http\Cache\ResponseCacheControl::hasMustRevalidate
      */
     public function testHasMustRevalidate()
     {
@@ -210,7 +210,7 @@ class ResponseCacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\ResponseCacheControl::withProxyRevalidate
+     * @covers Mindy\Http\Cache\ResponseCacheControl::withProxyRevalidate
      */
     public function testWithProxyRevalidate()
     {
@@ -219,7 +219,7 @@ class ResponseCacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\ResponseCacheControl::hasProxyRevalidate
+     * @covers Mindy\Http\Cache\ResponseCacheControl::hasProxyRevalidate
      */
     public function testHasProxyRevalidate()
     {
@@ -228,7 +228,7 @@ class ResponseCacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\ResponseCacheControl::withCachePrevention
+     * @covers Mindy\Http\Cache\ResponseCacheControl::withCachePrevention
      */
     public function testWithCachePrevention()
     {

@@ -6,21 +6,19 @@
  * @license http://www.opensource.org/licenses/BSD-3-Clause The BSD-3-Clause License
  */
 
-namespace MichehTest\Cache\Header;
-
-use Micheh\Cache\Header\CacheControl;
+namespace Mindy\Tests\Http;
 
 class CacheControlTestCase extends \PHPUnit_Framework_TestCase
 {
     /**
-     * @var CacheControl
+     * @var \Mindy\Http\Cache\CacheControl
      */
     protected $cacheControl;
 
     /**
      * @var string
      */
-    protected $controlClass = 'Micheh\Cache\Header\CacheControl';
+    protected $controlClass = 'Mindy\Http\Cache\CacheControl';
 
     protected function setUp()
     {

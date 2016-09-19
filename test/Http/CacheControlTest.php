@@ -6,7 +6,7 @@
  * @license http://www.opensource.org/licenses/BSD-3-Clause The BSD-3-Clause License
  */
 
-namespace MichehTest\Cache\Header;
+namespace Mindy\Tests\Http;
 
 class CacheControlTest extends CacheControlTestCase
 {
@@ -18,7 +18,7 @@ class CacheControlTest extends CacheControlTestCase
     /**
      * @var string
      */
-    protected $controlClass = 'MichehTest\Cache\Header\CacheControlStub';
+    protected $controlClass = 'Mindy\Tests\Http\CacheControlStub';
 
     /**
      * @covers Micheh\Cache\Header\CacheControl::withDirective
