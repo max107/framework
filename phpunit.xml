@@ -5,6 +5,10 @@
             <!--<directory>test</directory>-->
         <!--</testsuite>-->
 
+        <testsuite name="Zend">
+            <directory>test/Zend</directory>
+        </testsuite>
+
         <!--<testsuite name="Auth">-->
             <!--<directory>test/Auth</directory>-->
         <!--</testsuite>-->
@@ -20,9 +24,9 @@
         <!--<testsuite name="Helper">-->
             <!--<directory>test/Helper</directory>-->
         <!--</testsuite>-->
-        <testsuite name="Http">
-            <directory>test/Http</directory>
-        </testsuite>
+        <!--<testsuite name="Http">-->
+            <!--<directory>test/Http</directory>-->
+        <!--</testsuite>-->
         <!--<testsuite name="Orm">-->
             <!--<directory>test/Orm</directory>-->
         <!--</testsuite>-->
