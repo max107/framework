@@ -43,20 +43,31 @@ class NewModelTest extends OrmDatabaseTestCase
     public function testSetGet()
     {
         $model = new NewModel(['username' => 'foo', 'password' => 'bar']);
-        $this->assertSame('foo', $model->username);
-        $this->assertSame('bar', $model->password);
+
+        $this->assertFalse(property_exists($model, 'username'));
+        $this->assertFalse(property_exists($model, 'password'));
+        $this->assertFalse(property_exists($model, 'id'));
+        $this->assertFalse(property_exists($model, 'pk'));
+
+        $this->assertTrue(isset($model['username']));
+        $this->assertTrue(isset($model['password']));
+        $this->assertTrue(isset($model['id']));
+        $this->assertTrue(isset($model['pk']));
+
+        $this->assertEquals('foo', $model->username);
+        $this->assertEquals('bar', $model->password);
 
         $model->username = 'mike';
-        $this->assertSame('mike', $model->username);
+        $this->assertEquals('mike', $model->username);
 
         $model->id = 1;
-        $this->assertSame(1, $model->pk);
+        $this->assertEquals(1, $model->pk);
 
         $model->id = '1';
-        $this->assertSame('1', $model->pk);
+        $this->assertEquals('1', $model->pk);
 
         $model->pk = 2;
-        $this->assertSame(2, $model->id);
+        $this->assertEquals(2, $model->id);
 
         unset($model->pk);
         $this->assertNull($model->pk);

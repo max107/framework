@@ -46,6 +46,10 @@ class OrmDatabaseTestCase extends \PHPUnit_Framework_TestCase
             $this->markTestSkipped('pdo_' . $this->driver . ' ext required');
         }
 
+        if ($this->driver == 'pgsql' || $this->driver == 'mysql') {
+            $this->markTestSkipped('todo');
+        }
+
         Mindy::setApplication(null);
         $this->app = Mindy::getInstance([
             'basePath' => __DIR__ . '/app/protected',

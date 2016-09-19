@@ -108,7 +108,11 @@ class QuerySet extends QuerySetBase
      */
     public function updateSql(array $attributes)
     {
-        return $this->getQueryBuilder()->setTypeUpdate()->update($this->model->tableName(), $attributes)->toSQL();
+        $attrs = [];
+        foreach ($attributes as $key => $value) {
+            $attrs[$this->getModel()->convertToPrimaryKeyName($key)] = $value;
+        }
+        return $this->getQueryBuilder()->setTypeUpdate()->update($this->model->tableName(), $attrs)->toSQL();
     }
 
     /**

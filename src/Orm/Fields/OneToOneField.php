@@ -2,6 +2,7 @@
 
 namespace Mindy\Orm\Fields;
 
+use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Schema\Index;
 use Exception;
 use Mindy\Orm\ModelInterface;
@@ -31,29 +32,49 @@ class OneToOneField extends ForeignField
         }
     }
 
+    public function getSqlType()
+    {
+        if ($this->primary) {
+            return parent::getSqlType();
+        }
+
+        return false;
+    }
+
+    public function getValue()
+    {
+        if ($this->primary === false) {
+            $model = $this->getModel();
+            if ($model->getIsNewRecord()) {
+                return null;
+            }
+            return $this->getRelatedModel()->objects()->get(['pk' => $model->pk]);
+        } else {
+            return parent::getValue();
+        }
+    }
+
     public function getValidationConstraints() : array
     {
-        $constraints = [];
-
         if ($this->primary) {
             $constraints = [
                 new Assert\NotBlank(),
                 new Assert\Callback(function ($value, ExecutionContextInterface $context, $payload) {
-                    $qs = $this->getModel()->objects()->filter(['pk' => $value]);
-                    if ($qs->count() > 0) {
+                    if (empty($value)) {
+                        return;
+                    }
+
+                    if ($this->getModel()->objects()->filter(['pk' => $value])->count() > 0) {
                         $context->buildViolation('The value must be unique')->addViolation();
+                    }
+
+                    if ($this->getRelatedModel()->objects()->filter(['pk' => $value])->count() === 0) {
+                        $context->buildViolation('The primary model not found')->addViolation();
                     }
                 })
             ];
         } else {
-            $constraints = [
-                new Assert\Callback(function ($value, ExecutionContextInterface $context, $payload) {
-                    $qs = $this->getRelatedModel()->objects()->filter(['pk' => $value]);
-                    if ($qs->count() > 0) {
-                        $context->buildViolation('The value must be unique')->addViolation();
-                    }
-                })
-            ];
+            $constraints = [];
         }
 
         return $constraints;
@@ -64,74 +85,20 @@ class OneToOneField extends ForeignField
         return $this->to;
     }
 
-    /*
-    public function getDbPrepValue()
-    {
-        if ($this->primary && $this->getModel()->getConnection()->driverName == 'pgsql') {
-            // Primary key всегда передается по логике Query, а для корректной работы pk в pgsql
-            // необходимо передать curval($seq) или nextval($seq) или не экранированный DEFAULT.
-            //
-//            $sequenceName = $db->getSchema()->getTableSchema($this->getModel()->tableName())->sequenceName;
-//            return new Expression("nextval('" . $sequenceName . "')");
-            return new Expression("DEFAULT");
-        } else {
-            return parent::getDbPrepValue();
-        }
-    }
-    */
-
     public function setValue($value)
     {
-        if ($this->primary === false) {
-            $model = $this->getModel();
-            $modelClass = $this->modelClass;
-
-            $valueRaw = $value instanceof ModelInterface ? $value->pk : $value;
-
-            if ($value) {
-                $count = call_user_func([$modelClass, 'objects'])->filter([
-                    $this->reversedTo() => $model->pk
-                ])->exclude([
-                    $this->reversedTo() => $valueRaw
-                ])->count();
-
-                if ($count > 0) {
-                    throw new Exception(get_class($this->getRelatedModel()) . ' must have unique key');
-                }
-
-                $value->pk = $model->pk;
-                $value->save();
-            } else {
-                call_user_func([$modelClass, 'objects'])->filter([
-                    $this->reversedTo() => $model->pk
-                ])->delete();
-            }
-        } else {
-            if ($value) {
-                $currentValue = $this->getRelatedModel()->{$this->to};
-                if ($currentValue) {
-                    $relatedCount = $this->getRelatedModel()->objects()->filter([$this->to => $currentValue])->count();
-                } else {
-                    $relatedCount = 0;
-                }
-                $count = $this->getModel()->objects()->filter([$this->getName() . '_id' => $value])->count();
-                if ($relatedCount > 0 && $count > 0) {
-                    throw new Exception(get_class($this->getModel()) . ' failed to assign value');
-                }
-            }
-        }
-        return parent::setValue($value);
+        $this->value = $value;
     }
 
-    public function getValue()
+    public function convertToPHPValue($value, AbstractPlatform $platform)
     {
-        if ($this->primary) {
-            return $this->getModel()->pk;
-        } else {
-            return $this->getRelatedModel()->objects()->get([
-                $this->to => $this->getModel()->pk
-            ]);
+        if ($value === null) {
+            return $value;
         }
+
+        return $this->getRelatedModel()->objects()->get([
+            $this->to => $value
+        ]);
     }
 
     public function getSqlIndexes() : array

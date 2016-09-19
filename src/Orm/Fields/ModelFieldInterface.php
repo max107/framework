@@ -73,6 +73,20 @@ interface ModelFieldInterface
     public function convertToPHPValue($value, AbstractPlatform $platform);
 
     /**
+     * @param $value
+     * @param AbstractPlatform $platform
+     * @return mixed
+     */
+    public function convertToPHPValueSQL($value, AbstractPlatform $platform);
+
+    /**
+     * @param $value
+     * @param AbstractPlatform $platform
+     * @return mixed
+     */
+    public function convertToDatabaseValueSQL($value, AbstractPlatform $platform);
+
+    /**
      * internal event
      * @param ModelInterface $model
      * @param $value

@@ -61,42 +61,6 @@ class ForeignField extends RelatedField
     }
 
     /**
-     * @param $value
-     */
-    public function setValue($value)
-    {
-        $this->value = $value;
-    }
-
-    /**
-     * @return null|ModelInterface
-     * @throws Exception
-     */
-    public function getValue()
-    {
-        if (empty($this->value)) {
-            if ($this->null) {
-                return null;
-            } else {
-                throw new Exception('Value is empty');
-            }
-        } else {
-            if ($this->value instanceof ModelInterface) {
-                if ($this->value->getIsNewRecord()) {
-                    throw new Exception('Failed to set new model');
-                } else {
-                    $value = $this->value->pk;
-                }
-            } else {
-                $value = $this->value;
-            }
-
-            $params = array_merge(['pk' => $value], $this->extra);
-            return call_user_func([$this->modelClass, 'objects'])->get($params);
-        }
-    }
-
-    /**
      * @param $form
      * @param string $fieldClass
      * @param array $extra
@@ -149,6 +113,11 @@ class ForeignField extends RelatedField
         return $this->name . '_id';
     }
 
+    /**
+     * @param $value
+     * @param AbstractPlatform $platform
+     * @return null
+     */
     public function convertToPHPValue($value, AbstractPlatform $platform)
     {
         if ($value instanceof ModelInterface) {
@@ -159,9 +128,27 @@ class ForeignField extends RelatedField
         return $value;
     }
 
-    public function convertToDatabaseValue($value, AbstractPlatform $platform)
+    /**
+     * @param $value
+     * @param AbstractPlatform $platform
+     * @return null
+     */
+    public function convertToPHPValueSQL($value, AbstractPlatform $platform)
     {
-        if (is_null($value)) {
+        if ($value instanceof ModelInterface) {
+            return $value->pk;
+        }
+        return $value;
+    }
+
+    /**
+     * @param $value
+     * @param AbstractPlatform $platform
+     * @return int|string
+     */
+    public function convertToDatabaseValueSQL($value, AbstractPlatform $platform)
+    {
+        if ($value === null) {
             return $value;
         }
 

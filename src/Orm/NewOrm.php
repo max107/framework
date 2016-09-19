@@ -52,8 +52,6 @@ class NewOrm extends NewBase
         foreach ($values as $name => $value) {
             $this->setAttribute($name, $value);
         }
-        $this->attributes->resetOldAttributes();
-
         $this->updateRelated();
 
         return $rows >= 0;
@@ -86,9 +84,6 @@ class NewOrm extends NewBase
         }
 
         $this->setAttributes($values);
-        $this->attributes->resetOldAttributes();
-
-        $this->updateRelated();
 
         return true;
     }
@@ -110,7 +105,6 @@ class NewOrm extends NewBase
         try {
             if (($inserted = $this->insertInternal($fields))) {
                 $connection->commit();
-                $this->setIsNewRecord(false);
             } else {
                 $connection->rollBack();
             }
@@ -119,11 +113,12 @@ class NewOrm extends NewBase
             throw $e;
         }
 
-        // $this->updateRelated();
-
+        $this->afterInsertInternal();
         $this->trigger('afterInsert');
 
         if ($inserted) {
+            $this->setIsNewRecord(false);
+            $this->updateRelated();
             $this->attributes->resetOldAttributes();
         }
 
@@ -155,11 +150,11 @@ class NewOrm extends NewBase
             throw $e;
         }
 
-        // TODO $this->updateRelated();
-
+        $this->afterUpdateInternal();
         $this->trigger('afterUpdate');
 
         if ($updated) {
+            $this->updateRelated();
             $this->attributes->resetOldAttributes();
         }
         return $updated;
@@ -196,7 +191,7 @@ class NewOrm extends NewBase
                 $field = $this->getField($name);
                 $sqlType = $field->getSqlType();
                 if ($sqlType) {
-                    if ($value = $field->convertToDatabaseValue($attribute, $platform)) {
+                    if ($value = $field->convertToDatabaseValueSQL($attribute, $platform)) {
                         $changed[$name] = $value;
                     } else {
                         $changed[$name] = $field->default;

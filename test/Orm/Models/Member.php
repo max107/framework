@@ -19,7 +19,6 @@ class Member extends Model
             'profile' => [
                 'class' => OneToOneField::class,
                 'modelClass' => MemberProfile::class,
-                'to' => 'user_id'
             ],
         ];
     }

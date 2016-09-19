@@ -396,4 +396,24 @@ abstract class Field implements ModelFieldInterface
     {
         return $this->getSqlType()->convertToDatabaseValue($value, $platform);
     }
+
+    /**
+     * @param $value
+     * @param AbstractPlatform $platform
+     * @return mixed
+     */
+    public function convertToPHPValueSQL($value, AbstractPlatform $platform)
+    {
+        return $this->getSqlType()->convertToPHPValueSQL($value, $platform);
+    }
+
+    /**
+     * @param $value
+     * @param AbstractPlatform $platform
+     * @return mixed
+     */
+    public function convertToDatabaseValueSQL($value, AbstractPlatform $platform)
+    {
+        return $this->getSqlType()->convertToDatabaseValueSQL($value, $platform);
+    }
 }

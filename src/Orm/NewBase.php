@@ -66,7 +66,7 @@ abstract class NewBase implements ModelInterface, ArrayAccess
      * @param $name
      * @return string
      */
-    protected function convertToPrimaryKeyName($name) : string
+    public function convertToPrimaryKeyName($name) : string
     {
         return $name == 'pk' ? $this->getPrimaryKeyName() : $name;
     }
@@ -98,11 +98,9 @@ abstract class NewBase implements ModelInterface, ArrayAccess
      */
     public function __isset($name)
     {
-        try {
-            return $this->__get($name) !== null;
-        } catch (\Exception $e) {
-            return false;
-        }
+        $name = $this->convertToPrimaryKeyName($name);
+        $meta = self::getMeta();
+        return $meta->hasField($name);
     }
 
     /**
@@ -259,7 +257,7 @@ abstract class NewBase implements ModelInterface, ArrayAccess
         $platform = $this->getConnection()->getDatabasePlatform();
         foreach ($attributes as $name => $value) {
             $field = $this->getField($meta->getMappingName($name));
-            $this->setAttribute($name, $field->convertToDatabaseValue($value, $platform));
+            $this->setAttribute($name, $field->convertToDatabaseValueSQL($value, $platform));
         }
     }
 
@@ -378,6 +376,8 @@ abstract class NewBase implements ModelInterface, ArrayAccess
      */
     public function getAttribute(string $name)
     {
+        $name = $this->convertToPrimaryKeyName($name);
+
         if ($this->hasAttribute($name)) {
             return $this->attributes->getAttribute($name);
         } else if (isset($this->related[$name])) {
@@ -442,6 +442,24 @@ abstract class NewBase implements ModelInterface, ArrayAccess
         foreach ($meta->getAttributes() as $name) {
             $field = $this->getField($name);
             $field->beforeUpdate($this, $this->getAttribute($field->getAttributeName()));
+        }
+    }
+
+    protected function afterInsertInternal()
+    {
+        $meta = self::getMeta();
+        foreach ($meta->getAttributes() as $name) {
+            $field = $this->getField($name);
+            $field->afterInsert($this, $this->getAttribute($field->getAttributeName()));
+        }
+    }
+
+    protected function afterUpdateInternal()
+    {
+        $meta = self::getMeta();
+        foreach ($meta->getAttributes() as $name) {
+            $field = $this->getField($name);
+            $field->afterUpdate($this, $this->getAttribute($field->getAttributeName()));
         }
     }
 
@@ -528,16 +546,13 @@ abstract class NewBase implements ModelInterface, ArrayAccess
         if ($field->getSqlType()) {
             $platform = $this->getConnection()->getDatabasePlatform();
 
-            if ($field instanceof OneToOneField && $field->primary === false) {
-                $value = $field->getValue();
-            } else {
-                $value = $this->getAttribute($field->getAttributeName());
-            }
+            $attributeValue = $this->getAttribute($field->getAttributeName());
+            $field->setValue($attributeValue);
 
             if ($name == $field->getAttributeName()) {
-                return $field->convertToDatabaseValue($value, $platform);
+                return $field->convertToPHPValueSQL($attributeValue, $platform);
             } else {
-                return $field->convertToPHPValue($value, $platform);
+                return $field->convertToPHPValue($attributeValue, $platform);
             }
         } else {
             return $field->getValue();

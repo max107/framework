@@ -66,12 +66,12 @@ class SetterGetterTest extends OrmDatabaseTestCase
         // Мы не храним полное состояние модели
         $product->category = $category;
         $this->assertInstanceOf(Category::class, $product->category);
-        $this->assertSame('1', $product->category_id);
+        $this->assertEquals('1', $product->category_id);
 
         $product->category_id = 1;
-        $this->assertSame(1, $product->category_id);
+        $this->assertEquals(1, $product->category_id);
         $this->assertInstanceOf(Category::class, $product->category);
-        $this->assertSame(1, $product->getAttribute('category_id'));
+        $this->assertEquals(1, $product->getAttribute('category_id'));
 
         $this->assertFalse($category->getIsNewRecord());
         $this->assertFalse($product->category->getIsNewRecord());
