@@ -56,9 +56,15 @@ class HandlerResolver
 
         foreach ($method->getParameters() as $i => $param) {
             if ($param->isDefaultValueAvailable()) {
-                $ps[] = $param->getDefaultValue();
-            } else if (isset($params[$param->getName()]) && $params[$param->getName()] !== '') {
-                $ps[] = $params[$param->getName()];
+                $value = $param->getDefaultValue();
+            }
+
+            if (isset($params[$param->getName()]) && $params[$param->getName()] !== '') {
+                $value = $params[$param->getName()];
+            }
+
+            if (isset($value)) {
+                $ps[] = $value;
             }
         }
 

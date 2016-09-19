@@ -8,7 +8,7 @@
 
 namespace Mindy\Router;
 
-class BasePatterns implements IPatterns
+class BasePatterns implements PatternsInterface
 {
     /**
      * @var string

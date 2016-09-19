@@ -87,7 +87,8 @@ class Dispatcher
      */
     public function getResponse(array $data)
     {
-        return $this->handlerResolver->__invoke($data);
+        $resolver = $this->handlerResolver;
+        return $resolver($data);
     }
 
     /**

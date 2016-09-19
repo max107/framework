@@ -77,7 +77,7 @@ class Patterns extends BasePatterns
     public function parse(RouteCollector $collector, array $patterns, $parentPrefix = '')
     {
         foreach ($patterns as $urlPrefix => $params) {
-            if ($params instanceof IPatterns) {
+            if ($params instanceof PatternsInterface) {
                 $params->parse($collector, $params->getPatterns(), trim($parentPrefix, '/') . $urlPrefix);
             } else {
                 if (!isset($params['route'])) {

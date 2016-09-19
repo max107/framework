@@ -8,7 +8,7 @@
 
 namespace Mindy\Router;
 
-interface IPatterns
+interface PatternsInterface
 {
 
 }
