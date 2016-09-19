@@ -7,7 +7,7 @@ namespace Mindy\Http;
 use Exception;
 use function GuzzleHttp\Psr7\stream_for;
 use Mindy\Base\Mindy;
-use Mindy\Helper\Creator;
+use Mindy\Creator\Creator;
 use Mindy\Helper\Json;
 use Mindy\Helper\Traits\Accessors;
 use Mindy\Helper\Traits\Configurator;

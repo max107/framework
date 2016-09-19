@@ -14,7 +14,7 @@
 
 namespace Mindy\Helper\Traits;
 
-use Mindy\Helper\Creator;
+use Mindy\Creator\Creator;
 use ReflectionClass;
 
 /**

@@ -11,7 +11,7 @@ namespace Mindy\Finder;
 
 use Exception;
 use Mindy\Finder\TemplateFinder\TemplateFinderInterface;
-use Mindy\Helper\Creator;
+use Mindy\Creator\Creator;
 
 /**
  * Class Finder

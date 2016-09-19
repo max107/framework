@@ -12,7 +12,7 @@ use Closure;
 use Mindy\Form\FieldInterface;
 use Mindy\Form\FormInterface;
 use Mindy\Form\WidgetInterface;
-use Mindy\Helper\Creator;
+use Mindy\Creator\Creator;
 use Mindy\Validation\ValidationAwareInterface;
 use Mindy\Validation\ValidationAwareTrait;
 use Symfony\Component\Validator\Constraints as Assert;

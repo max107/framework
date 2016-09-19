@@ -14,7 +14,7 @@ use ArrayIterator;
 use Countable;
 use IteratorAggregate;
 use LogicException;
-use Mindy\Helper\Creator;
+use Mindy\Creator\Creator;
 use ReflectionClass;
 use ArrayAccess;
 use Traversable;

@@ -8,7 +8,7 @@ use Exception;
 use IteratorAggregate;
 use function Mindy\app;
 use Mindy\Base\Mindy;
-use Mindy\Helper\Creator;
+use Mindy\Creator\Creator;
 use Mindy\Helper\Traits\Accessors;
 use Mindy\Helper\Traits\Configurator;
 use Mindy\Orm\Callback\FetchColumnCallback;

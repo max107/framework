@@ -4,7 +4,7 @@ namespace Mindy\Mail;
 
 use Mindy\Exception\InvalidConfigException;
 use Mindy\Helper\Alias;
-use Mindy\Helper\Creator;
+use Mindy\Creator\Creator;
 use Mindy\Helper\Traits\Accessors;
 use Mindy\Helper\Traits\Configurator;
 use Mindy\Helper\Traits\RenderTrait;

@@ -40,7 +40,7 @@ class CacheControlTestCase extends \PHPUnit_Framework_TestCase
      */
     protected function getControlWithDirective($name, $value)
     {
-        $control = $this->getMock($this->controlClass, ['withDirective']);
+        $control = $this->getMockBuilder($this->controlClass)->setMethods(['withDirective'])->getMock();
         $control->expects($this->once())->method('withDirective')
             ->with($name, $value)->willReturn('phpunit');
 
@@ -53,7 +53,7 @@ class CacheControlTestCase extends \PHPUnit_Framework_TestCase
      */
     protected function getControlWithGetDirective($name)
     {
-        $control = $this->getMock($this->controlClass, ['getDirective']);
+        $control = $this->getMockBuilder($this->controlClass)->setMethods(['getDirective'])->getMock();
         $control->expects($this->once())->method('getDirective')
             ->with($name)->willReturn('phpunit');
 
@@ -66,7 +66,7 @@ class CacheControlTestCase extends \PHPUnit_Framework_TestCase
      */
     protected function getControlWithHasFlag($name)
     {
-        $control = $this->getMock($this->controlClass, ['hasDirective']);
+        $control = $this->getMockBuilder($this->controlClass)->setMethods(['hasDirective'])->getMock();
         $control->expects($this->once())->method('hasDirective')
             ->with($name)->willReturn('phpunit');
 

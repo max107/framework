@@ -14,7 +14,7 @@ use Exception;
 use function Mindy\app;
 use Mindy\Auth\PasswordHasher\IPasswordHasher;
 use Mindy\Auth\Strategy\AuthStrategyInterface;
-use Mindy\Helper\Creator;
+use Mindy\Creator\Creator;
 
 /**
  * Class BaseAuthProvider

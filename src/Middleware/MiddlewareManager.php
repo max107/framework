@@ -8,7 +8,7 @@
 
 namespace Mindy\Middleware;
 
-use Mindy\Helper\Creator;
+use Mindy\Creator\Creator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 

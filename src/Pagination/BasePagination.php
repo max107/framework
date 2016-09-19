@@ -3,7 +3,7 @@
 namespace Mindy\Pagination;
 
 use Mindy\Exception\Exception;
-use Mindy\Helper\Creator;
+use Mindy\Creator\Creator;
 use Mindy\Helper\Traits\Accessors;
 use Mindy\Helper\Traits\Configurator;
 use Mindy\Pagination\Interfaces\IPagination;
@@ -16,6 +16,7 @@ use Serializable;
 abstract class BasePagination implements Serializable
 {
     use Accessors, Configurator;
+
     /**
      * @var string
      */
