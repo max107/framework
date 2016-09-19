@@ -10,11 +10,30 @@ namespace Mindy\QueryBuilder;
 
 use Doctrine\DBAL\DriverManager;
 
+/**
+ * Class ConnectionManager
+ * @package Mindy\QueryBuilder
+ */
 class ConnectionManager
 {
+    /**
+     * @var string
+     */
     protected $defaultConnection;
+
+    /**
+     * @var array|\Doctrine\DBAL\Connection[]
+     */
     protected $connections = [];
 
+    /**
+     * ConnectionManager constructor.
+     * @param array $connections
+     * @param $defaultConnection
+     * @param null $configuration
+     * @param null $eventManager
+     * @throws \Exception
+     */
     public function __construct(array $connections, $defaultConnection, $configuration = null, $eventManager = null)
     {
         if (array_key_exists($defaultConnection, $connections) === false) {
@@ -26,6 +45,10 @@ class ConnectionManager
         }
     }
 
+    /**
+     * @param null $name
+     * @return \Doctrine\DBAL\Connection|null
+     */
     public function getConnection($name = null)
     {
         if (empty($name)) {
