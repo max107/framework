@@ -27,6 +27,7 @@ use Mindy\Helper\Traits\Accessors;
 use Mindy\Helper\Traits\Configurator;
 use Mindy\Http\Http;
 use Mindy\Migration\Commands\ModuleConfigurationHelper;
+use Mindy\Migration\EntityManager;
 use Mindy\Router\UrlManager;
 use Mindy\Security\Security;
 use Psr\Http\Message\ResponseInterface;
@@ -281,7 +282,7 @@ class Application extends BaseApplication implements ModulesAwareInterface
         $helpers = $consoleApplication->getDefaultHelpers();
         if ($this->getContainer()->has('db')) {
             $helpers = array_merge($helpers, [
-                'configuration' => new ModuleConfigurationHelper($this->db->getConnection())
+                'configuration' => new ModuleConfigurationHelper($this->db->getConnection()),
             ]);
         }
         $helperSet = new HelperSet($helpers);
@@ -290,7 +291,6 @@ class Application extends BaseApplication implements ModulesAwareInterface
 
         if ($this->getContainer()->has('db')) {
             $consoleApplication->addCommands([
-                new \Mindy\Migration\Commands\DiffCommand(),
                 new \Mindy\Migration\Commands\ExecuteCommand(),
                 new \Mindy\Migration\Commands\GenerateCommand(),
                 new \Mindy\Migration\Commands\MigrateCommand(),
