@@ -23,8 +23,11 @@
         <!--<testsuite name="Http">-->
             <!--<directory>test/Http</directory>-->
         <!--</testsuite>-->
-        <testsuite name="Orm">
-            <directory>test/Orm</directory>
+        <!--<testsuite name="Orm">-->
+            <!--<directory>test/Orm</directory>-->
+        <!--</testsuite>-->
+        <testsuite name="Migration">
+            <directory>test/Migration</directory>
         </testsuite>
         <!--<testsuite name="Storage">-->
             <!--<directory>test/Storage</directory>-->

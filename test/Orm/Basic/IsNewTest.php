@@ -20,11 +20,6 @@ class IsNewTest extends OrmDatabaseTestCase
         return [new User];
     }
 
-    public function tearDown()
-    {
-
-    }
-
     public function testSimple()
     {
         $user = new User;

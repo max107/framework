@@ -3,6 +3,9 @@
 namespace Mindy\Orm;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\DBALException;
+use Doctrine\DBAL\Schema\Schema;
+use Doctrine\DBAL\Schema\Sequence;
 use Doctrine\DBAL\Schema\Table;
 use Mindy\Orm\Fields\ForeignField;
 use Mindy\Orm\Fields\HasManyField;
@@ -56,6 +59,8 @@ class Sync
     {
         $i = 0;
 
+        $model->setConnection($this->connection);
+
         $schemaManager = $this->connection->getSchemaManager();
         $adapter = $this->getQueryBuilder()->getAdapter();
         $tableName = $adapter->getRawTableName($model->tableName());
@@ -88,8 +93,10 @@ class Sync
         }
 
         if ($this->hasTable($tableName) === false) {
-            $table = new Table($adapter->quoteTableName($tableName), $columns, $indexes);
+            $table = new Table($tableName, $columns, []);
+            $table->setPrimaryKey($model->getPrimaryKeyName(true), 'primary');
             $schemaManager->createTable($table);
+
             $i += 1;
         }
 
@@ -104,9 +111,11 @@ class Sync
     {
         $i = 0;
 
+        $model->setConnection($this->connection);
+
         $adapter = $this->getQueryBuilder()->getAdapter();
-//        $sql = $adapter->sqlCheckIntegrity(false);
-//        $this->connection->query($sql)->execute();
+
+//        $this->connection->executeUpdate($adapter->sqlCheckIntegrity(false, 'public', $model->tableName()));
 
         $schemaManager = $this->connection->getSchemaManager();
         foreach ($model->getMeta()->getManyToManyFields() as $field) {
@@ -119,13 +128,12 @@ class Sync
             }
         }
 
-        $modelTable = $adapter->getRawTableName($model->tableName());
-        if ($this->hasTable($modelTable)) {
-            $schemaManager->dropTable($adapter->quoteTableName($modelTable));
+        if ($this->hasTable($model->tableName())) {
+            $schemaManager->dropTable($model->tableName());
             $i += 1;
         }
 
-//        $this->connection->query($adapter->sqlCheckIntegrity(true))->execute();
+//        $this->connection->executeUpdate($adapter->sqlCheckIntegrity(true, 'public', $model->tableName()));
 
         return $i;
     }

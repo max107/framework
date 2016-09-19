@@ -25,7 +25,7 @@ abstract class BasePagination implements Serializable
      */
     public $pageSizeKey;
     /**
-     * @var array|IPagination|\Mindy\Orm\QuerySet|\Mindy\Orm\Manager|\Mindy\Query\Query
+     * @var array|IPagination|\Mindy\Orm\QuerySet|\Mindy\Orm\Manager
      */
     public $source = [];
     /**
@@ -213,8 +213,6 @@ abstract class BasePagination implements Serializable
 
             if ($this->source instanceof \Mindy\Orm\QuerySet) {
                 return $this->applyLimitQuerySet();
-            } else if ($this->source instanceof \Mindy\QueryBuilder\QueryBuilder) {
-                return $this->applyLimitQueryBuilder();
             } else if ($this->source instanceof IPagination) {
                 return $this->applyLimitByInterface();
             } else {
@@ -232,16 +230,6 @@ abstract class BasePagination implements Serializable
         $page = $this->getPage();
         $pageSize = $this->fetchPageSize();
         $this->data = array_slice($this->source, $pageSize * ($page <= 1 ? 0 : $page - 1), $pageSize);
-        return $this->data;
-    }
-
-    /**
-     * @return array
-     */
-    protected function applyLimitQueryBuilder()
-    {
-        $this->total = $this->source->count();
-        $this->data = $this->source->paginate($this->getPage(), $this->fetchPageSize())->all();
         return $this->data;
     }
 

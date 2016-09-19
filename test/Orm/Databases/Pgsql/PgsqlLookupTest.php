@@ -21,6 +21,11 @@ class PgsqlLookupTest extends LookupTest
 {
     public $driver = 'pgsql';
 
+    public function tearDown()
+    {
+        
+    }
+
     public function testYear()
     {
         $this->assertTrue((new ProductList(['name' => 'foo', 'date_action' => '2014-04-29 10:35:45']))->save());

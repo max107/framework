@@ -8,6 +8,7 @@
 
 namespace Mindy\Orm;
 
+use Doctrine\DBAL\DBALException;
 use Exception;
 use Mindy\QueryBuilder\QueryBuilder;
 
@@ -67,25 +68,44 @@ class NewOrm extends NewBase
         }
 
         $connection = static::getConnection();
-        $adapter = QueryBuilder::getInstance($connection)->getAdapter();
+        $qb = QueryBuilder::getInstance($connection);
+        $adapter = $qb->getAdapter();
 
         $tableName = $adapter->quoteTableName($adapter->getRawTableName($this->tableName()));
-        $inserted = $connection->insert($tableName, $values);
+        $inserted = $connection->executeUpdate($qb->insert($tableName, array_keys($values), [$values]));
         if ($inserted === false) {
             return false;
         }
 
         foreach (self::getMeta()->getPrimaryKeyName(true) as $primaryKeyName) {
             if (in_array($primaryKeyName, $dirty) === false) {
-                $id = $connection->lastInsertId();
-                $this->setAttribute($primaryKeyName, $id);
-                $values[$primaryKeyName] = $id;
+                $values[$primaryKeyName] = $connection->lastInsertId($this->getSequenceName());
             }
         }
 
         $this->setAttributes($values);
 
         return true;
+    }
+
+    /**
+     * @return null|string
+     */
+    public function getSequenceName()
+    {
+        $schemaManager = $this->getConnection()->getSchemaManager();
+
+        try {
+            $schemaManager->listSequences();
+
+            return implode('_', [
+                $this->tableName(),
+                $this->getPrimaryKeyName(),
+                'seq'
+            ]);
+        } catch (DBALException $e) {
+            return null;
+        }
     }
 
     /**
@@ -191,11 +211,8 @@ class NewOrm extends NewBase
                 $field = $this->getField($name);
                 $sqlType = $field->getSqlType();
                 if ($sqlType) {
-                    if ($value = $field->convertToDatabaseValueSQL($attribute, $platform)) {
-                        $changed[$name] = $value;
-                    } else {
-                        $changed[$name] = $field->default;
-                    }
+                    $value = $field->convertToDatabaseValueSQL($attribute, $platform);
+                    $changed[$name] = empty($value) ? $field->default : $value;
                 }
             }
         }

@@ -187,7 +187,7 @@ class TreeQuerySet extends QuerySet
         ]);
 
         $ids = $db->query($query->toSQL())->fetchColumn();
-        if (count($ids) > 0) {
+        if ($ids && count($ids) > 0) {
             $deleteQuery = clone $this->getQueryBuilder();
             $deleteQuery->clear()->setTypeDelete()->from($table)->where(['id__in' => $ids]);
             $db->query($deleteQuery->toSQL())->execute();

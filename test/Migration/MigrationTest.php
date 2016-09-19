@@ -14,35 +14,19 @@
 namespace Tests\Cases\Migration;
 
 use Mindy\Base\Mindy;
-use Mindy\Orm\Fields\CharField;
-use Mindy\Orm\Migration;
-use Mindy\Orm\Model;
+use Mindy\Migration\Migration;
 use Mindy\Tests\Orm\OrmDatabaseTestCase;
 
-class MigrateTest extends OrmDatabaseTestCase
+class MigrationTest extends OrmDatabaseTestCase
 {
     /**
      * @var Migration
      */
     public $m;
 
-    public $migrationPath;
-
     public function setUp()
     {
-        $this->markTestSkipped('TODO move code generation from migrations');
-
-        parent::setUp();
-
-        $this->migrationPath = Mindy::app()->basePath . DIRECTORY_SEPARATOR . 'migration';
-        if (is_dir($this->migrationPath)) {
-            foreach (glob($this->migrationPath . '/*') as $file) {
-                unlink($file);
-            }
-            rmdir($this->migrationPath);
-        }
-        mkdir($this->migrationPath, 0777, true);
-        $this->m = new Migration(new Test, $this->migrationPath);
+        $this->markTestSkipped('TODO');
     }
 
     public function testNameGeneration()

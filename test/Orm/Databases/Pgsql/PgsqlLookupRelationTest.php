@@ -34,8 +34,8 @@ class PgsqlLookupRelationTest extends LookupRelationTest
         $this->assertSql(
             "SELECT [[customer_1]].* 
 FROM [[customer]] AS [[customer_1]] 
-LEFT JOIN [[user]] AS [[user_1]] ON [[customer_1]].[[user_id]]=[[user_1]].[[id]] 
-WHERE ([[user_1]].[[username]]::text LIKE @t%@)", $sql);
+LEFT JOIN [[users]] AS [[users_1]] ON [[customer_1]].[[user_id]]=[[users_1]].[[id]] 
+WHERE ([[users_1]].[[username]]::text LIKE @t%@)", $sql);
     }
 
     public function testManyLookupAnother()
@@ -53,9 +53,9 @@ WHERE ([[user_1]].[[username]]::text LIKE @t%@)", $sql);
         $qs = User::objects()->filter(['addresses__address__contains' => 'test']);
         $sql = $qs->allSql();
         $this->assertSql(
-            "SELECT [[user_1]].* 
-FROM [[user]] AS [[user_1]] 
-LEFT JOIN [[customer]] AS [[customer_1]] ON [[customer_1]].[[user_id]]=[[user_1]].[[id]]
+            "SELECT [[users_1]].* 
+FROM [[users]] AS [[users_1]] 
+LEFT JOIN [[customer]] AS [[customer_1]] ON [[customer_1]].[[user_id]]=[[users_1]].[[id]]
 WHERE ([[customer_1]].[[address]]::text LIKE @%test%@)", $sql);
         $this->assertEquals(1, $qs->count());
     }
@@ -78,9 +78,9 @@ WHERE ([[customer_1]].[[address]]::text LIKE @%test%@)", $sql);
         ]);
         $sql = $qs->allSql();
         $this->assertSql(
-            "SELECT [[user_1]].* FROM [[user]] AS [[user_1]] 
-LEFT JOIN [[customer]] AS [[customer_1]] ON [[customer_1]].[[user_id]]=[[user_1]].[[id]]
-LEFT JOIN [[membership]] AS [[membership_1]] ON [[membership_1]].[[user_id]]=[[user_1]].[[id]]
+            "SELECT [[users_1]].* FROM [[users]] AS [[users_1]] 
+LEFT JOIN [[customer]] AS [[customer_1]] ON [[customer_1]].[[user_id]]=[[users_1]].[[id]]
+LEFT JOIN [[membership]] AS [[membership_1]] ON [[membership_1]].[[user_id]]=[[users_1]].[[id]]
 LEFT JOIN [[group]] AS [[group_1]] ON [[group_1]].[[id]]=[[membership_1]].[[group_id]] 
 WHERE (([[customer_1]].[[address]]::text LIKE @%test%@) AND ([[group_1]].[[id]]=@1@))", $sql);
         $this->assertEquals(1, $qs->count());

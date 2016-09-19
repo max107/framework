@@ -46,10 +46,6 @@ class OrmDatabaseTestCase extends \PHPUnit_Framework_TestCase
             $this->markTestSkipped('pdo_' . $this->driver . ' ext required');
         }
 
-        if ($this->driver == 'pgsql' || $this->driver == 'mysql') {
-            $this->markTestSkipped('todo');
-        }
-
         Mindy::setApplication(null);
         $this->app = Mindy::getInstance([
             'basePath' => __DIR__ . '/app/protected',
@@ -106,15 +102,22 @@ class OrmDatabaseTestCase extends \PHPUnit_Framework_TestCase
 
     public function initModels(array $models, Connection $connection)
     {
+        foreach ($connection->getSchemaManager()->listTables() as $table) {
+            $connection->getSchemaManager()->dropTable($table);
+        }
+
         $sync = new Sync($models, $connection);
-        $sync->delete();
         $sync->create();
     }
 
     public function dropModels(array $models, Connection $connection)
     {
-        $sync = new Sync($models, $connection);
-        $sync->delete();
+        foreach ($connection->getSchemaManager()->listTables() as $table) {
+            $connection->getSchemaManager()->dropTable($table);
+        }
+
+//        $sync = new Sync($models, $connection);
+//        $sync->delete();
     }
 
     public function getConnectionType()

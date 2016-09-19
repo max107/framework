@@ -2,8 +2,9 @@
 
 namespace Mindy\Orm\Fields;
 
-use Mindy\Query\ConnectionManager;
-use Mindy\Query\Expression;
+use Doctrine\DBAL\Platforms\AbstractPlatform;
+use Doctrine\DBAL\Types\Type;
+use Mindy\QueryBuilder\Expression;
 
 /**
  * Class AutoField
@@ -19,6 +20,18 @@ class AutoField extends BigIntField
      * @var bool
      */
     public $unsigned = true;
+
+    /**
+     * @return array
+     */
+    public function getSqlOptions() : array
+    {
+        return [
+            'autoincrement' => true,
+            'length' => $this->length,
+            'notnull' => true
+        ];
+    }
 
     /*
     public function getDbPrepValue()
@@ -37,4 +50,12 @@ class AutoField extends BigIntField
         }
     }
     */
+
+    public function convertToDatabaseValueSQL($value, AbstractPlatform $platform)
+    {
+        if ($value === null && $this->getModel()->getConnection()->getDriver()->getName() === 'pdo_pgsql') {
+            $value = new Expression('DEFAULT');
+        }
+        return parent::convertToDatabaseValueSQL($value, $platform);
+    }
 }

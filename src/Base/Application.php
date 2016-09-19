@@ -26,9 +26,11 @@ use Mindy\Helper\Alias;
 use Mindy\Helper\Traits\Accessors;
 use Mindy\Helper\Traits\Configurator;
 use Mindy\Http\Http;
+use Mindy\Migration\Commands\ModuleConfigurationHelper;
 use Mindy\Router\UrlManager;
 use Mindy\Security\Security;
 use Psr\Http\Message\ResponseInterface;
+use Symfony\Component\Console\Helper\HelperSet;
 
 /**
  * @property string $id The unique identifier for the application.
@@ -136,10 +138,6 @@ class Application extends BaseApplication implements ModulesAwareInterface
 
         $this->setContainer($container);
         $this->initModules($modules);
-
-        if (isset($config['modules'])) {
-            unset($config['modules']);
-        }
 
         $this->init();
     }
@@ -279,6 +277,27 @@ class Application extends BaseApplication implements ModulesAwareInterface
     protected function runCli()
     {
         $consoleApplication = new ConsoleApplication($this->name, self::getVersion());
+
+        $helpers = $consoleApplication->getDefaultHelpers();
+        if ($this->getContainer()->has('db')) {
+            $helpers = array_merge($helpers, [
+                'configuration' => new ModuleConfigurationHelper($this->db->getConnection())
+            ]);
+        }
+        $helperSet = new HelperSet($helpers);
+
+        $consoleApplication->setHelperSet($helperSet);
+
+        if ($this->getContainer()->has('db')) {
+            $consoleApplication->addCommands([
+                new \Mindy\Migration\Commands\DiffCommand(),
+                new \Mindy\Migration\Commands\ExecuteCommand(),
+                new \Mindy\Migration\Commands\GenerateCommand(),
+                new \Mindy\Migration\Commands\MigrateCommand(),
+                new \Mindy\Migration\Commands\StatusCommand(),
+                new \Mindy\Migration\Commands\VersionCommand()
+            ]);
+        }
 
         // Preload all modules
         $modules = [];

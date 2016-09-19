@@ -11,6 +11,10 @@ namespace Mindy\Console;
 use Exception;
 use Mindy\Helper\Text;
 use Symfony\Component\Console\Application;
+use Symfony\Component\Console\Helper\DebugFormatterHelper;
+use Symfony\Component\Console\Helper\FormatterHelper;
+use Symfony\Component\Console\Helper\ProcessHelper;
+use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo;
 
@@ -136,5 +140,18 @@ class ConsoleApplication extends Application
         }
 
         return $class;
+    }
+
+    /**
+     * @return array
+     */
+    public function getDefaultHelpers() : array
+    {
+        return [
+            new FormatterHelper(),
+            new DebugFormatterHelper(),
+            new ProcessHelper(),
+            new QuestionHelper(),
+        ];
     }
 }

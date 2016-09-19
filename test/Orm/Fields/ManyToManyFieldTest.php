@@ -47,11 +47,6 @@ abstract class ManyToManyFieldTest extends OrmDatabaseTestCase
         ];
     }
 
-    public function tearDown()
-    {
-
-    }
-
     public function testSimple()
     {
         $category = new Category();

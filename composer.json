@@ -20,7 +20,8 @@
     ],
     "psr-4": {
       "Mindy\\": "src/",
-      "Mindy\\Tests\\": "test/"
+      "Mindy\\Tests\\": "test/",
+      "Modules\\": "WWW/Modules/"
     }
   },
   "require": {

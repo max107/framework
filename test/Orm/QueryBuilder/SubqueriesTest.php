@@ -22,50 +22,6 @@ use Mindy\Tests\Orm\OrmDatabaseTestCase;
 
 abstract class SubqueriesTest extends OrmDatabaseTestCase
 {
-//    public function setUp()
-//    {
-//        parent::setUp();
-//
-//        $this->initModels([new User, new Group, new Membership, new Customer], $this->getConnection());
-//
-//        $group = new Group();
-//        $group->name = 'Administrators';
-//        $group->save();
-//
-//        $group_prog = new Group();
-//        $group_prog->name = 'Programmers';
-//        $group_prog->save();
-//
-//        $anton = new User();
-//        $anton->username = 'Anton';
-//        $anton->password = 'Passwords';
-//        $anton->save();
-//
-//        $group_prog->users->link($anton);
-//
-//        $anton_home = new Customer();
-//        $anton_home->address = "Anton home";
-//        $anton_home->user = $anton;
-//        $anton_home->save();
-//
-//        $anton_work = new Customer();
-//        $anton_work->address = "Anton work";
-//        $anton_work->user = $anton;
-//        $anton_work->save();
-//
-//        $max = new User();
-//        $max->username = 'Max';
-//        $max->password = 'MaxPassword';
-//        $max->save();
-//
-//        $group->users->link($max);
-//
-//        $max_home = new Customer();
-//        $max_home->address = "Max home";
-//        $max_home->user = $max;
-//        $max_home->save();
-//    }
-
     public function getModels()
     {
         return [new User, new Group, new Membership, new Customer];

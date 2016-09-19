@@ -14,6 +14,7 @@ use Mindy\Orm\Model;
 use Mindy\Orm\ModelInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 use Mindy\Validation\ValidationAwareTrait;
+use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
 /**
  * Class Field
@@ -89,17 +90,25 @@ abstract class Field implements ModelFieldInterface
         if ($this->required) {
             $constraints[] = new Assert\NotBlank();
         }
+
         if ($this->unique) {
-            // TODO
-            $constraints[] = new Assert\Callback(function () {
-                return $this->getModel()->objects()->filter([$this->getAttributeName() => $this->getValue()])->count() > 0;
+            $constraints[] = new Assert\Callback(function ($value, ExecutionContextInterface $context, $payload) {
+                if ($value === null && $this->null === true) {
+                    return;
+                }
+
+                if ($this->getModel()->objects()->filter(['pk' => $value])->count() > 0) {
+                    $context->buildViolation('The value must be unique')->addViolation();
+                }
             });
         }
+
         if (!empty($this->choices)) {
             $constraints[] = new Assert\Choice([
                 'choices' => $this->choices instanceof Closure ? $this->choices->__invoke() : $this->choices
             ]);
         }
+
         return array_merge($constraints, $this->validators);
     }
 
@@ -122,9 +131,7 @@ abstract class Field implements ModelFieldInterface
     public function getSqlIndexes() : array
     {
         $indexes = [];
-        if ($this->primary) {
-            $indexes[] = new Index('PRIMARY', [$this->name], true, true);
-        } else if ($this->unique && !$this->primary) {
+        if ($this->unique && $this->primary === false) {
             $indexes[] = new Index($this->name . '_idx', [$this->name], true, false);
         }
         return $indexes;
@@ -138,12 +145,13 @@ abstract class Field implements ModelFieldInterface
         $options = [];
 
         foreach (['length', 'default', 'comment'] as $key) {
-            $options[$key] = $this->{$key};
+            if ($this->{$key} !== null) {
+                $options[$key] = $this->{$key};
+            }
         }
 
         if ($this->null) {
             $options['notnull'] = false;
-            unset($options['default']);
         }
 
         return $options;

@@ -57,15 +57,15 @@ class ModuleServiceProvider extends AbstractServiceProvider
         foreach ($this->modules as $id => $config) {
             if (is_string($config)) {
                 $className = $config;
-                $container->add($id, $config);
+                $container->share($id, $config);
             } else if (is_array($config)) {
                 if (isset($config['class'])) {
                     $className = $config['class'];
                     unset($config['class']);
-                    $container->add($id, $className)->withArgument($config);
+                    $container->share($id, $className)->withArgument(array_merge($config, ['id' => $id]));
                 } else {
                     $className = $this->getDefaultModuleClassNamespace($id);
-                    $container->add($id, $className, $config);
+                    $container->share($id, $className)->withArgument(array_merge($config, ['id' => $id]));
                 }
             } else {
                 throw new RuntimeException('Unknown module config format');

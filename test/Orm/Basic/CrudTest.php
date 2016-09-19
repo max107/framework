@@ -22,18 +22,14 @@ abstract class CrudTest extends OrmDatabaseTestCase
         return [new User, new Solution, new Customer];
     }
 
-    public function tearDown()
-    {
-
-    }
-
     public function testLastInsertId()
     {
         $c = $this->getConnection();
         $adapter = QueryBuilder::getInstance($c)->getAdapter();
-        $tableName = $adapter->getRawTableName(User::tableName());
+        $model = new User;
+        $tableName = $adapter->getRawTableName($model->tableName());
         $c->insert($tableName, ['username' => 'foo']);
-        $this->assertEquals(1, $c->lastInsertId());
+        $this->assertEquals(1, $c->lastInsertId($model->getSequenceName()));
     }
 
     public function testBrokenLastInsertId()

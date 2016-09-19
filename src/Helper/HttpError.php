@@ -14,7 +14,11 @@ class HttpError
 {
     public static function errorMessage($code)
     {
-        return app()->t('main', isset(self::$httpCodes[$code]) ? self::$httpCodes[$code] : 'Unknown error');
+        $message = isset(self::$httpCodes[$code]) ? self::$httpCodes[$code] : 'Unknown error';
+        if ($app = app()) {
+            $app->t('main', $message);
+        }
+        return $message;
     }
 
     public static $httpCodes = [

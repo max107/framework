@@ -1,7 +1,10 @@
 <?php
 
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\DriverManager;
 use Mindy\Pagination\Pagination;
 use Mindy\Query\Query;
+use Mindy\QueryBuilder\QueryBuilder;
 
 /**
  * All rights reserved.
@@ -66,28 +69,5 @@ class PaginationTest extends PHPUnit_Framework_TestCase
                 'total' => 10
             ]
         ], $pager->toJson());
-    }
-
-    public function testPaginateQuery()
-    {
-        // TODO
-        if (class_exists('\Mindy\QueryBuilder\QueryBuilder') === false) {
-            $this->markTestSkipped('Missing QueryBuilder');
-        }
-        $connection = new \Mindy\Query\Connection([
-            'dsn' => 'sqlite::memory:'
-        ]);
-        $cmd = $connection->createCommand();
-        $cmd->createTable('test', ['id' => 'auto'])->execute();
-        $cmd->insert('test', ['id' => 1])->execute();
-        $cmd->insert('test', ['id' => 2])->execute();
-        $cmd->insert('test', ['id' => 3])->execute();
-        $cmd->insert('test', ['id' => 4])->execute();
-
-        $qb = $connection->getQueryBuilder()->select(['id'])->from('test');
-        $pager = new Pagination($qb, [
-            'pageSize' => 1
-        ]);
-        $this->assertEquals([['id' => 1]], $pager->paginate());
     }
 }

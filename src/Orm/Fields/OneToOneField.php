@@ -4,9 +4,6 @@ namespace Mindy\Orm\Fields;
 
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Schema\Index;
-use Exception;
-use Mindy\Orm\ModelInterface;
-use Mindy\Tests\Orm\Models\MemberProfile;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
