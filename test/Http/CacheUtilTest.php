@@ -32,7 +32,7 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
      */
     public function testWithCache()
     {
-        $util = $this->getMock('Mindy\Http\Cache\CacheUtil', ['withCacheControl']);
+        $util = $this->getMockBuilder('Mindy\Http\Cache\CacheUtil')->setMethods(['withCacheControl'])->getMock();
         $response = $this->getResponse();
 
         $util->expects($this->once())->method('withCacheControl')
@@ -48,7 +48,7 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
      */
     public function testWithCacheCustomParameters()
     {
-        $util = $this->getMock('Mindy\Http\Cache\CacheUtil', ['withCacheControl']);
+        $util = $this->getMockBuilder('Mindy\Http\Cache\CacheUtil')->setMethods(['withCacheControl'])->getMock();
         $response = $this->getResponse();
 
         $util->expects($this->once())->method('withCacheControl')
@@ -62,7 +62,7 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
      */
     public function testWithCachePrevention()
     {
-        $util = $this->getMock('Mindy\Http\Cache\CacheUtil', ['withCacheControl']);
+        $util = $this->getMockBuilder('Mindy\Http\Cache\CacheUtil')->setMethods(['withCacheControl'])->getMock();
         $response = $this->getResponse();
 
         $util->expects($this->once())->method('withCacheControl')
@@ -219,7 +219,7 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
             ['If-Unmodified-Since', $ifUnmodified]
         ];
 
-        $request = $this->getMock('Psr\Http\Message\RequestInterface');
+        $request = $this->createMock('Psr\Http\Message\RequestInterface');
         $request->method('hasHeader')->willReturnMap($map);
 
         $result = $this->cacheUtil->hasStateValidator($request);
@@ -254,7 +254,7 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
             ['If-None-Match', '']
         ];
 
-        $request = $this->getMock('Psr\Http\Message\RequestInterface');
+        $request = $this->createMock('Psr\Http\Message\RequestInterface');
         $request->method('getHeaderLine')->willReturnMap($map);
 
 
@@ -298,7 +298,7 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
             ['If-None-Match', '']
         ];
 
-        $request = $this->getMock('Psr\Http\Message\RequestInterface');
+        $request = $this->createMock('Psr\Http\Message\RequestInterface');
         $request->method('getHeaderLine')->willReturnMap($map);
 
 
@@ -335,7 +335,7 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
             ['If-None-Match', $ifNoneMatch]
         ];
 
-        $request = $this->getMock('Psr\Http\Message\RequestInterface');
+        $request = $this->createMock('Psr\Http\Message\RequestInterface');
         $request->method('getHeaderLine')->willReturnMap($map);
 
 
@@ -367,7 +367,7 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
             ['If-None-Match', '"foo"']
         ];
 
-        $request = $this->getMock('Psr\Http\Message\RequestInterface');
+        $request = $this->createMock('Psr\Http\Message\RequestInterface');
         $request->method('getHeaderLine')->willReturnMap($map);
         $request->method('getMethod')->willReturn('GET');
 
@@ -385,7 +385,7 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
      */
     public function testIsNotModifiedWithETag($ifNoneMatch, $eTag, $notModified)
     {
-        $request = $this->getMock('Psr\Http\Message\RequestInterface');
+        $request = $this->createMock('Psr\Http\Message\RequestInterface');
         $request->expects($this->once())->method('getHeaderLine')
             ->with('If-None-Match')->willReturn($ifNoneMatch);
 
@@ -424,7 +424,7 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
      */
     public function testIsNotModifiedWithModified($ifModifiedSince, $lastModified, $notModified)
     {
-        $request = $this->getMock('Psr\Http\Message\RequestInterface');
+        $request = $this->createMock('Psr\Http\Message\RequestInterface');
 
         $request->method('getHeaderLine')->willReturnMap([['If-Modified-Since', $ifModifiedSince]]);
         $request->expects($this->once())->method('getMethod')->willReturn('GET');
@@ -453,7 +453,7 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
      */
     public function testIsNotModifiedWithModifiedUnsafe()
     {
-        $request = $this->getMock('Psr\Http\Message\RequestInterface');
+        $request = $this->createMock('Psr\Http\Message\RequestInterface');
         $request->expects($this->once())->method('getMethod')->will($this->returnValue('POST'));
 
         $response = $this->getResponse();
@@ -521,13 +521,12 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
     {
         $response = $this->getResponse();
 
-        /** @var CacheUtil|\PHPUnit_Framework_MockObject_MockObject $util */
-        $util = $this->getMock('Mindy\Http\Cache\CacheUtil', ['getLifetime', 'getAge']);
-        $util->expects($this->once())->method('getLifetime')
-            ->with($response)->willReturn(20);
+        $util = $this->getMockBuilder(CacheUtil::class)
+            ->setMethods(['getLifetime', 'getAge'])
+            ->getMock();
 
-        $util->expects($this->once())->method('getAge')
-            ->with($response)->willReturn(10);
+        $util->expects($this->once())->method('getLifetime')->with($response)->willReturn(20);
+        $util->expects($this->once())->method('getAge')->with($response)->willReturn(10);
 
         $this->assertTrue($util->isFresh($response));
     }
@@ -540,7 +539,7 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
         $response = $this->getResponse();
 
         /** @var CacheUtil|\PHPUnit_Framework_MockObject_MockObject $util */
-        $util = $this->getMock('Mindy\Http\Cache\CacheUtil', ['getLifetime', 'getAge']);
+        $util = $this->getMockBuilder(CacheUtil::class)->setMethods(['getLifetime', 'getAge'])->getMock();
         $util->expects($this->once())->method('getLifetime')
             ->with($response)->willReturn(20);
 
@@ -557,7 +556,7 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
         $response = $this->getResponse();
 
         /** @var CacheUtil|\PHPUnit_Framework_MockObject_MockObject $util */
-        $util = $this->getMock('Mindy\Http\Cache\CacheUtil', ['getLifetime', 'getAge']);
+        $util = $this->getMockBuilder('Mindy\Http\Cache\CacheUtil')->setMethods(['getLifetime', 'getAge'])->getMock();
         $util->expects($this->once())->method('getLifetime')
             ->with($response)->willReturn(0);
 
@@ -575,7 +574,7 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
         $response = $this->getResponse();
 
         /** @var CacheUtil|\PHPUnit_Framework_MockObject_MockObject $util */
-        $util = $this->getMock('Mindy\Http\Cache\CacheUtil', ['getLifetime']);
+        $util = $this->getMockBuilder('Mindy\Http\Cache\CacheUtil')->setMethods(['getLifetime'])->getMock();
         $util->expects($this->once())->method('getLifetime')
             ->with($response)->willReturn(null);
 
@@ -802,6 +801,6 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
      */
     private function getResponse()
     {
-        return $this->getMock('Psr\Http\Message\ResponseInterface');
+        return $this->createMock('Psr\Http\Message\ResponseInterface');
     }
 }

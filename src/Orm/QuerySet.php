@@ -3,7 +3,7 @@
 namespace Mindy\Orm;
 
 use Mindy\Exception\Exception;
-use Mindy\Helper\Creator;
+use Mindy\Creator\Creator;
 use Mindy\Orm\Exception\MultipleObjectsReturned;
 use Mindy\Orm\Fields\ForeignField;
 use Mindy\Orm\Fields\ManyToManyField;

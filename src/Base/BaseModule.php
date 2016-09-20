@@ -14,10 +14,8 @@
 
 namespace Mindy\Base;
 
-use League\Container\Container;
-use League\Container\ContainerAwareTrait;
-use League\Container\ServiceProvider\BootableServiceProviderInterface;
 use function Mindy\app;
+use Mindy\Di\ServiceLocatorInterface;
 use Mindy\Helper\Collection;
 use Mindy\Helper\Traits\Accessors;
 use Mindy\Helper\Traits\Configurator;
@@ -34,12 +32,10 @@ use ReflectionClass;
  * @property array $import List of aliases to be imported.
  * @property array $aliases List of aliases to be defined. The array keys are root aliases,
  */
-abstract class BaseModule implements ModuleInterface, BootableServiceProviderInterface
+abstract class BaseModule implements ModuleInterface
 {
     use Configurator;
     use Accessors;
-    use ContainerAwareTrait;
-    use DeprecatedMethodsTrait;
 
     /**
      * @var string
@@ -60,7 +56,6 @@ abstract class BaseModule implements ModuleInterface, BootableServiceProviderInt
      */
     public function __construct(array $config = [])
     {
-        $this->setContainer(new Container);
         $this->configure($config);
         $this->init();
     }
@@ -71,71 +66,7 @@ abstract class BaseModule implements ModuleInterface, BootableServiceProviderInt
      *
      * @return void
      */
-    public function boot()
-    {
-
-    }
-
-    /**
-     * Returns a boolean if checking whether this provider provides a specific
-     * service or returns an array of provided services if no argument passed.
-     *
-     * @param  string $service
-     * @return boolean|array
-     */
-    public function provides($service = null)
-    {
-        return array_key_exists($service, $this->provides);
-    }
-
-    /**
-     * Use the register method to register items with the container via the
-     * protected $this->container property or the `getContainer` method
-     * from the ContainerAwareTrait.
-     *
-     * @return void
-     */
-    public function register()
-    {
-
-    }
-
-    /**
-     * Getter magic method.
-     * This method is overridden to support accessing application components
-     * like reading module properties.
-     * @param string $name application component or property name
-     * @return mixed the named property value
-     */
-    public function __get($name)
-    {
-        if ($this->getContainer()->has($name)) {
-            return $this->getContainer()->get($name);
-        } else {
-            return $this->__getInternal($name);
-        }
-    }
-
-    /**
-     * Checks if a property value is null.
-     * This method overrides the parent implementation by checking
-     * if the named application component is loaded.
-     * @param string $name the property name or the event name
-     * @return boolean whether the property value is null
-     */
-    public function __isset($name)
-    {
-        if ($this->getContainer()->has($name)) {
-            return true;
-        } else {
-            return $this->__issetInternal($name);
-        }
-    }
-
-    /**
-     * Configure module or application before call constructor
-     */
-    public static function preConfigure()
+    public function boot(ServiceLocatorInterface $serviceLocator)
     {
 
     }

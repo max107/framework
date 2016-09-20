@@ -17,8 +17,8 @@ namespace Mindy\Base;
 
 use League\Container\ContainerInterface;
 use Mindy\Console\ConsoleApplication;
-use Mindy\Di\ModuleContainer;
-use Mindy\Di\Container;
+use Mindy\Di\ModuleManager;
+use Mindy\Di\ServiceLocator;
 use Mindy\Event\EventManager;
 use Mindy\Exception\Exception;
 use Mindy\Exception\HttpException;
@@ -27,7 +27,6 @@ use Mindy\Helper\Traits\Accessors;
 use Mindy\Helper\Traits\Configurator;
 use Mindy\Http\Http;
 use Mindy\Migration\Commands\ModuleConfigurationHelper;
-use Mindy\Migration\EntityManager;
 use Mindy\Router\UrlManager;
 use Mindy\Security\Security;
 use Psr\Http\Message\ResponseInterface;
@@ -40,7 +39,6 @@ use Symfony\Component\Console\Helper\HelperSet;
  * @property string $extensionPath The directory that contains all extensions. Defaults to the 'extensions' directory under 'protected'.
  * @property string $timeZone The time zone used by this application.
  * @property \Mindy\Event\EventManager $signal The event system component.
- * @property \Mindy\ErrorHandler\ErrorHandler $errorHandler The error handler application component.
  * @property \Mindy\Security\Security $securityManager The security manager application component.
  * @property \Mindy\Http\Http $http The request component.
  * @property \Mindy\Auth\UserInterface $user The user component.
@@ -52,11 +50,10 @@ use Symfony\Component\Console\Helper\HelperSet;
  * @property \Mindy\Controller\BaseController $controller The currently active controller. Null is returned in this base class.
  * @property string $baseUrl The relative URL for the application.
  */
-class Application extends BaseApplication implements ModulesAwareInterface
+class Application extends BaseApplication
 {
     use Configurator;
     use Accessors;
-    use ModulesAwareTrait;
     use DeprecatedMethodsTrait;
 
     /**
@@ -88,7 +85,7 @@ class Application extends BaseApplication implements ModulesAwareInterface
      * @throws Exception
      * @throws \Exception
      */
-    public function __construct($config = null, ContainerInterface $container = null)
+    public function __construct($config = null)
     {
         Mindy::setApplication($this);
 
@@ -128,40 +125,35 @@ class Application extends BaseApplication implements ModulesAwareInterface
 
         $this->configure($config);
 
-        if ($container === null) {
-            $container = new Container;
-        }
-        if (!empty($components)) {
-            $componentServiceProvider = new LegacyComponentsServiceProvider($components);
-            $container->addServiceProvider($componentServiceProvider);
-        }
-        $container = $this->prepareContainer($container);
+        $serviceLocator = new ServiceLocator($components);
+        $this->setServiceLocator($this->prepareServiceLocator($serviceLocator));
 
-        $this->setContainer($container);
-        $this->initModules($modules);
+        $moduleManager = new ModuleManager($modules);
+        $moduleManager->loadModules($this->getServiceLocator());
+        $this->setModuleManager($moduleManager);
 
         $this->init();
     }
 
     /**
-     * @param ContainerInterface $container
-     * @return ContainerInterface
+     * @param ServiceLocator $container
+     * @return ServiceLocator
      */
-    protected function prepareContainer(ContainerInterface $container)
+    protected function prepareServiceLocator(ServiceLocator $serviceLocator)
     {
-        if ($container->has('security') === false) {
-            $container->add('security', Security::class);
+        if ($serviceLocator->has('security') === false) {
+            $serviceLocator->add('security', Security::class);
         }
-        if ($container->has('urlManager') === false) {
-            $container->add('urlManager', UrlManager::class);
+        if ($serviceLocator->has('urlManager') === false) {
+            $serviceLocator->add('urlManager', UrlManager::class);
         }
-        if ($container->has('http') === false) {
-            $container->add('http', Http::class);
+        if ($serviceLocator->has('http') === false) {
+            $serviceLocator->add('http', Http::class);
         }
-        if ($container->has('signal') === false) {
-            $container->add('signal', EventManager::class);
+        if ($serviceLocator->has('signal') === false) {
+            $serviceLocator->add('signal', EventManager::class);
         }
-        return $container;
+        return $serviceLocator;
     }
 
     /**
@@ -173,7 +165,7 @@ class Application extends BaseApplication implements ModulesAwareInterface
      */
     public function t($category, $message, $params = [], $language = null) : string
     {
-        $container = $this->getContainer();
+        $container = $this->getServiceLocator();
         if ($container && $container->has('locale')) {
             return $container->get('locale')->t($category, $message, $params, $language);
         } else {
@@ -246,8 +238,8 @@ class Application extends BaseApplication implements ModulesAwareInterface
      */
     public function __get($name)
     {
-        if ($this->getContainer()->has($name)) {
-            return $this->getContainer()->get($name);
+        if ($this->getServiceLocator()->has($name)) {
+            return $this->getServiceLocator()->get($name);
         } else {
             $getter = 'get' . $name;
             if (method_exists($this, $getter)) {
@@ -280,7 +272,7 @@ class Application extends BaseApplication implements ModulesAwareInterface
         $consoleApplication = new ConsoleApplication($this->name, self::getVersion());
 
         $helpers = $consoleApplication->getDefaultHelpers();
-        if ($this->getContainer()->has('db')) {
+        if ($this->getServiceLocator()->has('db')) {
             $helpers = array_merge($helpers, [
                 'configuration' => new ModuleConfigurationHelper($this->db->getConnection()),
             ]);
@@ -289,7 +281,7 @@ class Application extends BaseApplication implements ModulesAwareInterface
 
         $consoleApplication->setHelperSet($helperSet);
 
-        if ($this->getContainer()->has('db')) {
+        if ($this->getServiceLocator()->has('db')) {
             $consoleApplication->addCommands([
                 new \Mindy\Migration\Commands\ExecuteCommand(),
                 new \Mindy\Migration\Commands\GenerateCommand(),
@@ -299,13 +291,7 @@ class Application extends BaseApplication implements ModulesAwareInterface
             ]);
         }
 
-        // Preload all modules
-        $modules = [];
-        foreach ($this->getModules() as $id => $module) {
-            $modules[$id] = $this->getModuleLocator()->get($id);
-        }
-
-        $modulesCommands = $consoleApplication->findModulesCommands($modules);
+        $modulesCommands = $consoleApplication->findModulesCommands($this->getModules());
         $consoleApplication->addCommands($modulesCommands);
 
         if ($envPath = @getenv('CONSOLE_COMMANDS')) {
@@ -316,6 +302,9 @@ class Application extends BaseApplication implements ModulesAwareInterface
         $consoleApplication->run();
     }
 
+    /**
+     * @void
+     */
     protected function runWeb()
     {
         ob_start();
@@ -357,20 +346,9 @@ class Application extends BaseApplication implements ModulesAwareInterface
      */
     public function getUser()
     {
-        if ($this->getContainer()->has('auth')) {
+        if ($this->getServiceLocator()->has('auth')) {
             return $this->auth->getUser();
         }
         return null;
-    }
-
-    /**
-     * Create di container for modules
-     * @param array $modules
-     */
-    protected function initModules(array $modules)
-    {
-        $moduleContainer = new ModuleContainer;
-        $moduleContainer->addServiceProvider(new ModuleServiceProvider($modules, $this->getModulePath()));
-        $this->setModulesContainer($moduleContainer);
     }
 }

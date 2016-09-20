@@ -15,7 +15,7 @@ use Mindy\Controller\Action\InlineAction;
 use Mindy\Helper\HttpError;
 use Mindy\Http\Response\Response;
 use Mindy\Exception\HttpException;
-use Mindy\Helper\Creator;
+use Mindy\Creator\Creator;
 use Mindy\Helper\Traits\Accessors;
 use Mindy\Helper\Traits\Configurator;
 use ReflectionClass;

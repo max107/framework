@@ -91,9 +91,4 @@ interface ModelInterface
      * @param $value
      */
     public function setAttribute(string $name, $value);
-
-    /**
-     * @return array
-     */
-    public function getSqlOptions() : array;
 }

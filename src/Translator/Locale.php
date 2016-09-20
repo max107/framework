@@ -8,7 +8,7 @@
 
 namespace Mindy\Translator;
 
-use Mindy\Helper\Creator;
+use Mindy\Creator\Creator;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Translation\Loader\LoaderInterface;
 use Symfony\Component\Translation\Loader\PhpFileLoader;

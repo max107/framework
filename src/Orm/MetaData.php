@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Mindy\Orm;
 
-use Mindy\Helper\Creator;
+use Mindy\Creator\Creator;
 use Mindy\Orm\Fields\AutoField;
 use Mindy\Orm\Fields\Field;
 use Mindy\Orm\Fields\FileField;

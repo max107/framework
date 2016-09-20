@@ -21,7 +21,7 @@ class CacheControlTest extends CacheControlTestCase
     protected $controlClass = 'Mindy\Tests\Http\CacheControlStub';
 
     /**
-     * @covers Micheh\Cache\Header\CacheControl::withDirective
+     * @covers Mindy\Http\Cache\CacheControl::withDirective
      */
     public function testWithFlag()
     {
@@ -33,7 +33,7 @@ class CacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\CacheControl::withDirective
+     * @covers Mindy\Http\Cache\CacheControl::withDirective
      */
     public function testWithFlagAndFalse()
     {
@@ -42,7 +42,7 @@ class CacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\CacheControl::withDirective
+     * @covers Mindy\Http\Cache\CacheControl::withDirective
      */
     public function testWithFlagRemovesFlag()
     {
@@ -51,7 +51,7 @@ class CacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\CacheControl::hasDirective
+     * @covers Mindy\Http\Cache\CacheControl::hasDirective
      */
     public function testHasFlag()
     {
@@ -60,7 +60,7 @@ class CacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\CacheControl::hasDirective
+     * @covers Mindy\Http\Cache\CacheControl::hasDirective
      */
     public function testHasFlagWithoutValue()
     {
@@ -68,7 +68,7 @@ class CacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\CacheControl::withDirective
+     * @covers Mindy\Http\Cache\CacheControl::withDirective
      */
     public function testWithDirective()
     {
@@ -80,7 +80,7 @@ class CacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\CacheControl::withDirective
+     * @covers Mindy\Http\Cache\CacheControl::withDirective
      */
     public function testWithDirectiveWithNegativeInt()
     {
@@ -89,7 +89,7 @@ class CacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\CacheControl::withDirective
+     * @covers Mindy\Http\Cache\CacheControl::withDirective
      */
     public function testWithDirectiveWithNull()
     {
@@ -98,7 +98,7 @@ class CacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\CacheControl::getDirective
+     * @covers Mindy\Http\Cache\CacheControl::getDirective
      */
     public function testGetDirective()
     {
@@ -107,7 +107,7 @@ class CacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\CacheControl::getDirective
+     * @covers Mindy\Http\Cache\CacheControl::getDirective
      */
     public function testGetDirectiveWithoutValue()
     {
@@ -115,8 +115,8 @@ class CacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\CacheControl::createFromString
-     * @covers Micheh\Cache\Header\CacheControl::getMethod
+     * @covers Mindy\Http\Cache\CacheControl::createFromString
+     * @covers Mindy\Http\Cache\CacheControl::getMethod
      */
     public function testFromStringWithFlag()
     {
@@ -125,8 +125,8 @@ class CacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\CacheControl::createFromString
-     * @covers Micheh\Cache\Header\CacheControl::getMethod
+     * @covers Mindy\Http\Cache\CacheControl::createFromString
+     * @covers Mindy\Http\Cache\CacheControl::getMethod
      */
     public function testFromStringWithToken()
     {
@@ -135,8 +135,8 @@ class CacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\CacheControl::createFromString
-     * @covers Micheh\Cache\Header\CacheControl::getMethod
+     * @covers Mindy\Http\Cache\CacheControl::createFromString
+     * @covers Mindy\Http\Cache\CacheControl::getMethod
      */
     public function testFromStringWithMultiple()
     {
@@ -145,8 +145,8 @@ class CacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\CacheControl::createFromString
-     * @covers Micheh\Cache\Header\CacheControl::getMethod
+     * @covers Mindy\Http\Cache\CacheControl::createFromString
+     * @covers Mindy\Http\Cache\CacheControl::getMethod
      */
     public function testFromStringWithOverrideMethod()
     {
@@ -154,8 +154,8 @@ class CacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\CacheControl::createFromString
-     * @covers Micheh\Cache\Header\CacheControl::getMethod
+     * @covers Mindy\Http\Cache\CacheControl::createFromString
+     * @covers Mindy\Http\Cache\CacheControl::getMethod
      */
     public function testFromStringWithUnknownDirective()
     {
@@ -164,8 +164,8 @@ class CacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\CacheControl::createFromString
-     * @covers Micheh\Cache\Header\CacheControl::getMethod
+     * @covers Mindy\Http\Cache\CacheControl::createFromString
+     * @covers Mindy\Http\Cache\CacheControl::getMethod
      */
     public function testFromStringWithUnknownDirectiveFlag()
     {
@@ -174,7 +174,7 @@ class CacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\CacheControl::withMaxAge
+     * @covers Mindy\Http\Cache\CacheControl::withMaxAge
      */
     public function testWithMaxAge()
     {
@@ -183,7 +183,7 @@ class CacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\CacheControl::getMaxAge
+     * @covers Mindy\Http\Cache\CacheControl::getMaxAge
      */
     public function testGetMaxAge()
     {
@@ -192,7 +192,7 @@ class CacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\CacheControl::withNoCache
+     * @covers Mindy\Http\Cache\CacheControl::withNoCache
      */
     public function testWithNoCache()
     {
@@ -201,7 +201,7 @@ class CacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\CacheControl::hasNoCache
+     * @covers Mindy\Http\Cache\CacheControl::hasNoCache
      */
     public function testHasNoCache()
     {
@@ -210,7 +210,7 @@ class CacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\CacheControl::withNoStore
+     * @covers Mindy\Http\Cache\CacheControl::withNoStore
      */
     public function testWithNoStore()
     {
@@ -219,7 +219,7 @@ class CacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\CacheControl::hasNoStore
+     * @covers Mindy\Http\Cache\CacheControl::hasNoStore
      */
     public function testHasNoStore()
     {
@@ -228,7 +228,7 @@ class CacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\CacheControl::withNoTransform
+     * @covers Mindy\Http\Cache\CacheControl::withNoTransform
      */
     public function testWithNoTransform()
     {
@@ -237,7 +237,7 @@ class CacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\CacheControl::hasNoTransform
+     * @covers Mindy\Http\Cache\CacheControl::hasNoTransform
      */
     public function testHasNoTransform()
     {
@@ -246,7 +246,7 @@ class CacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\CacheControl::withExtension
+     * @covers Mindy\Http\Cache\CacheControl::withExtension
      */
     public function testWithExtension()
     {
@@ -255,7 +255,7 @@ class CacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\CacheControl::withExtension
+     * @covers Mindy\Http\Cache\CacheControl::withExtension
      */
     public function testWithExtensionInvalidType()
     {
@@ -267,7 +267,7 @@ class CacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\CacheControl::getExtension
+     * @covers Mindy\Http\Cache\CacheControl::getExtension
      */
     public function testGetExtension()
     {
@@ -276,7 +276,7 @@ class CacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\CacheControl::__toString
+     * @covers Mindy\Http\Cache\CacheControl::__toString
      */
     public function testToStringWithFlag()
     {
@@ -285,7 +285,7 @@ class CacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\CacheControl::__toString
+     * @covers Mindy\Http\Cache\CacheControl::__toString
      */
     public function testToStringWithToken()
     {
@@ -294,7 +294,7 @@ class CacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\CacheControl::__toString
+     * @covers Mindy\Http\Cache\CacheControl::__toString
      */
     public function testToStringWithExtension()
     {
@@ -303,7 +303,7 @@ class CacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\CacheControl::__toString
+     * @covers Mindy\Http\Cache\CacheControl::__toString
      */
     public function testToStringWithMultiple()
     {
@@ -312,7 +312,7 @@ class CacheControlTest extends CacheControlTestCase
     }
 
     /**
-     * @covers Micheh\Cache\Header\CacheControl::__toString
+     * @covers Mindy\Http\Cache\CacheControl::__toString
      */
     public function testToStringWithEmpty()
     {

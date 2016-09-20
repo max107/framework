@@ -4,7 +4,7 @@ namespace Mindy\Session;
 
 use Countable;
 use Exception;
-use Mindy\Helper\Creator;
+use Mindy\Creator\Creator;
 use Mindy\Session\Adapter\SessionAdapterInterface;
 
 /**

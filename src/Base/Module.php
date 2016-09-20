@@ -19,7 +19,6 @@ class Module extends BaseModule implements ReverseAwareInterface
     }
 
     /**
-     * TODO
      * @return \Mindy\Orm\Model[]
      */
     public function getModels() : array

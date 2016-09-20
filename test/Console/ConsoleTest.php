@@ -36,9 +36,11 @@ class ConsoleTest extends \PHPUnit_Framework_TestCase
         $this->assertContains('SuccessCommand foo:bar', $output);
     }
 
+    /**
+     * @expectedException \Exception
+     */
     public function testEmpty()
     {
-        $this->setExpectedException(Exception::class);
         $application = new ConsoleApplication();
         $application->findCommands(__DIR__ . DIRECTORY_SEPARATOR . 'empty');
     }

@@ -2,9 +2,9 @@
 
 namespace Mindy\Tests\Base;
 
-use Mindy\Di\Container;
 use Mindy\Base\Mindy;
 use Mindy\Base\Module;
+use Mindy\Di\ServiceLocator;
 use Mindy\Event\EventManager;
 use Mindy\Helper\Alias;
 use Mindy\Http\Http;
@@ -66,36 +66,17 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
         }
     }
 
-    public function testDi()
-    {
-        $container = new Container;
-        $container->add('security', Security::class);
-        $container->add('urlManager', UrlManager::class);
-        $container->add('http', Http::class);
-        $container->add('signal', EventManager::class);
-
-        $app = new TestApplication([
-            'basePath' => __DIR__ . '/app'
-        ], $container);
-
-        $this->assertInstanceOf(Container::class, $app->getContainer());
-        $this->assertInstanceOf(Http::class, $app->getContainer()->get('http'));
-        $this->assertInstanceOf(Security::class, $app->getContainer()->get('security'));
-        $this->assertInstanceOf(UrlManager::class, $app->getContainer()->get('urlManager'));
-        $this->assertInstanceOf(EventManager::class, $app->getContainer()->get('signal'));
-    }
-
     public function testDiCoreComponents()
     {
         $app = new TestApplication([
             'basePath' => __DIR__ . '/app'
         ]);
 
-        $this->assertInstanceOf(Container::class, $app->getContainer());
-        $this->assertInstanceOf(Http::class, $app->getContainer()->get('http'));
-        $this->assertInstanceOf(Security::class, $app->getContainer()->get('security'));
-        $this->assertInstanceOf(UrlManager::class, $app->getContainer()->get('urlManager'));
-        $this->assertInstanceOf(EventManager::class, $app->getContainer()->get('signal'));
+        $this->assertInstanceOf(ServiceLocator::class, $app->getServiceLocator());
+        $this->assertInstanceOf(Http::class, $app->getServiceLocator()->get('http'));
+        $this->assertInstanceOf(Security::class, $app->getServiceLocator()->get('security'));
+        $this->assertInstanceOf(UrlManager::class, $app->getServiceLocator()->get('urlManager'));
+        $this->assertInstanceOf(EventManager::class, $app->getServiceLocator()->get('signal'));
     }
 
     public function testModules()
@@ -116,8 +97,8 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
         $this->assertInstanceOf(FooBarModule::class, $app->getModule('Bar'));
         $this->assertEquals('example.com', $app->getModule('Bar')->host);
 
-        $this->assertEquals(__DIR__ . '/app/Modules/Foo', Alias::get('Foo'));
-        $this->assertEquals(__DIR__ . '/app/Modules/Bar', Alias::get('Bar'));
+        $this->assertEquals(__DIR__, Alias::get('Foo'));
+        $this->assertEquals(__DIR__, Alias::get('Bar'));
 
         $this->assertEquals(['Foo', 'Bar'], array_keys($app->getModules()));
     }
