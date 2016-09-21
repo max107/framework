@@ -13,8 +13,15 @@
 
 namespace Mindy\Router\Tests;
 
+use Mindy\Auth\AuthProvider;
+use Mindy\Auth\UserInterface;
+use Mindy\Base\Mindy;
+use Mindy\Http\Http;
+use Mindy\Permissions\Rule;
 use Mindy\Router\Dispatcher;
 use Mindy\Router\Patterns;
+use Mindy\Session\Adapter\MemorySessionAdapter;
+use Mindy\Session\Session;
 
 class CustomDispatcher extends Dispatcher
 {

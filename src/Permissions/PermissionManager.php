@@ -13,7 +13,6 @@ namespace Mindy\Permissions;
 use function Mindy\app;
 use Mindy\Auth\UserInterface;
 use Mindy\Permissions\PermissionProvider\PermissionProviderInterface;
-use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
 
 class PermissionManager
 {

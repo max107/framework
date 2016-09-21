@@ -78,8 +78,6 @@
     <!--<filter>-->
         <!--<whitelist>-->
             <!--<directory suffix=".php">src/</directory>-->
-            <!--<file>src/Orm/NewOrm.php</file>-->
-            <!--<file>src/Orm/NewBase.php</file>-->
         <!--</whitelist>-->
     <!--</filter>-->
     <!--<logging>-->

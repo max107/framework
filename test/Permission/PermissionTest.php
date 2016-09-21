@@ -6,10 +6,12 @@
  * Time: 18:29
  */
 
-namespace Mindy\Permissions;
+namespace Mindy\Tests\Permission;
 
 use Mindy\Auth\GroupInterface;
 use Mindy\Auth\UserInterface;
+use Mindy\Permissions\Permission;
+use Mindy\Permissions\PermissionManager;
 use Mindy\Permissions\PermissionProvider\ArrayPermissionProvider;
 
 class GroupPerm implements GroupInterface

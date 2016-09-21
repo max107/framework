@@ -10,19 +10,61 @@ namespace Mindy\Router;
 
 use Exception;
 use function Mindy\app;
+use Mindy\Creator\Creator;
+use Mindy\Middleware\MiddlewareManager;
+use Mindy\Router\Exception\HttpMethodNotAllowedException;
 use ReflectionFunction;
 use ReflectionFunctionAbstract;
 use ReflectionMethod;
 
 class HandlerResolver
 {
+    protected function checkPermissions(array $params)
+    {
+        $user = app()->getUser();
+        if (isset($params['rules'])) {
+            $hasAccess = false;
+
+            foreach ($params['rules'] as $ruleConfig) {
+                $rule = Creator::createObject($ruleConfig);
+                if ($rule->can($user) === false) {
+                    $hasAccess = true;
+                    break;
+                }
+            }
+
+            if (!$hasAccess) {
+                throw new HttpMethodNotAllowedException();
+            }
+        }
+    }
+
+    protected function updateRequest(array $vars)
+    {
+        $request = app()->http->getRequest();
+        app()->http->setRequest($request->withQueryParams(array_merge($request->getQueryParams(), $vars)));
+    }
+
+    protected function runMiddleware($params)
+    {
+        if (isset($params['middleware'])) {
+            $middleware = new MiddlewareManager($params['middleware']);
+            $request = app()->http->getRequest();
+            $response = app()->http->getResponse();
+
+            $newResponse = $middleware($request, $response);
+            app()->http->setResponse($newResponse);
+        }
+    }
+
     public function __invoke($data)
     {
         list($handler, $vars, $params) = $data;
 
         if (app()) {
-            $request = app()->http->getRequest();
-            app()->http->setRequest($request->withQueryParams(array_merge($request->getQueryParams(), $vars)));
+            $this->checkPermissions($params);
+            $this->updateRequest($vars);
+            $this->runMiddleware($params);
         }
 
         if ($handler instanceof \Closure) {

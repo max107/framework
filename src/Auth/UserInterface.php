@@ -15,6 +15,7 @@ namespace Mindy\Auth;
  * @package Mindy\Auth
  * @property int|string $id
  * @property int|string $pk
+ * @property string $username
  * @property string $password
  * @property string $hash_type
  * @property array $groups
