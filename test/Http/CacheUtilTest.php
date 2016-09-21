@@ -219,7 +219,7 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
             ['If-Unmodified-Since', $ifUnmodified]
         ];
 
-        $request = $this->createMock('Psr\Http\Message\RequestInterface');
+        $request = $this->getMockBuilder('Psr\Http\Message\RequestInterface')->getMock();
         $request->method('hasHeader')->willReturnMap($map);
 
         $result = $this->cacheUtil->hasStateValidator($request);
@@ -254,7 +254,7 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
             ['If-None-Match', '']
         ];
 
-        $request = $this->createMock('Psr\Http\Message\RequestInterface');
+        $request = $this->getMockBuilder('Psr\Http\Message\RequestInterface')->getMock();
         $request->method('getHeaderLine')->willReturnMap($map);
 
 
@@ -298,7 +298,7 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
             ['If-None-Match', '']
         ];
 
-        $request = $this->createMock('Psr\Http\Message\RequestInterface');
+        $request = $this->getMockBuilder('Psr\Http\Message\RequestInterface')->getMock();
         $request->method('getHeaderLine')->willReturnMap($map);
 
 
@@ -335,7 +335,7 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
             ['If-None-Match', $ifNoneMatch]
         ];
 
-        $request = $this->createMock('Psr\Http\Message\RequestInterface');
+        $request = $this->getMockBuilder('Psr\Http\Message\RequestInterface')->getMock();
         $request->method('getHeaderLine')->willReturnMap($map);
 
 
@@ -367,7 +367,7 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
             ['If-None-Match', '"foo"']
         ];
 
-        $request = $this->createMock('Psr\Http\Message\RequestInterface');
+        $request = $this->getMockBuilder('Psr\Http\Message\RequestInterface')->getMock();
         $request->method('getHeaderLine')->willReturnMap($map);
         $request->method('getMethod')->willReturn('GET');
 
@@ -385,7 +385,7 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
      */
     public function testIsNotModifiedWithETag($ifNoneMatch, $eTag, $notModified)
     {
-        $request = $this->createMock('Psr\Http\Message\RequestInterface');
+        $request = $this->getMockBuilder('Psr\Http\Message\RequestInterface')->getMock();
         $request->expects($this->once())->method('getHeaderLine')
             ->with('If-None-Match')->willReturn($ifNoneMatch);
 
@@ -424,7 +424,7 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
      */
     public function testIsNotModifiedWithModified($ifModifiedSince, $lastModified, $notModified)
     {
-        $request = $this->createMock('Psr\Http\Message\RequestInterface');
+        $request = $this->getMockBuilder('Psr\Http\Message\RequestInterface')->getMock();
 
         $request->method('getHeaderLine')->willReturnMap([['If-Modified-Since', $ifModifiedSince]]);
         $request->expects($this->once())->method('getMethod')->willReturn('GET');
@@ -453,7 +453,7 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
      */
     public function testIsNotModifiedWithModifiedUnsafe()
     {
-        $request = $this->createMock('Psr\Http\Message\RequestInterface');
+        $request = $this->getMockBuilder('Psr\Http\Message\RequestInterface')->getMock();
         $request->expects($this->once())->method('getMethod')->will($this->returnValue('POST'));
 
         $response = $this->getResponse();
@@ -801,6 +801,6 @@ class CacheUtilTest extends \PHPUnit_Framework_TestCase
      */
     private function getResponse()
     {
-        return $this->createMock('Psr\Http\Message\ResponseInterface');
+        return $this->getMockBuilder('Psr\Http\Message\ResponseInterface')->getMock();
     }
 }
