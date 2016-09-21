@@ -101,7 +101,7 @@ class EventManagerTest extends \PHPUnit_Framework_TestCase
 
         // send a signal that should match two handlers
         $origin = new \StdClass;
-        $signal->send($origin, 'mock_signal', 'hello');
+        $signal->send($origin, 'mock_signal', ['hello']);
         $results1 = $signal->getResults();
         $this->assertEquals(2, count($results1));
         $this->assertSame('hello-stdclass-early', $results1[0]->value);
@@ -117,7 +117,7 @@ class EventManagerTest extends \PHPUnit_Framework_TestCase
             4500 // just before the mid group
         );
 
-        $signal->send($origin, 'mock_signal', 'hello');
+        $signal->send($origin, 'mock_signal', ['hello']);
         $results2 = $signal->getResults();
         $this->assertNotSame($results1, $results2);
         $this->assertEquals(2, count($results2));

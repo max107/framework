@@ -42,9 +42,9 @@ class EventManager
 
     /**
      * Constructor.
-     * @param array $handlers An array describing Handler params.
+     * @param array $config An array describing Handler params.
      */
-    public function __construct($config = [])
+    public function __construct(array $config = [])
     {
         $this->resultCollection = new ResultCollection;
         if (isset($config['events'])) {
@@ -118,21 +118,16 @@ class EventManager
      * @param object $origin The object sending the signal. Note that this is
      * always an object, not a class name.
      * @param string $signal The name of the signal from that origin.
-     * @param Arguments to pass to the Handler callback.
+     * @param array $params Arguments to pass to the Handler callback.
      * @return ResultCollection The results from each of the Handler objects.
      */
-    public function send($origin, $signal)
+    public function send($origin, $signal, array $params = [])
     {
         // clone a new result collection
         $this->results = clone $this->resultCollection;
 
-        // get the arguments to be passed to the handler
-        $args = func_get_args();
-        array_shift($args);
-        array_shift($args);
-
         // now process the signal through the handlers and return the results
-        $this->process($origin, $signal, $args);
+        $this->process($origin, $signal, $params);
         return $this->results;
     }
 

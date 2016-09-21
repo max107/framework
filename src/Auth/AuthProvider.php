@@ -73,7 +73,7 @@ class AuthProvider extends BaseAuthProvider
 //            $session->save(['user']);
 //        }
 
-        app()->signal->send($this, 'onAuth', $user);
+        app()->signal->send($this, 'onAuth', ['user' => $user]);
 
         return true;
     }
