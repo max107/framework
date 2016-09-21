@@ -57,8 +57,12 @@ class Session implements Countable
      * @param SessionAdapterInterface $handler
      * @throws Exception
      */
-    public function setHandler(SessionAdapterInterface $handler)
+    public function setHandler($handler)
     {
+        if (($handler instanceof SessionAdapterInterface) === false) {
+            $handler = Creator::createObject($handler);
+        }
+
         $this->_handler = $handler;
 
         if (session_set_save_handler($handler, true) === false) {

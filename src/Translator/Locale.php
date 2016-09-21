@@ -9,7 +9,6 @@
 namespace Mindy\Translator;
 
 use Mindy\Creator\Creator;
-use Symfony\Component\Finder\Finder;
 use Symfony\Component\Translation\Loader\LoaderInterface;
 use Symfony\Component\Translation\Loader\PhpFileLoader;
 use Symfony\Component\Translation\MessageSelector;
@@ -111,14 +110,9 @@ class Locale
             '{language}' => $language
         ]);
 
-        $finder = (new Finder())
-            ->files()
-            ->ignoreUnreadableDirs()
-            ->in($path);
-
         foreach ($this->loaders as $prefix => $loader) {
-            $clone = clone $finder;
-            foreach ($clone->name('*.' . $prefix) as $fileInfo) {
+            foreach (glob($path . '*.' . $prefix) as $path) {
+                $fileInfo = new \SplFileInfo($path);
                 $filePath = $fileInfo->getRealPath();
                 $raw = substr($filePath, strlen($modulesPath) + 1);
                 $moduleId = substr($raw, 0, strpos($raw, '/'));
