@@ -38,5 +38,5 @@ interface UserInterface
      * @param array $attributes
      * @return UserInterface
      */
-    public static function create(array $attributes) : UserInterface;
+    public static function create(array $attributes);
 }

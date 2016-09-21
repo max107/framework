@@ -104,9 +104,9 @@ abstract class MindyBase
 //        }
     }
 
-    public static function t($category, $message, $params = [], $language = null)
+    public static function t($id, array $parameters = [], $domain = null, $locale = null) : string
     {
-        return self::$_app->t($category, $message, $params, $language);
+        return self::$_app->t($id, $parameters, $domain, $locale);
     }
 
     /**

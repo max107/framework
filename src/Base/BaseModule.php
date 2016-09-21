@@ -64,7 +64,7 @@ abstract class BaseModule implements ModuleInterface
      * Method will be invoked on registration of a service provider implementing
      * this interface. Provides ability for eager loading of Service Providers.
      *
-     * @return void
+     * @param ServiceLocatorInterface $serviceLocator
      */
     public function boot(ServiceLocatorInterface $serviceLocator)
     {
@@ -102,15 +102,15 @@ abstract class BaseModule implements ModuleInterface
     }
 
     /**
-     * @param $id
-     * @param array $parameters
      * @param null $domain
+     * @param $message
+     * @param array $parameters
      * @param null $locale
      * @return string
      */
-    public static function t($id, array $parameters = [], $domain = null, $locale = null)
+    public static function t($domain, $message, array $parameters = [], $locale = null) : string
     {
-        return app()->t($id, $parameters, $domain, $locale);
+        return app()->t($domain, $message, $parameters, $locale);
     }
 
     /**

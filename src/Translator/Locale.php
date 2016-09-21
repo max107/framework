@@ -32,6 +32,10 @@ class Locale
      * @var array|[]LoaderInterface
      */
     protected $loaders;
+    /**
+     * @var string
+     */
+    protected $defaultLoader = 'php';
 
     /**
      * Locale constructor.
@@ -77,6 +81,7 @@ class Locale
         foreach ($loaders as $prefix => $loader) {
             $translator->addLoader($prefix, $loader);
         }
+        $this->loadFramework($translator, $this->locale);
         $this->load($translator, $this->locale);
         return $translator;
     }
@@ -101,12 +106,26 @@ class Locale
      * @param Translator $translator
      * @param string $language
      */
+    protected function loadFramework(Translator $translator, string $language)
+    {
+        if ($path = realpath(__DIR__ . '/../messages/' . $language)) {
+            foreach (glob($path . '/*.' . $this->defaultLoader) as $filePath) {
+                $ext = pathinfo($filePath, PATHINFO_EXTENSION);
+                $basename = basename($filePath);
+                $name = substr($basename, 0, strpos($basename, $ext) - 1);
+                $translator->addResource($this->defaultLoader, $filePath, $language, 'framework.' . $name);
+            }
+        }
+    }
+
+    /**
+     * @param Translator $translator
+     * @param string $language
+     */
     protected function load(Translator $translator, string $language)
     {
         $modulesPath = $this->getModulesPath();
-
         $path = '{modules}/*/messages/{language}/*.{prefix}';
-
         foreach ($this->loaders as $prefix => $loader) {
             $params = [
                 '{modules}' => $modulesPath,
@@ -123,15 +142,15 @@ class Locale
     }
 
     /**
-     * @param $id
+     * @param string $message
      * @param array $parameters
      * @param null $domain
      * @param null $locale
      * @return string
      */
-    public function t($id, array $parameters = [], $domain = null, $locale = null)
+    public function t($domain, $message, array $parameters = [], $locale = null) : string
     {
-        return $this->trans($id, $parameters, $domain, $locale);
+        return $this->trans($message, $parameters, $domain, $locale);
     }
 
     /**
@@ -141,9 +160,11 @@ class Locale
      * @param null $locale
      * @return string
      */
-    public function trans($id, array $parameters = [], $domain = null, $locale = null)
+    public function trans($id, array $parameters = [], $domain = null, $locale = null) : string
     {
-        return $this->getTranslator()->trans($id, $this->formatParameters($parameters), $domain, $locale);
+        // todo need formatParameters?
+        $params = $this->formatParameters($parameters);
+        return $this->getTranslator()->trans($id, $params, $domain, $locale);
     }
 
     /**

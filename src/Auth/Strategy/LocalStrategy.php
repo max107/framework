@@ -38,7 +38,7 @@ class LocalStrategy extends BaseStrategy
         $userRaw = $this->authProvider->getUserProvider()->get([$attribute => strtolower($name)]);
 
         if ($userRaw === null) {
-            $this->addError($attribute, app()->t('auth', 'User not registered'));
+            $this->addError($attribute, app()->t('framework.auth', 'User not registered'));
             return false;
         } else {
             $instance = $user->create($userRaw);
@@ -47,11 +47,11 @@ class LocalStrategy extends BaseStrategy
                     $this->setUser($instance);
                     return true;
                 } else {
-                    $this->addError($attribute, app()->t('auth', 'Account is not verified'));
+                    $this->addError($attribute, app()->t('framework.auth', 'Account is not verified'));
                     return false;
                 }
             } else {
-                $this->addError('password', app()->t('Wrong password', [], 'auth'));
+                $this->addError('password', app()->t('framework.auth', 'Wrong password'));
                 return false;
             }
         }

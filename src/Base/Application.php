@@ -15,7 +15,6 @@ declare(strict_types = 1);
 
 namespace Mindy\Base;
 
-use League\Container\ContainerInterface;
 use Mindy\Console\ConsoleApplication;
 use Mindy\Di\ModuleManager;
 use Mindy\Di\ServiceLocator;
@@ -26,7 +25,12 @@ use Mindy\Helper\Alias;
 use Mindy\Helper\Traits\Accessors;
 use Mindy\Helper\Traits\Configurator;
 use Mindy\Http\Http;
-use Mindy\Migration\Commands\ModuleConfigurationHelper;
+use Mindy\Orm\Migrations\Commands\ExecuteCommand;
+use Mindy\Orm\Migrations\Commands\GenerateCommand;
+use Mindy\Orm\Migrations\Commands\MigrateCommand;
+use Mindy\Orm\Migrations\Commands\ModuleConfigurationHelper;
+use Mindy\Orm\Migrations\Commands\StatusCommand;
+use Mindy\Orm\Migrations\Commands\VersionCommand;
 use Mindy\Router\UrlManager;
 use Mindy\Security\Security;
 use Psr\Http\Message\ResponseInterface;
@@ -81,7 +85,6 @@ class Application extends BaseApplication
      * Please make sure you specify the {@link getBasePath basePath} property in the configuration,
      * which should point to the directory containing all application logic, template and data.
      * If not, the directory will be defaulted to 'protected'.
-     * @param ContainerInterface $container
      * @throws Exception
      * @throws \Exception
      */
@@ -157,19 +160,19 @@ class Application extends BaseApplication
     }
 
     /**
-     * @param $id
+     * @param $message
      * @param array $parameters
      * @param null $domain
      * @param null $locale
      * @return string
      */
-    public function t($id, array $parameters = [], $domain = null, $locale = null) : string
+    public function t($domain, $message, array $parameters = [], $locale = null) : string
     {
         $container = $this->getServiceLocator();
         if ($container && $container->has('locale')) {
-            return $container->get('locale')->t($id, $parameters, $domain, $locale);
+            return $container->get('locale')->t($domain, $message, $parameters, $locale);
         } else {
-            return strtr($id, $parameters);
+            return strtr($message, $parameters);
         }
     }
 
@@ -283,11 +286,11 @@ class Application extends BaseApplication
 
         if ($this->getServiceLocator()->has('db')) {
             $consoleApplication->addCommands([
-                new \Mindy\Migration\Commands\ExecuteCommand(),
-                new \Mindy\Migration\Commands\GenerateCommand(),
-                new \Mindy\Migration\Commands\MigrateCommand(),
-                new \Mindy\Migration\Commands\StatusCommand(),
-                new \Mindy\Migration\Commands\VersionCommand()
+                new ExecuteCommand(),
+                new GenerateCommand(),
+                new MigrateCommand(),
+                new StatusCommand(),
+                new VersionCommand()
             ]);
         }
 

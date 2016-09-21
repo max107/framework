@@ -10,9 +10,14 @@ use function Mindy\app;
  */
 trait RenderTrait
 {
+    protected static function getTemplate()
+    {
+        return app()->template;
+    }
+
     public function renderString($source, array $data = [])
     {
-        return app()->template->renderString($source, $this->mergeData($data));
+        return self::getTemplate()->renderString($source, $this->mergeData($data));
     }
 
     protected static function mergeData($data)
@@ -29,17 +34,7 @@ trait RenderTrait
 
     public static function renderTemplate($view, array $data = [])
     {
-        return app()->getComponent('template')->render($view, self::mergeData($data));
-    }
-
-    /**
-     * @deprecated use renderTemplate
-     * @param $view
-     * @param array $data
-     */
-    public static function renderStatic($view, array $data = [])
-    {
-        return self::renderTemplate($view, $data);
+        return self::getTemplate()->render($view, self::mergeData($data));
     }
 
     /**
