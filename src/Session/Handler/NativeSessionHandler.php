@@ -8,9 +8,9 @@
 
 declare(strict_types = 1);
 
-namespace Mindy\Session\Adapter;
+namespace Mindy\Session\Handler;
 
-class NativeSessionAdapter extends BaseSessionAdapter
+class NativeSessionHandler extends AbstractSessionHandler
 {
     /**
      * Initializes the application component.

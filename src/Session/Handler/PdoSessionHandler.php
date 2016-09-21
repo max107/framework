@@ -6,12 +6,12 @@
  * Time: 22:52
  */
 
-namespace Mindy\Session\Adapter;
+namespace Mindy\Session\Handler;
 
 use Exception;
 use PDO;
 
-class PdoSessionAdapter extends NativeSessionAdapter
+class PdoSessionHandler extends NativeSessionHandler
 {
     /**
      * @var PDO

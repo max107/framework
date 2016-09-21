@@ -8,14 +8,14 @@
 
 declare(strict_types = 1);
 
-namespace Mindy\Session\Adapter;
+namespace Mindy\Session\Handler;
 
 use Countable;
 use Exception;
 use RuntimeException;
 use SessionHandler;
 
-abstract class BaseSessionAdapter extends SessionHandler implements Countable, SessionAdapterInterface
+abstract class AbstractSessionHandler extends SessionHandler implements Countable, SessionHandlerInterface
 {
     /**
      * @var bool
@@ -69,9 +69,9 @@ abstract class BaseSessionAdapter extends SessionHandler implements Countable, S
     }
 
     /**
-     * @return SessionAdapterInterface
+     * @return SessionHandlerInterface
      */
-    public function start() : SessionAdapterInterface
+    public function start() : SessionHandlerInterface
     {
         if ($this->started) {
             return $this;

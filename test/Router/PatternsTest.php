@@ -20,7 +20,7 @@ use Mindy\Http\Http;
 use Mindy\Permissions\Rule;
 use Mindy\Router\Dispatcher;
 use Mindy\Router\Patterns;
-use Mindy\Session\Adapter\MemorySessionAdapter;
+use Mindy\Session\Adapter\MemorySessionHandler;
 use Mindy\Session\Session;
 
 class CustomDispatcher extends Dispatcher

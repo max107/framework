@@ -24,7 +24,7 @@ use Psr\Http\Message\ServerRequestInterface;
 /**
  * Class Http
  * @package Mindy\Http
- * @property \Mindy\Session\Adapter\SessionAdapterInterface $session The session component.
+ * @property \Mindy\Session\Adapter\SessionHandlerInterface $session The session component.
  */
 class Http
 {

@@ -105,15 +105,16 @@ class Locale
     {
         $modulesPath = $this->getModulesPath();
 
-        $path = strtr('{modules}/*/messages/{language}/', [
-            '{modules}' => $modulesPath,
-            '{language}' => $language
-        ]);
+        $path = '{modules}/*/messages/{language}/*.{prefix}';
 
         foreach ($this->loaders as $prefix => $loader) {
-            foreach (glob($path . '*.' . $prefix) as $path) {
-                $fileInfo = new \SplFileInfo($path);
-                $filePath = $fileInfo->getRealPath();
+            $params = [
+                '{modules}' => $modulesPath,
+                '{language}' => $language,
+                '{prefix}' => $prefix
+            ];
+
+            foreach (glob(strtr($path, $params)) as $filePath) {
                 $raw = substr($filePath, strlen($modulesPath) + 1);
                 $moduleId = substr($raw, 0, strpos($raw, '/'));
                 $translator->addResource($prefix, $filePath, $language, 'modules.' . $moduleId);

@@ -8,9 +8,9 @@
 
 declare(strict_types = 1);
 
-namespace Mindy\Session\Adapter;
+namespace Mindy\Session\Handler;
 
-class MemorySessionAdapter implements SessionAdapterInterface
+class MemorySessionHandler implements SessionHandlerInterface
 {
     /**
      * @var bool
@@ -38,9 +38,9 @@ class MemorySessionAdapter implements SessionAdapterInterface
     }
 
     /**
-     * @return SessionAdapterInterface
+     * @return SessionHandlerInterface
      */
-    public function start() : SessionAdapterInterface
+    public function start() : SessionHandlerInterface
     {
         if ($this->isStarted()) {
             return $this;

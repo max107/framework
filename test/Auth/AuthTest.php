@@ -21,7 +21,7 @@ use Mindy\Base\Mindy;
 use Mindy\Creator\Creator;
 use Mindy\Http\Cookie;
 use Mindy\Http\Http;
-use Mindy\Session\Adapter\MemorySessionAdapter;
+use Mindy\Session\Handler\MemorySessionHandler;
 use Mindy\Session\Session;
 use Mindy\Tests\Base\TestApplication;
 
@@ -179,7 +179,7 @@ class AuthTest extends \PHPUnit_Framework_TestCase
                 */
                 'http' => [
                     'class' => '\Mindy\Http\Http',
-                    'session' => new Session(['handler' => new MemorySessionAdapter])
+                    'session' => new Session(['handler' => new MemorySessionHandler])
                 ],
             ]
         ]);
@@ -207,7 +207,7 @@ class AuthTest extends \PHPUnit_Framework_TestCase
         $this->assertInstanceOf(NullStrategyInterface::class, $this->app->auth->getStrategy('local'));
         $this->assertInstanceOf(Http::class, $this->app->http);
         $this->assertInstanceOf(Session::class, $this->app->http->session);
-        $this->assertInstanceOf(MemorySessionAdapter::class, $this->app->http->session->getHandler());
+        $this->assertInstanceOf(MemorySessionHandler::class, $this->app->http->session->getHandler());
     }
 
     public function testIsGuest()
@@ -229,7 +229,7 @@ class AuthTest extends \PHPUnit_Framework_TestCase
     public function testLogin()
     {
         $session = $this->app->http->session;
-        $this->assertInstanceOf(MemorySessionAdapter::class, $session->getHandler());
+        $this->assertInstanceOf(MemorySessionHandler::class, $session->getHandler());
 
         $auth = $this->app->auth;
         $user = $auth->getUser();

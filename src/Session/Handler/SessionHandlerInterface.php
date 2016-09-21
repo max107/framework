@@ -8,12 +8,12 @@
 
 declare(strict_types = 1);
 
-namespace Mindy\Session\Adapter;
+namespace Mindy\Session\Handler;
 
 use Countable;
-use SessionHandlerInterface;
+use SessionHandlerInterface as BaseSessionHandlerInterface;
 
-interface SessionAdapterInterface extends Countable, SessionHandlerInterface
+interface SessionHandlerInterface extends Countable, BaseSessionHandlerInterface
 {
     /**
      * @return bool
@@ -21,9 +21,9 @@ interface SessionAdapterInterface extends Countable, SessionHandlerInterface
     public function isStarted() : bool;
 
     /**
-     * @return SessionAdapterInterface
+     * @return SessionHandlerInterface
      */
-    public function start() : SessionAdapterInterface;
+    public function start() : SessionHandlerInterface;
 
     /**
      * @return mixed

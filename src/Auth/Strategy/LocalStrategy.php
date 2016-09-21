@@ -51,7 +51,7 @@ class LocalStrategy extends BaseStrategy
                     return false;
                 }
             } else {
-                $this->addError('password', app()->t('auth', 'Wrong password'));
+                $this->addError('password', app()->t('Wrong password', [], 'auth'));
                 return false;
             }
         }

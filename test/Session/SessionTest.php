@@ -8,11 +8,10 @@
 
 namespace Mindy\Tests\Session;
 
-use Mindy\Session\Adapter\SessionAdapterInterface;
-use Mindy\Session\Adapter\MemcachedSessionAdapter;
-use Mindy\Session\Adapter\MemorySessionAdapter;
-use Mindy\Session\Adapter\NativeSessionAdapter;
-use Mindy\Session\Adapter\RedisSessionAdapter;
+use Mindy\Creator\Creator;
+use Mindy\Session\Handler\SessionHandlerInterface;
+use Mindy\Session\Handler\MemorySessionHandler;
+use Mindy\Session\Handler\NativeSessionHandler;
 use Mindy\Session\Session;
 
 class SessionTest extends \PHPUnit_Framework_TestCase
@@ -23,7 +22,7 @@ class SessionTest extends \PHPUnit_Framework_TestCase
         ini_set('session.save_path', '/tmp/');
     }
 
-    protected function sessionTesting(SessionAdapterInterface $handler)
+    protected function sessionTesting(SessionHandlerInterface $handler)
     {
         $session = new Session([
             'handler' => $handler
@@ -45,7 +44,7 @@ class SessionTest extends \PHPUnit_Framework_TestCase
 
     public function testMemorySession()
     {
-        $handler = new MemorySessionAdapter();
+        $handler = new MemorySessionHandler();
         $this->sessionTesting($handler);
     }
 
@@ -57,9 +56,16 @@ class SessionTest extends \PHPUnit_Framework_TestCase
         if (!extension_loaded('php_memcached')) {
             $this->markTestSkipped('Failed to connect to memcached');
         }
-        $handler = new MemcachedSessionAdapter();
+
+        $serverString = "127.0.0.1:11211?persistent=1&weight=1&timeout=1&retry_interval=15";
+        $handler = new NativeSessionHandler([
+            'iniOptions' => [
+                'save_handler' => 'memcached',
+                'save_path' => $serverString
+            ]
+        ]);
         $this->sessionTesting($handler);
-        $this->assertEquals(ini_get('session.save_path'), $handler->getServerString());
+        $this->assertEquals(ini_get('session.save_path'), $serverString);
     }
 
     /**
@@ -71,9 +77,15 @@ class SessionTest extends \PHPUnit_Framework_TestCase
             $this->markTestSkipped('Failed to connect to redis');
         }
 
-        $handler = new RedisSessionAdapter();
+        $serverString = "tcp://127.0.0.1:6379";
+        $handler = new NativeSessionHandler([
+            'iniOptions' => [
+                'save_handler' => 'redis',
+                'save_path' => $serverString
+            ]
+        ]);
         $this->sessionTesting($handler);
-        $this->assertEquals(ini_get('session.save_path'), $handler->getServerString());
+        $this->assertEquals(ini_get('session.save_path'), $serverString);
     }
 
     /**
@@ -81,6 +93,24 @@ class SessionTest extends \PHPUnit_Framework_TestCase
      */
     public function testNativeSession()
     {
-        $this->sessionTesting(new NativeSessionAdapter());
+        $this->sessionTesting(new NativeSessionHandler());
+    }
+
+    public function testInitFromArray()
+    {
+        $config = [
+            'class' => Session::class,
+            'handler' => [
+                'class' => MemorySessionHandler::class,
+                'iniOptions' => [
+                    'save_handler' => 'redis',
+                    'save_path' => 'unknown'
+                ]
+            ]
+        ];
+
+        $session = Creator::createObject($config);
+        $this->assertInstanceOf(Session::class, $session);
+        $this->assertInstanceOf(SessionHandlerInterface::class, $session->getHandler());
     }
 }

@@ -5,7 +5,7 @@ namespace Mindy\Session;
 use Countable;
 use Exception;
 use Mindy\Creator\Creator;
-use Mindy\Session\Adapter\SessionAdapterInterface;
+use Mindy\Session\Handler\SessionHandlerInterface;
 
 /**
  * Class Session
@@ -18,7 +18,7 @@ class Session implements Countable
      */
     public $autoStart = false;
     /**
-     * @var SessionAdapterInterface
+     * @var SessionHandlerInterface
      */
     private $_handler;
 
@@ -54,12 +54,12 @@ class Session implements Countable
     }
 
     /**
-     * @param SessionAdapterInterface $handler
+     * @param SessionHandlerInterface $handler
      * @throws Exception
      */
     public function setHandler($handler)
     {
-        if (($handler instanceof SessionAdapterInterface) === false) {
+        if (($handler instanceof SessionHandlerInterface) === false) {
             $handler = Creator::createObject($handler);
         }
 
@@ -71,15 +71,15 @@ class Session implements Countable
     }
 
     /**
-     * @return SessionAdapterInterface
+     * @return SessionHandlerInterface
      */
-    public function getHandler() : SessionAdapterInterface
+    public function getHandler() : SessionHandlerInterface
     {
         return $this->_handler;
     }
 
     /**
-     * @return SessionAdapterInterface
+     * @return SessionHandlerInterface
      */
     public function start()
     {
