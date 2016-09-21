@@ -102,14 +102,15 @@ abstract class BaseModule implements ModuleInterface
     }
 
     /**
-     * @param $str
-     * @param array $params
-     * @param string $dic
+     * @param $id
+     * @param array $parameters
+     * @param null $domain
+     * @param null $locale
      * @return string
      */
-    public static function t($str, $params = [], $dic = 'main')
+    public static function t($id, array $parameters = [], $domain = null, $locale = null)
     {
-        return app()->t(get_called_class() . "." . $dic, $str, $params);
+        return app()->t($id, $parameters, $domain, $locale);
     }
 
     /**
