@@ -163,7 +163,7 @@ class BaseForm implements FormInterface, ArrayAccess, IteratorAggregate, Countab
     /**
      * @return array
      */
-    public function getFields() : array
+    public function getFields()
     {
         return [];
     }

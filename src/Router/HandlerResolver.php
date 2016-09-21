@@ -23,18 +23,11 @@ class HandlerResolver
     {
         $user = app()->getUser();
         if (isset($params['rules'])) {
-            $hasAccess = false;
-
             foreach ($params['rules'] as $ruleConfig) {
                 $rule = Creator::createObject($ruleConfig);
                 if ($rule->can($user) === false) {
-                    $hasAccess = true;
-                    break;
+                    throw new HttpMethodNotAllowedException();
                 }
-            }
-
-            if (!$hasAccess) {
-                throw new HttpMethodNotAllowedException();
             }
         }
     }

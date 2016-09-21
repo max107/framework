@@ -6,9 +6,8 @@ namespace Mindy\Controller;
 
 use Exception;
 use function GuzzleHttp\Psr7\stream_for;
+use function Mindy\app;
 use Mindy\Base\Application;
-use Mindy\Base\Mindy;
-use Mindy\Base\Module;
 use Mindy\Controller\Action\ClosureAction;
 use Mindy\Controller\Action\IAction;
 use Mindy\Controller\Action\InlineAction;
@@ -28,6 +27,9 @@ class BaseController
 {
     use Configurator, Accessors;
 
+    /**
+     * @var \Mindy\Base\ModuleInterface|null
+     */
     private $_module;
 
     /**
@@ -36,7 +38,7 @@ class BaseController
      */
     protected function getApp() : Application
     {
-        return Mindy::app();
+        return app();
     }
 
     /**
@@ -51,9 +53,12 @@ class BaseController
         $this->getRequest()->send($response);
     }
 
+    /**
+     * @return \Mindy\Http\Http
+     */
     protected function getRequest()
     {
-        return Mindy::app()->http;
+        return app()->http;
     }
 
     /**
@@ -162,7 +167,7 @@ class BaseController
             $reflect = new ReflectionClass(get_class($this));
             $namespace = $reflect->getNamespaceName();
             $segments = explode('\\', $namespace);
-            $this->_module = $this->getApp()->getModule($segments[1]);
+            $this->_module = app()->getModule($segments[1]);
         }
         return $this->_module;
     }
@@ -172,14 +177,9 @@ class BaseController
      * @param $controllerClass
      * @param $action
      * @param $params
-     * @param $module
      */
-    public function forward($controllerClass, $action, $params, $module)
+    public function forward($controllerClass, $action, array $params = [])
     {
-        if (($module instanceof Module) == false) {
-            // TODO
-            $module = $this->getApp()->getModule($module);
-        }
         /** @var \Mindy\Controller\BaseController $controller */
         $controller = Creator::createObject($controllerClass);
         $controller->run($action, $params);

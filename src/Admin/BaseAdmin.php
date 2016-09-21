@@ -6,18 +6,18 @@
  * Time: 13:22
  */
 
-namespace Modules\Admin;
+namespace Mindy\Admin;
 
 use Exception;
 use function Mindy\app;
-use Mindy\Controllers\Controller;
+use Mindy\Base\ModuleInterface;
+use Mindy\Helper\Traits\RenderTrait;
+use Mindy\Orm\ModelInterface;
+use ReflectionClass;
 
-abstract class BaseAdmin extends Controller
+abstract class BaseAdmin
 {
-    /**
-     * @var string field name for block update, delete actions per object
-     */
-    public $lockField = 'is_locked';
+    use RenderTrait;
 
     /**
      * Default admin template paths for easy override
@@ -38,6 +38,40 @@ abstract class BaseAdmin extends Controller
         'info' => true,
         'remove' => true
     ];
+    /**
+     * @var \Mindy\Base\Module|ModuleInterface
+     */
+    private $_module;
+
+    /**
+     * @return \Mindy\Base\Module|ModuleInterface
+     */
+    protected function getModule()
+    {
+        if ($this->_module === null) {
+            $reflect = new ReflectionClass(get_class($this));
+            $namespace = $reflect->getNamespaceName();
+            $segments = explode('\\', $namespace);
+            $this->_module = app()->getModule($segments[1]);
+        }
+        return $this->_module;
+    }
+
+    /**
+     * @param $view
+     * @param array $data
+     * @return string
+     */
+    public function render($view, array $data = [])
+    {
+        return $this->renderTemplate($view, array_merge([
+            'debug' => MINDY_DEBUG,
+            'this' => $this,
+            'app' => app(),
+            'module' => $this->getModule(),
+            'admin' => $this
+        ], $data));
+    }
 
     /**
      * Init function called after construct class
@@ -74,7 +108,7 @@ abstract class BaseAdmin extends Controller
      * @return null|string
      * @throws Exception
      */
-    public function getTemplate($view, $throw = true)
+    public function findTemplate($view, $throw = true)
     {
         $moduleName = strtolower($this->getModule()->getId());
         $paths = array_map(function ($path) use ($moduleName, $view) {
@@ -109,19 +143,6 @@ abstract class BaseAdmin extends Controller
         return app()->urlManager->reverse($route, $params);
     }
 
-    /**
-     * @param $view
-     * @param array $data
-     * @return mixed
-     */
-    public function render($view, array $data = [])
-    {
-        return parent::render($view, array_merge($data, [
-            'module' => $this->getModule(),
-            'admin' => $this
-        ]));
-    }
-
     public function getOrderUrl($column)
     {
         $request = $this->getRequest();
@@ -134,8 +155,50 @@ abstract class BaseAdmin extends Controller
     }
 
     /**
+     * @return string
+     */
+    public function classNameShort() : string
+    {
+        $classMap = explode('\\', get_called_class());
+        return end($classMap);
+    }
+
+    /**
+     * @param $name
+     * @return string
+     */
+    public static function normalizeName($name) : string
+    {
+        return trim(strtolower(preg_replace('/(?<![A-Z])[A-Z]/', ' \0', $name)), '_ ');
+    }
+
+    /**
+     * @return string model class name
+     */
+    abstract public function getModelClass() : string;
+
+    /**
+     * @param ModelInterface|null $instance
+     * @return array
+     */
+    public function getAdminNames(ModelInterface $instance = null)
+    {
+        $modelClass = self::getModelClass();
+        $classMap = explode('\\', $modelClass);
+        $name = self::normalizeName(end($classMap));
+
+        $id = $this->getModule()->getId();
+        return [
+            app()->t('modules.' . $id, ucfirst($name . 's')),
+            app()->t('modules.' . $id, 'Create ' . $name),
+            app()->t('modules.' . $id, 'Update ' . $name . ': %name%', ['name' => (string)$instance]),
+        ];
+    }
+
+    /**
      * Shortcut for generate admin urls
      * @param $action
+     * @param array $params
      * @return string
      */
     public function getAdminUrl($action, array $params = [])
