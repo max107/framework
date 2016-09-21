@@ -16,7 +16,7 @@ class HttpError
     {
         $message = isset(self::$httpCodes[$code]) ? self::$httpCodes[$code] : 'Unknown error';
         if ($app = app()) {
-            $app->t($message, [], 'main');
+            $app->t('framework.http', $message);
         }
         return $message;
     }

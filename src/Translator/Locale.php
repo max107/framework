@@ -162,19 +162,18 @@ class Locale
      */
     public function trans($id, array $parameters = [], $domain = null, $locale = null) : string
     {
-        // todo need formatParameters?
-        $params = $this->formatParameters($parameters);
-        return $this->getTranslator()->trans($id, $params, $domain, $locale);
+        return $this->getTranslator()->trans($id, $this->formatParameters($parameters), $domain, $locale);
     }
 
     /**
-     * @param $id
-     * @param array $parameters
      * @param null $domain
+     * @param $id
+     * @param $number
+     * @param array $parameters
      * @param null $locale
      * @return string
      */
-    public function transChoice($id, $number, array $parameters = [], $domain = null, $locale = null)
+    public function transChoice($domain, $id, $number, array $parameters = [], $locale = null)
     {
         return $this->getTranslator()->transChoice($id, $number, $this->formatParameters($parameters), $domain, $locale);
     }

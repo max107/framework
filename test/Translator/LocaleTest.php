@@ -45,19 +45,19 @@ class LocaleTest extends \PHPUnit_Framework_TestCase
                 'yml' => ['class' => YamlFileLoader::class]
             ]
         ]);
-        $this->assertEquals('тест', $locale->t('test', [], 'modules.Core'));
-        $this->assertEquals('1', $locale->t('foo.bar', [], 'modules.Core'));
-        $this->assertEquals('2', $locale->t('foo.qwe', [], 'modules.Core'));
-        $this->assertEquals('почта', $locale->t('mail', [], 'modules.Mail'));
+        $this->assertEquals('тест', $locale->t('modules.Core', 'test'));
+        $this->assertEquals('1', $locale->t('modules.Core', 'foo.bar'));
+        $this->assertEquals('2', $locale->t('modules.Core', 'foo.qwe'));
+        $this->assertEquals('почта', $locale->t('modules.Mail', 'mail'));
 
-        $this->assertEquals('yaml test', $locale->t('yaml_mail', [], 'modules.Mail'));
+        $this->assertEquals('yaml test', $locale->t('modules.Mail', 'yaml_mail'));
 
-        $this->assertEquals('одно яблоко', $locale->transChoice('plural_apple', 1, ['%count%' => 1], 'modules.Mail'));
-        $this->assertEquals('2 яблока', $locale->transChoice('plural_apple', 2, ['%count%' => 2], 'modules.Mail'));
-        $this->assertEquals('10 яблок', $locale->transChoice('plural_apple', 10, ['%count%' => 10], 'modules.Mail'));
+        $this->assertEquals('одно яблоко', $locale->transChoice('modules.Mail', 'plural_apple', 1, ['%count%' => 1]));
+        $this->assertEquals('2 яблока', $locale->transChoice('modules.Mail', 'plural_apple', 2, ['%count%' => 2]));
+        $this->assertEquals('10 яблок', $locale->transChoice('modules.Mail', 'plural_apple', 10, ['%count%' => 10]));
 
-        $this->assertEquals('одно яблоко', $locale->transChoice('plural_apple', 1, ['count' => 1], 'modules.Mail'));
-        $this->assertEquals('2 яблока', $locale->transChoice('plural_apple', 2, ['count' => 2], 'modules.Mail'));
-        $this->assertEquals('10 яблок', $locale->transChoice('plural_apple', 10, ['count' => 10], 'modules.Mail'));
+        $this->assertEquals('одно яблоко', $locale->transChoice('modules.Mail', 'plural_apple', 1, ['count' => 1]));
+        $this->assertEquals('2 яблока', $locale->transChoice('modules.Mail', 'plural_apple', 2, ['count' => 2]));
+        $this->assertEquals('10 яблок', $locale->transChoice('modules.Mail', 'plural_apple', 10, ['count' => 10]));
     }
 }
