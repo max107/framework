@@ -7,6 +7,7 @@ namespace Mindy\Http;
 use Exception;
 use function GuzzleHttp\Psr7\stream_for;
 use Mindy\Base\Mindy;
+use Mindy\Creator\Creator;
 use Mindy\Helper\Json;
 use Mindy\Helper\Traits\Accessors;
 use Mindy\Http\Collection\CookieParamCollection;
@@ -148,8 +149,11 @@ class Http
     /**
      * @param Session $session
      */
-    public function setSession(Session $session)
+    public function setSession($session)
     {
+        if (($session instanceof Session) === false) {
+            $session = Creator::createObject($session);
+        }
         $this->session = $session;
     }
 
