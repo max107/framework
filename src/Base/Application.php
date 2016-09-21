@@ -157,19 +157,18 @@ class Application extends BaseApplication
     }
 
     /**
-     * @param $category
-     * @param $message
+     * @param $id
      * @param array $params
      * @param null $language
-     * @return mixed
+     * @return mixed|string
      */
-    public function t($category, $message, $params = [], $language = null) : string
+    public function t($id, $params = [], $language = null) : string
     {
         $container = $this->getServiceLocator();
         if ($container && $container->has('locale')) {
-            return $container->get('locale')->t($category, $message, $params, $language);
+            return $container->get('locale')->t($id, $params, $language);
         } else {
-            return strtr($message, $params);
+            return strtr($id, $params);
         }
     }
 
