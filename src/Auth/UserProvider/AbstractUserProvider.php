@@ -8,21 +8,24 @@
 
 namespace Mindy\Auth\UserProvider;
 
-use Mindy\Auth\AuthProviderInterface;
-
 abstract class AbstractUserProvider implements UserProviderInterface
 {
-    /**
-     * @var AuthProviderInterface
-     */
-    protected $authProvider;
+    public function __construct(array $config = [])
+    {
+        $this->configure($config);
+    }
 
     /**
-     * MemoryUserProvider constructor.
-     * @param AuthProviderInterface $authProvider
+     * @param array $config
      */
-    public function __construct(AuthProviderInterface $authProvider)
+    protected function configure(array $config)
     {
-        $this->authProvider = $authProvider;
+        foreach ($config as $key => $value) {
+            if (method_exists($this, 'set' . ucfirst($key))) {
+                $this->{'set' . ucfirst($key)}($value);
+            } else {
+                $this->{$key} = $value;
+            }
+        }
     }
 }

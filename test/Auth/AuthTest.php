@@ -10,6 +10,7 @@ namespace Mindy\Tests\Auth;
 
 use Mindy\Auth\AuthProvider;
 use Mindy\Auth\AuthProviderInterface;
+use Mindy\Auth\Strategy\BaseStrategy;
 use Mindy\Auth\UserInterface;
 use Mindy\Auth\PasswordHasher\NullPasswordHasher;
 use Mindy\Auth\Strategy\AuthStrategyInterface;
@@ -17,6 +18,7 @@ use Mindy\Auth\Strategy\LocalStrategy;
 use Mindy\Auth\UserProvider\MemoryUserProvider;
 use Mindy\Base\Application;
 use Mindy\Base\Mindy;
+use Mindy\Creator\Creator;
 use Mindy\Http\Cookie;
 use Mindy\Http\Http;
 use Mindy\Session\Adapter\MemorySessionAdapter;
@@ -72,7 +74,7 @@ class UserInterfaceExample implements UserInterface
     }
 }
 
-class NullStrategyInterface implements AuthStrategyInterface
+class NullStrategyInterface extends BaseStrategy implements AuthStrategyInterface
 {
     protected $user;
 
@@ -161,7 +163,7 @@ class AuthTest extends \PHPUnit_Framework_TestCase
                     'class' => '\Mindy\Auth\AuthProvider',
                     'userClass' => UserInterfaceExample::class,
                     'strategies' => [
-                        'local' => new NullStrategyInterface
+                        'local' => NullStrategyInterface::class
                     ]
                 ],
                 /*
@@ -190,6 +192,16 @@ class AuthTest extends \PHPUnit_Framework_TestCase
 
     public function testInit()
     {
+        $auth = Creator::createObject([
+            'class' => '\Mindy\Auth\AuthProvider',
+            'userProvider' => ['class' => MemoryUserProvider::class],
+            'userClass' => UserInterfaceExample::class,
+            'strategies' => [
+                'local' => ['class' => NullStrategyInterface::class]
+            ]
+        ]);
+        $this->assertInstanceOf(AuthProvider::class, $auth);
+
         $this->assertInstanceOf(Application::class, $this->app);
         $this->assertInstanceOf(AuthProvider::class, $this->app->auth);
         $this->assertInstanceOf(NullStrategyInterface::class, $this->app->auth->getStrategy('local'));
@@ -255,21 +267,27 @@ class AuthTest extends \PHPUnit_Framework_TestCase
     {
         $authProvider = new AuthProvider([
             'userClass' => UserInterfaceExample::class,
+            'userProvider' => [
+                'class' => MemoryUserProvider::class,
+                'users' => [
+                    ['username' => 'foo', 'password' => 123, 'id' => 1, 'hash_type' => 'null', 'is_active' => true],
+                    ['username' => 'bar', 'password' => 321, 'id' => 2, 'hash_type' => 'null', 'is_active' => true]
+                ]
+            ],
             'passwordHashers' => [
                 'null' => new NullPasswordHasher()
             ]
         ]);
 
-        $userProvider = new MemoryUserProvider($authProvider);
-        $userProvider->setUsers([
-            ['username' => 'foo', 'password' => 123, 'id' => 1, 'hash_type' => 'null', 'is_active' => true],
-            ['username' => 'bar', 'password' => 321, 'id' => 2, 'hash_type' => 'null', 'is_active' => true]
-        ]);
+        $userProvider = $authProvider->getUserProvider();
+
         $this->assertNull($userProvider->get(['username' => 'foo', 'password' => 321]));
         $user = $userProvider->get(['username' => 'foo', 'password' => 123]);
+        $user = $authProvider->createUser($user);
         $this->assertNotNull($user);
+        $this->assertInstanceOf(UserInterface::class, $user);
 
-        $strategy = new LocalStrategy($authProvider, $userProvider);
+        $strategy = new LocalStrategy($authProvider);
 
         $this->assertTrue($strategy->process($user, ['username' => 'foo', 'password' => 123]));
         $authUser = $strategy->getUser();

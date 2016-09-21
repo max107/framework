@@ -36,7 +36,7 @@ interface UserInterface
 
     /**
      * @param array $attributes
-     * @return mixed
+     * @return UserInterface
      */
     public static function create(array $attributes) : UserInterface;
 }

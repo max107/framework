@@ -6,10 +6,13 @@
  * Time: 16:03
  */
 
+declare(strict_types = 1);
+
 namespace Mindy\Auth;
 
 use Exception;
 use Mindy\Auth\PasswordHasher\IPasswordHasher;
+use Mindy\Auth\UserProvider\UserProviderInterface;
 
 /**
  * Interface IAuthProvider
@@ -29,4 +32,9 @@ interface AuthProviderInterface
      * @return UserInterface
      */
     public function createUser(array $attributes) : UserInterface;
+
+    /**
+     * @return UserProviderInterface
+     */
+    public function getUserProvider() : UserProviderInterface;
 }

@@ -30,20 +30,14 @@ abstract class BaseStrategy implements AuthStrategyInterface
      * @var AuthProviderInterface
      */
     protected $authProvider;
-    /**
-     * @var UserProviderInterface
-     */
-    protected $userProvider;
 
     /**
      * BaseStrategy constructor.
      * @param AuthProviderInterface $authProvider
-     * @param UserProviderInterface $userProvider
      */
-    public function __construct(AuthProviderInterface $authProvider, UserProviderInterface $userProvider)
+    public function __construct(AuthProviderInterface $authProvider)
     {
         $this->authProvider = $authProvider;
-        $this->userProvider = $userProvider;
     }
 
     /**

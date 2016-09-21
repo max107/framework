@@ -7,10 +7,8 @@ namespace Mindy\Http;
 use Exception;
 use function GuzzleHttp\Psr7\stream_for;
 use Mindy\Base\Mindy;
-use Mindy\Creator\Creator;
 use Mindy\Helper\Json;
 use Mindy\Helper\Traits\Accessors;
-use Mindy\Helper\Traits\Configurator;
 use Mindy\Http\Collection\CookieParamCollection;
 use Mindy\Http\Collection\FileParamCollection;
 use Mindy\Http\Collection\GetParamCollection;
@@ -29,7 +27,6 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 class Http
 {
-    use Configurator;
     use Accessors;
     use Legacy;
 
@@ -122,6 +119,20 @@ class Http
         $this->files = new FileParamCollection($this->request);
 
         return $this;
+    }
+
+    /**
+     * @param array $config
+     */
+    protected function configure(array $config)
+    {
+        foreach ($config as $key => $value) {
+            if (method_exists($this, 'set' . ucfirst($key))) {
+                $this->{'set' . ucfirst($key)}($value);
+            } else {
+                $this->{$key} = $value;
+            }
+        }
     }
 
     public function setResponse(ResponseInterface $response)

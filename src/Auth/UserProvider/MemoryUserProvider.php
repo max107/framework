@@ -29,13 +29,13 @@ class MemoryUserProvider extends AbstractUserProvider
 
     /**
      * @param array $attributes
-     * @return null|\Mindy\Auth\UserInterface
+     * @return null|array
      */
     public function get(array $attributes)
     {
         foreach ($this->users as $user) {
             if (count(array_intersect($user, $attributes)) == count($attributes)) {
-                return $this->authProvider->createUser($user);
+                return $user;
             }
         }
 

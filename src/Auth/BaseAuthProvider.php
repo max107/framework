@@ -14,6 +14,7 @@ use Exception;
 use function Mindy\app;
 use Mindy\Auth\PasswordHasher\IPasswordHasher;
 use Mindy\Auth\Strategy\AuthStrategyInterface;
+use Mindy\Auth\UserProvider\UserProviderInterface;
 use Mindy\Creator\Creator;
 
 /**
@@ -34,6 +35,10 @@ abstract class BaseAuthProvider implements AuthProviderInterface
      * @var string
      */
     public $userClass;
+    /**
+     * @var UserProviderInterface
+     */
+    protected $userProvider;
     /**
      * @var UserInterface
      */
@@ -56,7 +61,7 @@ abstract class BaseAuthProvider implements AuthProviderInterface
         foreach ($config as $key => $value) {
             if (method_exists($this, 'set' . ucfirst($key))) {
                 $this->{'set' . ucfirst($key)}($value);
-            } else {
+            } else if (property_exists($this, $key)) {
                 $this->{$key} = $value;
             }
         }
@@ -144,6 +149,26 @@ abstract class BaseAuthProvider implements AuthProviderInterface
     }
 
     /**
+     * @param $userProvider
+     */
+    public function setUserProvider($userProvider)
+    {
+        if (($userProvider instanceof UserProviderInterface) === false) {
+            $userProvider = Creator::createObject($userProvider);
+        }
+
+        $this->userProvider = $userProvider;
+    }
+
+    /**
+     * @return UserProviderInterface
+     */
+    public function getUserProvider() : UserProviderInterface
+    {
+        return $this->userProvider;
+    }
+
+    /**
      * @param array $strategies
      * @return $this
      */
@@ -155,7 +180,7 @@ abstract class BaseAuthProvider implements AuthProviderInterface
             }
 
             if (is_array($strategy)) {
-                $this->_strategies[$name] = Creator::createObject(array_merge($strategy, ['authProvider' => $this]));
+                $this->_strategies[$name] = Creator::createObject($strategy, $this);
             } else {
                 $this->_strategies[$name] = $strategy->setAuthProvider($this);
             }

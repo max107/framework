@@ -34,23 +34,26 @@ class LocalStrategy extends BaseStrategy
         $password = $attributes['password'];
 
         $attribute = strpos($name, "@") > -1 ? 'email' : 'username';
-        /** @var null|UserInterface $instance */
-        $instance = $this->userProvider->get([$attribute => strtolower($name)]);
+        /** @var null|array $instance */
+        $userRaw = $this->authProvider->getUserProvider()->get([$attribute => strtolower($name)]);
 
-        if ($instance === null) {
+        if ($userRaw === null) {
             $this->addError($attribute, app()->t('auth', 'User not registered'));
             return false;
-        } else if ($this->verifyPassword($instance, $password)) {
-            if ($instance->is_active || !$instance->is_active && $this->allowInactive) {
-                $this->setUser($instance);
-                return true;
+        } else {
+            $instance = $user->create($userRaw);
+            if ($this->verifyPassword($instance, $password)) {
+                if ($instance->is_active || !$instance->is_active && $this->allowInactive) {
+                    $this->setUser($instance);
+                    return true;
+                } else {
+                    $this->addError($attribute, app()->t('auth', 'Account is not verified'));
+                    return false;
+                }
             } else {
-                $this->addError($attribute, app()->t('auth', 'Account is not verified'));
+                $this->addError('password', app()->t('auth', 'Wrong password'));
                 return false;
             }
-        } else {
-            $this->addError('password', app()->t('auth', 'Wrong password'));
-            return false;
         }
     }
 }
