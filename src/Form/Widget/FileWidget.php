@@ -10,6 +10,7 @@ namespace Mindy\Form\Widget;
 
 use function Mindy\app;
 use Mindy\Form\FieldInterface;
+use Mindy\Form\FormInterface;
 use Mindy\Form\ModelForm;
 use Mindy\Form\Widget;
 
@@ -29,13 +30,14 @@ class FileWidget extends Widget
     public $cleanTemplate = '<label for="{id}-clean" class="clean-label"><input type="checkbox" id="{id}-clean" name="{name}" value="{value}"> {label}</label>';
 
     /**
+     * @param FormInterface $form
      * @param FieldInterface $field
      * @return string
      */
-    public function render(FieldInterface $field) : string
+    public function render(FormInterface $form, FieldInterface $field) : string
     {
-        $html = $field->render();
-        if ($field->getForm() instanceof ModelForm && $value = $field->getValue()) {
+        $html = $field->render($form);
+        if ($form instanceof ModelForm && $value = $field->getValue()) {
             $currentLink = strtr($this->currentTemplate, [
                 '{current}' => $value,
                 '{label}' => app()->t('form', "Current file")

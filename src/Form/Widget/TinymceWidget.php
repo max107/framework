@@ -9,15 +9,17 @@
 namespace Mindy\Form\Widget;
 
 use Mindy\Form\FieldInterface;
+use Mindy\Form\FormInterface;
 use Mindy\Form\Widget;
 
 class TinymceWidget extends Widget
 {
     /**
+     * @param FormInterface $form
      * @param FieldInterface $field
      * @return string
      */
-    public function render(FieldInterface $field) : string
+    public function render(FormInterface $form, FieldInterface $field) : string
     {
         $js = "<script type='text/javascript'>
         tinyMCE.init({
@@ -48,6 +50,7 @@ class TinymceWidget extends Widget
             skin_variant : 'silver'
         });
         </script>";
-        return $field->render() . $js;
+        
+        return $field->render($form) . $js;
     }
 }

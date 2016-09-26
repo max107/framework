@@ -9,6 +9,7 @@
 namespace Mindy\Form\Widget;
 
 use Mindy\Form\FieldInterface;
+use Mindy\Form\FormInterface;
 use Mindy\Form\Widget;
 use Mindy\Helper\JavaScript;
 
@@ -32,14 +33,14 @@ class MapWidget extends Widget
     public $center = [55.76, 37.64];
 
     /**
+     * @param FormInterface $form
      * @param FieldInterface $field
      * @return string
      */
-    public function render(FieldInterface $field) : string
+    public function render(FormInterface $form, FieldInterface $field) : string
     {
         $center = JavaScript::encode($this->center);
 
-        $form = $field->getForm();
         $latField = $form->getField($this->latField);
         $lngField = $form->getField($this->latField);
 
@@ -101,6 +102,6 @@ class MapWidget extends Widget
             }
         </style>";
 
-        return $map . $field->render();
+        return $map . $field->render($form);
     }
 }

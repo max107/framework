@@ -9,6 +9,7 @@
 namespace Mindy\Form\Widget;
 
 use Mindy\Form\FieldInterface;
+use Mindy\Form\FormInterface;
 use Mindy\Form\Widget;
 use Mindy\Helper\Json;
 
@@ -30,10 +31,11 @@ class CodeMirrorWidget extends Widget
     public $options = [];
 
     /**
+     * @param FormInterface $form
      * @param FieldInterface $field
      * @return string
      */
-    public function render(FieldInterface $field) : string
+    public function render(FormInterface $form, FieldInterface $field) : string
     {
         $jsOptions = Json::encode(array_merge($this->_defaultOptions, $this->options));
         $js = '<script type="text/javascript">

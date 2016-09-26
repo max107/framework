@@ -34,19 +34,20 @@ class EditorWidget extends Widget
     }
 
     /**
+     * @param FormInterface $form
      * @param FieldInterface $field
      * @return string
      */
-    public function render(FieldInterface $field) : string
+    public function render(FormInterface $form, FieldInterface $field) : string
     {
         $options = JavaScript::encode([
             'language' => 'ru',
             'plugins' => ['space', 'text', 'image', 'video'],
             'image' => [
-                'uploadUrl' => $this->getUploadUrl($field->getForm())
+                'uploadUrl' => $this->getUploadUrl($form)
             ]
         ]);
         $js = "<script type='text/javascript'>var editor = meditor.init('#{$field->getHtmlId()}', $options);</script>";
-        return $field->renderInput() . $js;
+        return $field->renderInput($form) . $js;
     }
 }
