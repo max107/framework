@@ -35,7 +35,7 @@ class Form extends BaseForm
     {
         $inputs = '';
         foreach ($fields as $name) {
-            $inputs .= $this->fields[$name]->render($this);
+            $inputs .= $this->getField($name)->render($this);
         }
         return $inputs;
     }
@@ -51,7 +51,7 @@ class Form extends BaseForm
             $errorsHtml = '';
             foreach ($this->getErrors() as $name => $errors) {
                 $errorsHtml .= strtr($this->errorsTemplate, [
-                    '{label}' => $this->fields[$name]->getLabel(),
+                    '{label}' => $this->getField($name)->getLabel(),
                     '{errors}' => implode(' ', array_map(function ($error) {
                         return '<li>' . $error . '</li>';
                     }, $errors))

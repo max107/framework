@@ -46,10 +46,6 @@ abstract class Field implements FieldInterface, ValidationAwareInterface
      */
     protected $value;
     /**
-     * @var FormInterface
-     */
-    protected $form;
-    /**
      * @var bool
      */
     protected $required = true;
@@ -68,7 +64,7 @@ abstract class Field implements FieldInterface, ValidationAwareInterface
     /**
      * @var string
      */
-    protected $label = '';
+    public $label = '';
     /**
      * @var string
      */
@@ -201,18 +197,15 @@ abstract class Field implements FieldInterface, ValidationAwareInterface
      */
     public function renderLabel() : string
     {
-        if ($this->label === false) {
+        if ($this->getLabel() === false) {
             return '';
         }
 
-        $label = $this->label;
-        if ($this->required) {
-            $label .= " <span class='required'>*</span>";
-        }
+        $star = " <span class='required'>*</span>";
 
         return strtr("<label for='{for}'>{label}</label>", [
             '{for}' => $this->getHtmlId(),
-            '{label}' => $label,
+            '{label}' => $this->required ? $this->getLabel() . $star : $this->getLabel(),
         ]);
     }
 

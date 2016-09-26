@@ -48,19 +48,22 @@ class BaseForm implements FormInterface, ArrayAccess, IteratorAggregate, Countab
      */
     public function __construct(array $config = [])
     {
+        foreach ($this->getFields() as $name => $field) {
+            if (($field instanceof FieldInterface) === false) {
+                $field = Creator::createObject($field);
+            }
+            $field->configure([
+                'name' => $name
+            ]);
+            $this->fields[$name] = $field;
+        }
+
         foreach ($config as $key => $value) {
             if (method_exists($this, 'set' . ucfirst($key))) {
                 $this->{'set' . ucfirst($key)}($value);
             } else if (property_exists($this, $key)) {
                 $this->{$key} = $value;
             }
-        }
-
-        foreach ($this->getFields() as $name => $config) {
-            $field = Creator::createObject(array_merge($config, [
-                'name' => $name
-            ]));
-            $this->fields[$name] = $field;
         }
     }
 
@@ -159,12 +162,15 @@ class BaseForm implements FormInterface, ArrayAccess, IteratorAggregate, Countab
     public function populate(array $data, array $files = [])
     {
         $name = $this->classNameShort();
+
         if (isset($data[$name])) {
             $this->setAttributes($data[$name]);
         }
+
         if (isset($files[$name])) {
             $this->setAttributes($files[$name]);
         }
+
         return $this;
     }
 
@@ -175,8 +181,8 @@ class BaseForm implements FormInterface, ArrayAccess, IteratorAggregate, Countab
     public function setAttributes(array $attributes)
     {
         foreach ($attributes as $key => $value) {
-            if (array_key_exists($key, $this->fields)) {
-                $this->fields[$key]->setValue($value);
+            if ($this->hasField($key)) {
+                $this->getField($key)->setValue($value);
             }
         }
         return $this;

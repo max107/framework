@@ -41,6 +41,6 @@ class CodeMirrorWidget extends Widget
         $js = '<script type="text/javascript">
             var editor = CodeMirror.fromTextArea(document.getElementById("' . $field->getHtmlId() . '"), ' . $jsOptions . ');
         </script>';
-        return $field->renderInput() . $js;
+        return $field->renderInput($form) . $js;
     }
 }

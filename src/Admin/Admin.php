@@ -59,6 +59,9 @@ abstract class Admin extends BaseAdmin
      */
     public $treeLinkColumn;
 
+    /**
+     * Initialize admin class
+     */
     public function init()
     {
         if ($this->getModel() instanceof TreeModel) {
@@ -134,6 +137,11 @@ abstract class Admin extends BaseAdmin
         return $model->objects();
     }
 
+    /**
+     * @param $modelClass
+     * @param array $data
+     * @throws Exception
+     */
     public function sortingFlat($modelClass, array $data)
     {
         /** @var \Mindy\Orm\Model $modelClass */
@@ -155,6 +163,11 @@ abstract class Admin extends BaseAdmin
         }
     }
 
+    /**
+     * @param $modelClass
+     * @param array $data
+     * @throws Exception
+     */
     public function sortingNested($modelClass, array $data)
     {
         /** @var \Mindy\Orm\TreeModel $modelClass */
@@ -211,6 +224,11 @@ abstract class Admin extends BaseAdmin
         }
     }
 
+    /**
+     * @param null $pk
+     * @throws Exception
+     * @throws \Mindy\Exception\Exception
+     */
     public function actionSorting($pk = null)
     {
         /* @var $qs \Mindy\Orm\QuerySet */
@@ -371,11 +389,11 @@ abstract class Admin extends BaseAdmin
 
     public function actionCreate()
     {
-        $model = Creator::createObject(['class' => $this->getModelClass()]);
+        $model = $this->getModel();
+        
         $form = Creator::createObject([
             'class' => $this->getCreateForm(),
-            'model' => $model,
-            'enableCreateButton' => true
+            'model' => $model
         ]);
         $form->setAttributes($this->getInitialAttributes());
 

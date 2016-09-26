@@ -7,6 +7,7 @@
  */
 
 namespace Mindy\Form;
+
 use Mindy\Creator\Creator;
 
 /**
@@ -48,23 +49,26 @@ class ModelForm extends Form
     {
         if ($this->initialized === false) {
             $fields = $this->getFields();
+
             foreach ($model->getAttributes() as $name => $value) {
                 /** @var FieldInterface $field */
                 $modelField = $model->getField($name);
                 $field = $modelField->getFormField();
 
-                if (($field instanceof FieldInterface) === false) {
-                    $field = Creator::createObject($field);
+                if ($field === null || $field === false) {
+                    continue;
                 }
 
-                if (isset($fields[$name])) {
-                    $field->configure(array_merge($fields[$name], [
-                        'name' => $name
-                    ]));
+                if (($field instanceof FieldInterface) === false) {
+                    $field = Creator::createObject($field);
                 } else {
                     $field->configure([
                         'name' => $name
                     ]);
+                }
+
+                if (isset($fields[$name]) && is_array($fields[$name])) {
+                    $field->configure($fields[$name]);
                 }
 
                 $this->fields[$name] = $field;
