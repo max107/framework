@@ -1,6 +1,7 @@
 <?php
 
 namespace Mindy\Form\Fields;
+use Mindy\Form\FormInterface;
 
 /**
  * Class CheckboxField
@@ -24,7 +25,11 @@ class CheckboxField extends Field
      */
     public $container = '{input}';
 
-    public function renderInput() : string
+    /**
+     * @param FormInterface $form
+     * @return string
+     */
+    public function renderInput(FormInterface $form) : string
     {
         if (!empty($this->choices)) {
             $inputs = [];

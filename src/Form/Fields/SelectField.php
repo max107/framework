@@ -7,6 +7,8 @@
 
 namespace Mindy\Form\Fields;
 
+use Mindy\Form\FormInterface;
+
 class SelectField extends Field
 {
     /**
@@ -27,7 +29,11 @@ class SelectField extends Field
      */
     public $disabled = [];
 
-    public function renderInput() : string
+    /**
+     * @param FormInterface $form
+     * @return string
+     */
+    public function renderInput(FormInterface $form) : string
     {
         $name = $this->getHtmlName();
         return implode("\n", ["<input type='hidden' value='' name='{$name}' />", strtr($this->template, [

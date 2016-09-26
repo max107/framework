@@ -263,13 +263,14 @@ abstract class Field implements FieldInterface, ValidationAwareInterface
     }
 
     /**
+     * @param FormInterface $form
      * @return string
      */
-    public function renderInput() : string
+    public function renderInput(FormInterface $form) : string
     {
         if (empty($this->widget) === false && $this->_renderWidget) {
             $this->setRenderWidget(false);
-            $input = $this->createWidget()->render($this);
+            $input = $this->createWidget()->render($form, $this);
             $this->setRenderWidget(true);
             return $input;
         } else {
@@ -324,7 +325,7 @@ abstract class Field implements FieldInterface, ValidationAwareInterface
 
         return strtr($this->containerTemplate, [
             '{label}' => $this->renderLabel(),
-            '{input}' => $this->renderInput(),
+            '{input}' => $this->renderInput($form),
             '{errors}' => $this->renderErrors(),
             '{hint}' => $this->renderHint()
         ]);

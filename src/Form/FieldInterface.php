@@ -57,9 +57,10 @@ interface FieldInterface
     public function renderLabel() : string;
 
     /**
+     * @param FormInterface $form
      * @return string
      */
-    public function renderInput() : string;
+    public function renderInput(FormInterface $form) : string;
 
     /**
      * @return bool

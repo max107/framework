@@ -1,6 +1,7 @@
 <?php
 
 namespace Mindy\Form\Fields;
+use Mindy\Form\FormInterface;
 
 /**
  * Class RadioField
@@ -17,7 +18,11 @@ class RadioField extends Field
      */
     public $template = "<input type='radio' id='{id}' value='{value}' name='{name}'{html}/>";
 
-    public function renderInput() : string
+    /**
+     * @param FormInterface $form
+     * @return string
+     */
+    public function renderInput(FormInterface $form) : string
     {
         if (!empty($this->choices)) {
             $inputs = [];
