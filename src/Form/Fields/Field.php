@@ -82,6 +82,14 @@ abstract class Field implements FieldInterface, ValidationAwareInterface
      */
     protected $choices = [];
     /**
+     * @var string
+     */
+    protected $htmlId;
+    /**
+     * @var string
+     */
+    protected $htmlName;
+    /**
      * Variable for avoid recursion
      * @var bool
      */
@@ -94,7 +102,11 @@ abstract class Field implements FieldInterface, ValidationAwareInterface
     public function __construct(array $config = [])
     {
         foreach ($config as $key => $value) {
-            $this->{$key} = $value;
+            if (method_exists($this, 'set' . ucfirst($key))) {
+                $this->{'set' . ucfirst($key)}($value);
+            } else if (property_exists($this, $key)) {
+                $this->{$key} = $value;
+            }
         }
     }
 
@@ -141,28 +153,24 @@ abstract class Field implements FieldInterface, ValidationAwareInterface
         if (isset($this->html['id'])) {
             return $this->html['id'];
         } else {
-            $form = $this->getForm();
-            return implode('_', [$form->classNameShort(), $form->getId(), $this->name]);
+            return $this->htmlId;
         }
     }
 
     /**
      * @param FormInterface $form
      */
-    public function setForm(FormInterface $form)
+    protected function setHtmlId(FormInterface $form)
     {
-        $this->form = $form;
+        $this->htmlId = implode('_', [$form->classNameShort(), $form->getId(), $this->name]);
     }
 
     /**
-     * @return FormInterface
+     * @param FormInterface $form
      */
-    public function getForm() : FormInterface
+    protected function setHtmlName(FormInterface $form)
     {
-        if ($this->form === null) {
-            throw new \LogicException('Missing form');
-        }
-        return $this->form;
+        $this->htmlName = $form->classNameShort();
     }
 
     /**
@@ -178,14 +186,6 @@ abstract class Field implements FieldInterface, ValidationAwareInterface
             $html .= $key . '="' . $value . '" ';
         }
         return trim($html);
-    }
-
-    /**
-     * @return string
-     */
-    public function __toString()
-    {
-        return (string)$this->render();
     }
 
     /**
@@ -241,11 +241,7 @@ abstract class Field implements FieldInterface, ValidationAwareInterface
      */
     public function getHtmlName() : string
     {
-        $form = $this->getForm();
-        if ($form === null) {
-            return $this->name;
-        }
-        return $this->getForm()->classNameShort() . '[' . $this->name . ']';
+        return $this->htmlName . '[' . $this->name . ']';
     }
 
     /**
@@ -310,10 +306,14 @@ abstract class Field implements FieldInterface, ValidationAwareInterface
     }
 
     /**
+     * @param FormInterface $form
      * @return string
      */
-    public function render() : string
+    public function render(FormInterface $form) : string
     {
+        $this->setHtmlId($form);
+        $this->setHtmlName($form);
+
         return strtr($this->containerTemplate, [
             '{label}' => $this->renderLabel(),
             '{input}' => $this->renderInput(),

@@ -12,6 +12,7 @@ namespace Mindy\Permissions;
 
 use function Mindy\app;
 use Mindy\Auth\UserInterface;
+use Mindy\Creator\Creator;
 use Mindy\Permissions\PermissionProvider\PermissionProviderInterface;
 
 class PermissionManager
@@ -23,11 +24,29 @@ class PermissionManager
 
     /**
      * PermissionManager constructor.
-     * @param PermissionProviderInterface $permissionProvider
+     * @param array $config
      */
-    public function __construct(PermissionProviderInterface $permissionProvider)
+    public function __construct(array $config = [])
     {
-        $this->setPermissions($permissionProvider->load());
+        foreach ($config as $key => $value) {
+            if (method_exists($this, 'set' . ucfirst($key))) {
+                $this->{'set' . ucfirst($key)}($value);
+            } else if (property_exists($this, $key)) {
+                $this->{$key} = $value;
+            }
+        }
+    }
+
+    /**
+     * @param $config
+     */
+    protected function setPermissionProvider($config)
+    {
+        if (($config instanceof PermissionProviderInterface) === false) {
+            $config = Creator::createObject($config);
+        }
+
+        $this->setPermissions($config->load());
     }
 
     /**

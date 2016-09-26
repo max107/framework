@@ -11,6 +11,10 @@ class RadioField extends Field
     /**
      * @var string
      */
+    public $containerTemplate = '{input}{label}{hint}{errors}';
+    /**
+     * @var string
+     */
     public $template = "<input type='radio' id='{id}' value='{value}' name='{name}'{html}/>";
 
     public function renderInput() : string

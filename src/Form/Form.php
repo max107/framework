@@ -35,12 +35,9 @@ class Form extends BaseForm
     {
         $inputs = '';
         foreach ($fields as $name) {
-            $inputs .= $this->fields[$name]->render();
+            $inputs .= $this->fields[$name]->render($this);
         }
-
-        return strtr('{inputs}', [
-            '{inputs}' => $inputs
-        ]);
+        return $inputs;
     }
 
     /**
@@ -81,7 +78,7 @@ class Form extends BaseForm
             foreach ($fieldsets as $legend => $fields) {
                 $html .= strtr('<fieldset><legend>{legend}</legend>{errors}{inputs}</fieldset>', [
                     '{legend}' => $legend,
-                    '{inputs}' => $this->renderInputs(array_keys($this->fields)),
+                    '{inputs}' => $this->renderInputs($fields),
                     '{errors}' => $this->renderErrors()
                 ]);
             }

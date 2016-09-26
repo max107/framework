@@ -37,13 +37,9 @@ interface FieldInterface
 
     /**
      * @param FormInterface $form
-     */
-    public function setForm(FormInterface $form);
-
-    /**
      * @return string
      */
-    public function render() : string;
+    public function render(FormInterface $form) : string;
 
     /**
      * @return mixed
@@ -66,11 +62,6 @@ interface FieldInterface
     public function renderInput() : string;
 
     /**
-     * @return FormInterface
-     */
-    public function getForm() : FormInterface;
-
-    /**
      * @return bool
      */
     public function isRequired() : bool;
@@ -79,4 +70,9 @@ interface FieldInterface
      * @return string
      */
     public function getHtmlName() : string;
+
+    /**
+     * @return mixed|string|null
+     */
+    public function getLabel();
 }

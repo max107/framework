@@ -53,7 +53,6 @@ use Symfony\Component\Console\Helper\HelperSet;
  * @property \Mindy\Translator\Locale $locale The locale component.
  * @property \Mindy\Storage\Storage $storage The storage component.
  * @property \Mindy\Controller\BaseController $controller The currently active controller. Null is returned in this base class.
- * @property string $baseUrl The relative URL for the application.
  */
 class Application extends BaseApplication
 {
@@ -70,9 +69,9 @@ class Application extends BaseApplication
      */
     public $admins = [];
     /**
-     * @var string The homepage URL.
+     * @var string The relative URL for the application.
      */
-    public $homeUrl;
+    public $baseUrl = '/';
     /**
      * @var string
      */
@@ -103,6 +102,11 @@ class Application extends BaseApplication
             unset($config['basePath']);
         } else {
             throw new Exception('Unknown basePath');
+        }
+
+        if (isset($config['baseUrl'])) {
+            $this->setBaseUrl($config['baseUrl']);
+            unset($config['baseUrl']);
         }
 
         if (isset($config['webPath'])) {
@@ -331,7 +335,19 @@ class Application extends BaseApplication
      */
     public function getBaseUrl($absolute = false)
     {
-        return $this->request->http->getBaseUrl($absolute);
+        if ($absolute) {
+            return $this->http->getRequest()->getHeaderLine('Host') . $this->baseUrl;
+        } else {
+            return $this->baseUrl;
+        }
+    }
+
+    /**
+     * @param string $url
+     */
+    public function setBaseUrl(string $url)
+    {
+        $this->baseUrl = $url;
     }
 
     public function parseRoute()

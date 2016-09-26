@@ -8,11 +8,15 @@
 
 namespace Mindy\Auth\UserProvider;
 
+/**
+ * Interface UserProviderInterface
+ * @package Mindy\Auth\UserProvider
+ */
 interface UserProviderInterface
 {
     /**
      * @param array $attributes
-     * @return null|\Mindy\Auth\UserInterface
+     * @return null|\Mindy\Auth\UserInterface|\Mindy\Orm\ModelInterface
      */
     public function get(array $attributes);
 }

@@ -85,7 +85,7 @@ abstract class BaseModule implements ModuleInterface
      */
     public function getName()
     {
-        return self::t(ucfirst($this->getId()));
+        return self::t(sprintf('modules.%s', $this->getId()), $this->getId());
     }
 
     /**

@@ -12,11 +12,11 @@ trait DeprecatedMethodsTrait
 {
     public function getComponent($id)
     {
-        return $this->getContainer()->get($id);
+        return $this->getServiceLocator()->get($id);
     }
 
     public function hasComponent($id)
     {
-        return $this->getContainer()->has($id);
+        return $this->getServiceLocator()->has($id);
     }
 }

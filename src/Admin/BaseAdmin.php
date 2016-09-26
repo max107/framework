@@ -11,11 +11,12 @@ namespace Mindy\Admin;
 use Exception;
 use function Mindy\app;
 use Mindy\Base\ModuleInterface;
+use Mindy\Controller\BaseController;
 use Mindy\Helper\Traits\RenderTrait;
 use Mindy\Orm\ModelInterface;
 use ReflectionClass;
 
-abstract class BaseAdmin
+abstract class BaseAdmin extends BaseController
 {
     use RenderTrait;
 
@@ -62,11 +63,10 @@ abstract class BaseAdmin
      * @param array $data
      * @return string
      */
-    public function render($view, array $data = [])
+    public function render(string $view, array $data = [])
     {
         return $this->renderTemplate($view, array_merge([
             'debug' => MINDY_DEBUG,
-            'this' => $this,
             'app' => app(),
             'module' => $this->getModule(),
             'admin' => $this
@@ -175,7 +175,7 @@ abstract class BaseAdmin
     /**
      * @return string model class name
      */
-    abstract public function getModelClass() : string;
+    abstract public function getModelClass();
 
     /**
      * @param ModelInterface|null $instance
@@ -183,8 +183,7 @@ abstract class BaseAdmin
      */
     public function getAdminNames(ModelInterface $instance = null)
     {
-        $modelClass = self::getModelClass();
-        $classMap = explode('\\', $modelClass);
+        $classMap = explode('\\', $this->getModelClass());
         $name = self::normalizeName(end($classMap));
 
         $id = $this->getModule()->getId();

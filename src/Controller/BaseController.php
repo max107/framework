@@ -25,7 +25,7 @@ use ReflectionClass;
  */
 class BaseController
 {
-    use Configurator, Accessors;
+    use Accessors;
 
     /**
      * @var \Mindy\Base\ModuleInterface|null

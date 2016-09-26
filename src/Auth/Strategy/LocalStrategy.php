@@ -35,13 +35,12 @@ class LocalStrategy extends BaseStrategy
 
         $attribute = strpos($name, "@") > -1 ? 'email' : 'username';
         /** @var null|array $instance */
-        $userRaw = $this->authProvider->getUserProvider()->get([$attribute => strtolower($name)]);
+        $instance = $this->authProvider->getUserProvider()->get([$attribute => strtolower($name)]);
 
-        if ($userRaw === null) {
+        if ($instance === null) {
             $this->addError($attribute, app()->t('framework.auth', 'User not registered'));
             return false;
         } else {
-            $instance = $user->create($userRaw);
             if ($this->verifyPassword($instance, $password)) {
                 if ($instance->is_active || !$instance->is_active && $this->allowInactive) {
                     $this->setUser($instance);

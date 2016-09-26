@@ -13,5 +13,5 @@ interface FormModelInterface
     /**
      * @return array
      */
-    public function getFieldsInit() : array;
+    public function getAttributes() : array;
 }

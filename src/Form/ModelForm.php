@@ -7,7 +7,12 @@
  */
 
 namespace Mindy\Form;
+use Mindy\Creator\Creator;
 
+/**
+ * Class ModelForm
+ * @package Mindy\Form
+ */
 class ModelForm extends Form
 {
     /**
@@ -37,19 +42,24 @@ class ModelForm extends Form
     }
 
     /**
-     * @param FormModelInterface $model
+     * @param FormModelInterface|\Mindy\Orm\ModelInterface $model
      */
     private function initializeForm(FormModelInterface $model)
     {
         if ($this->initialized === false) {
-            foreach ($model->getFieldsInit() as $name => $modelField) {
+            $fields = $this->getFields();
+            foreach ($model->getAttributes() as $name => $value) {
                 /** @var FieldInterface $field */
-                $field = $modelField->getFormField();
-                $field->setName($name);
-                $field->setForm($this);
-                $this->fields[$name] = $field;
-            }
+                $modelField = $model->getField($name);
+                $config = $modelField->getFormField();
+                if ($config) {
+                    if (isset($fields[$name])) {
+                        $config = array_merge($config, $fields[$name]);
+                    }
 
+                    $this->fields[$name] = Creator::createObject($config);
+                }
+            }
             $this->initialized = true;
         }
     }

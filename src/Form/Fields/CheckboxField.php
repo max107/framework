@@ -8,6 +8,13 @@ namespace Mindy\Form\Fields;
  */
 class CheckboxField extends Field
 {
+    /**
+     * @var string
+     */
+    public $containerTemplate = '{input}{label}{hint}{errors}';
+    /**
+     * @var string
+     */
     public $template = "<input type='checkbox' id='{id}' value='{value}' name='{name}'{html}/>";
 
     /**

@@ -19,6 +19,10 @@ use ReflectionClass;
 use ArrayAccess;
 use Traversable;
 
+/**
+ * Class BaseForm
+ * @package Mindy\Form
+ */
 class BaseForm implements FormInterface, ArrayAccess, IteratorAggregate, Countable
 {
     /**
@@ -40,13 +44,22 @@ class BaseForm implements FormInterface, ArrayAccess, IteratorAggregate, Countab
 
     /**
      * NewBaseForm constructor
+     * @param array $config
      */
-    public function __construct()
+    public function __construct(array $config = [])
     {
+        foreach ($config as $key => $value) {
+            if (method_exists($this, 'set' . ucfirst($key))) {
+                $this->{'set' . ucfirst($key)}($value);
+            } else if (property_exists($this, $key)) {
+                $this->{$key} = $value;
+            }
+        }
+
         foreach ($this->getFields() as $name => $config) {
-            $field = Creator::createObject($config);
-            $field->setForm($this);
-            $field->setName($name);
+            $field = Creator::createObject(array_merge($config, [
+                'name' => $name
+            ]));
             $this->fields[$name] = $field;
         }
     }
@@ -118,6 +131,24 @@ class BaseForm implements FormInterface, ArrayAccess, IteratorAggregate, Countab
     public function getErrors() : array
     {
         return $this->errors;
+    }
+
+    /**
+     * @param array $errors
+     * @return $this
+     */
+    public function addErrors(array $errors)
+    {
+        $this->errors = array_merge($this->errors, $errors);
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasErrors() : bool
+    {
+        return empty($this->errors) === false;
     }
 
     /**
