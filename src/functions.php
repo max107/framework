@@ -19,3 +19,28 @@ function app()
 {
     return Mindy::app();
 }
+
+/**
+ * @param $domain
+ * @param $message
+ * @param array $parameters
+ * @param null $locale
+ * @return string
+ */
+function trans($domain, $message, array $parameters = [], $locale = null) : string
+{
+    return app()->locale->t($domain, $message, $parameters, $locale);
+}
+
+/**
+ * @param $domain
+ * @param $id
+ * @param $number
+ * @param array $parameters
+ * @param null $locale
+ * @return string
+ */
+function transChoice($domain, $id, $number, array $parameters = [], $locale = null) : string
+{
+    return app()->locale->transChoice($domain, $id, $number, $parameters, $locale);
+}

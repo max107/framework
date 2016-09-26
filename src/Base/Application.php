@@ -50,6 +50,7 @@ use Symfony\Component\Console\Helper\HelperSet;
  * @property \Mindy\Finder\Finder $finder The template finder component.
  * @property \Mindy\Auth\AuthProvider $auth The auth component.
  * @property \Mindy\Router\UrlManager $urlManager The URL manager component.
+ * @property \Mindy\Translator\Locale $locale The locale component.
  * @property \Mindy\Storage\Storage $storage The storage component.
  * @property \Mindy\Controller\BaseController $controller The currently active controller. Null is returned in this base class.
  * @property string $baseUrl The relative URL for the application.
