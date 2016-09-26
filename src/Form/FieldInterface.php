@@ -75,4 +75,9 @@ interface FieldInterface
      * @return mixed|string|null
      */
     public function getLabel();
+
+    /**
+     * @param array $config
+     */
+    public function configure(array $config);
 }

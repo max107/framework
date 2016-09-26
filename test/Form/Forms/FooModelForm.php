@@ -8,8 +8,18 @@
 
 namespace Mindy\Tests\Form\Forms;
 
+use Mindy\Form\Fields\TextField;
 use Mindy\Form\ModelForm;
 
 class FooModelForm extends ModelForm
 {
+    public function getFields()
+    {
+        return [
+            'name' => [
+                'class' => TextField::class,
+                'label' => 'test',
+            ]
+        ];
+    }
 }

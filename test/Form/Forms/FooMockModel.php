@@ -33,6 +33,11 @@ class FooMockModel implements FormModelInterface
         ];
     }
 
+    public function getField($name)
+    {
+        return $this->getFieldsInit()[$name];
+    }
+
     public function setAttributes(array $attributes)
     {
         foreach ($attributes as $key => $value) {

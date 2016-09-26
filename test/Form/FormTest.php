@@ -49,9 +49,8 @@ class FormTest extends \PHPUnit_Framework_TestCase
         $field = new CheckboxField([
             'choices' => [1 => 1, 2 => 2, 3 => 3]
         ]);
-        $field->setForm($form);
         $field->setName('test');
-        $html = $field->render();
+        $html = $field->render($form);
         $this->assertContains("<label for='FooFieldsetForm_1_test_0'>1</label>", $html);
         $this->assertContains("<label for='FooFieldsetForm_1_test_1'>2</label>", $html);
         $this->assertContains("<label for='FooFieldsetForm_1_test_2'>3</label>", $html);
@@ -66,9 +65,8 @@ class FormTest extends \PHPUnit_Framework_TestCase
         $field = new RadioField([
             'choices' => [1 => 1, 2 => 2, 3 => 3]
         ]);
-        $field->setForm($form);
         $field->setName('test');
-        $html = $field->render();
+        $html = $field->render($form);
         $this->assertContains("<label for='FooFieldsetForm_1_test_0'>1</label>", $html);
         $this->assertContains("<label for='FooFieldsetForm_1_test_1'>2</label>", $html);
         $this->assertContains("<label for='FooFieldsetForm_1_test_2'>3</label>", $html);
@@ -83,9 +81,8 @@ class FormTest extends \PHPUnit_Framework_TestCase
         $field = new SelectField([
             'choices' => [1, 2, 3]
         ]);
-        $field->setForm($form);
         $field->setName('test');
-        $html = $field->render();
+        $html = $field->render($form);
         $this->assertContains("<input type='hidden' value='' name='FooFieldsetForm[test]' />", $html);
         $this->assertContains("<select id='FooFieldsetForm_1_test' name='FooFieldsetForm[test]'>", $html);
         $this->assertContains("<option value='0'>1</option><option value='1'>2</option><option value='2'>3</option>", $html);
@@ -110,7 +107,7 @@ class FormTest extends \PHPUnit_Framework_TestCase
     {
         $form = new FooForm();
         $field = $form['name'];
-        $html = $field->render();
+        $html = $field->render($form);
         $this->assertContains("for='FooForm_1_name'", $html);
         $this->assertContains('required', $html);
         $this->assertContains("id='FooForm_1_name'", $html);
@@ -257,20 +254,29 @@ class FormTest extends \PHPUnit_Framework_TestCase
     public function testModelForm()
     {
         $form = new FooModelForm();
+
+        $this->assertEquals('test', $form->getField('name')->getLabel());
+        $this->assertFalse($form->hasField('phone'));
+
         $form->setModel(new FooMockModel());
         $this->assertEquals(['name', 'phone'], array_keys($form->getAttributes()));
+        $this->assertEquals('телефон', $form->getField('phone')->getLabel());
+        $this->assertEquals('test', $form->getField('name')->getLabel());
 
         $form->setAttributes(['name' => 'foo', 'phone' => 123456]);
         $this->assertEquals(['name' => null, 'phone' => null], $form->getModel()->getAttributes());
         $this->assertTrue($form->save());
         $this->assertEquals(['name' => 'foo', 'phone' => 123456], $form->getModel()->getAttributes());
 
+        $this->assertEquals('phone', $form->getField('phone')->getName());
+        $this->assertEquals('name', $form->getField('name')->getName());
+
         $html = $form->render();
-        $this->assertContains("<label for='FooModelForm_1_name'>имя <span class='required'>*</span></label>", $html);
+        $this->assertContains("<label for='FooModelForm_1_name'>test <span class='required'>*</span></label>", $html);
         $this->assertContains("<label for='FooModelForm_1_phone'>телефон <span class='required'>*</span></label>", $html);
 
         $html = (string)$form;
-        $this->assertContains("<label for='FooModelForm_1_name'>имя <span class='required'>*</span></label>", $html);
+        $this->assertContains("<label for='FooModelForm_1_name'>test <span class='required'>*</span></label>", $html);
         $this->assertContains("<label for='FooModelForm_1_phone'>телефон <span class='required'>*</span></label>", $html);
 
         $form = new FooModelForm();

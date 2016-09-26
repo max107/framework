@@ -32,9 +32,8 @@ class WidgetTest extends PHPUnit_Framework_TestCase
         $field = new TextField([
             'name' => 'foo'
         ]);
-        $field->setForm($form);
         $widget = new LicenseWidget(['content' => 'foo bar']);
-        $this->assertContains('foo bar', $widget->render($field));
-        $this->assertContains("<label for='FooForm_1_foo'>", $widget->render($field));
+        $this->assertContains('foo bar', $widget->render($form, $field));
+        $this->assertContains("<label for='FooForm_1_foo'>", $widget->render($form, $field));
     }
 }

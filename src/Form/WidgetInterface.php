@@ -11,8 +11,9 @@ namespace Mindy\Form;
 interface WidgetInterface
 {
     /**
+     * @param FormInterface $form
      * @param FieldInterface $field
      * @return string
      */
-    public function render(FieldInterface $field) : string;
+    public function render(FormInterface $form, FieldInterface $field) : string;
 }

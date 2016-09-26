@@ -51,15 +51,25 @@ class ModelForm extends Form
             foreach ($model->getAttributes() as $name => $value) {
                 /** @var FieldInterface $field */
                 $modelField = $model->getField($name);
-                $config = $modelField->getFormField();
-                if ($config) {
-                    if (isset($fields[$name])) {
-                        $config = array_merge($config, $fields[$name]);
-                    }
+                $field = $modelField->getFormField();
 
-                    $this->fields[$name] = Creator::createObject($config);
+                if (($field instanceof FieldInterface) === false) {
+                    $field = Creator::createObject($field);
                 }
+
+                if (isset($fields[$name])) {
+                    $field->configure(array_merge($fields[$name], [
+                        'name' => $name
+                    ]));
+                } else {
+                    $field->configure([
+                        'name' => $name
+                    ]);
+                }
+
+                $this->fields[$name] = $field;
             }
+
             $this->initialized = true;
         }
     }

@@ -5,72 +5,72 @@
             <!--<directory>test</directory>-->
         <!--</testsuite>-->
 
-        <testsuite name="Auth">
-            <directory>test/Auth</directory>
-        </testsuite>
-        <testsuite name="Base">
-            <directory>test/Base</directory>
-        </testsuite>
-        <testsuite name="Console">
-            <directory>test/Console</directory>
-        </testsuite>
-        <testsuite name="Security">
-            <directory>test/Security</directory>
-        </testsuite>
-        <testsuite name="Helper">
-            <directory>test/Helper</directory>
-        </testsuite>
-        <testsuite name="Http">
-            <directory>test/Http</directory>
-        </testsuite>
-        <testsuite name="Orm">
-            <directory>test/Orm</directory>
-        </testsuite>
-        <testsuite name="Di">
-            <directory>test/Di</directory>
-        </testsuite>
-        <testsuite name="Migration">
-            <directory>test/Migration</directory>
-        </testsuite>
-        <testsuite name="Storage">
-            <directory>test/Storage</directory>
-        </testsuite>
+        <!--<testsuite name="Auth">-->
+            <!--<directory>test/Auth</directory>-->
+        <!--</testsuite>-->
+        <!--<testsuite name="Base">-->
+            <!--<directory>test/Base</directory>-->
+        <!--</testsuite>-->
+        <!--<testsuite name="Console">-->
+            <!--<directory>test/Console</directory>-->
+        <!--</testsuite>-->
+        <!--<testsuite name="Security">-->
+            <!--<directory>test/Security</directory>-->
+        <!--</testsuite>-->
+        <!--<testsuite name="Helper">-->
+            <!--<directory>test/Helper</directory>-->
+        <!--</testsuite>-->
+        <!--<testsuite name="Http">-->
+            <!--<directory>test/Http</directory>-->
+        <!--</testsuite>-->
+        <!--<testsuite name="Orm">-->
+            <!--<directory>test/Orm</directory>-->
+        <!--</testsuite>-->
+        <!--<testsuite name="Di">-->
+            <!--<directory>test/Di</directory>-->
+        <!--</testsuite>-->
+        <!--<testsuite name="Migration">-->
+            <!--<directory>test/Migration</directory>-->
+        <!--</testsuite>-->
+        <!--<testsuite name="Storage">-->
+            <!--<directory>test/Storage</directory>-->
+        <!--</testsuite>-->
         <testsuite name="Form">
             <directory>test/Form</directory>
         </testsuite>
-        <testsuite name="Finder">
-            <directory>test/Finder</directory>
-        </testsuite>
-        <testsuite name="Pagination">
-            <directory>test/Pagination</directory>
-        </testsuite>
-        <testsuite name="Translator">
-            <directory>test/Translator</directory>
-        </testsuite>
-        <testsuite name="Controller">
-            <directory>test/Controller</directory>
-        </testsuite>
-        <testsuite name="Mail">
-            <directory>test/Mail</directory>
-        </testsuite>
-        <testsuite name="Event">
-            <directory>test/Event</directory>
-        </testsuite>
-        <testsuite name="Router">
-            <directory>test/Router</directory>
-        </testsuite>
-        <testsuite name="Session">
-            <directory>test/Session</directory>
-        </testsuite>
-        <testsuite name="Permission">
-            <directory>test/Permission</directory>
-        </testsuite>
-        <testsuite name="QueryBuilder">
-            <directory>test/QueryBuilder</directory>
-        </testsuite>
-        <testsuite name="Validation">
-            <directory>test/Validation</directory>
-        </testsuite>
+        <!--<testsuite name="Finder">-->
+            <!--<directory>test/Finder</directory>-->
+        <!--</testsuite>-->
+        <!--<testsuite name="Pagination">-->
+            <!--<directory>test/Pagination</directory>-->
+        <!--</testsuite>-->
+        <!--<testsuite name="Translator">-->
+            <!--<directory>test/Translator</directory>-->
+        <!--</testsuite>-->
+        <!--<testsuite name="Controller">-->
+            <!--<directory>test/Controller</directory>-->
+        <!--</testsuite>-->
+        <!--<testsuite name="Mail">-->
+            <!--<directory>test/Mail</directory>-->
+        <!--</testsuite>-->
+        <!--<testsuite name="Event">-->
+            <!--<directory>test/Event</directory>-->
+        <!--</testsuite>-->
+        <!--<testsuite name="Router">-->
+            <!--<directory>test/Router</directory>-->
+        <!--</testsuite>-->
+        <!--<testsuite name="Session">-->
+            <!--<directory>test/Session</directory>-->
+        <!--</testsuite>-->
+        <!--<testsuite name="Permission">-->
+            <!--<directory>test/Permission</directory>-->
+        <!--</testsuite>-->
+        <!--<testsuite name="QueryBuilder">-->
+            <!--<directory>test/QueryBuilder</directory>-->
+        <!--</testsuite>-->
+        <!--<testsuite name="Validation">-->
+            <!--<directory>test/Validation</directory>-->
+        <!--</testsuite>-->
     </testsuites>
     <php>
         <ini name="error_reporting" value="32767"/>

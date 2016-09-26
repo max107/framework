@@ -101,6 +101,14 @@ abstract class Field implements FieldInterface, ValidationAwareInterface
      */
     public function __construct(array $config = [])
     {
+        $this->configure($config);
+    }
+
+    /**
+     * @param array $config
+     */
+    public function configure(array $config)
+    {
         foreach ($config as $key => $value) {
             if (method_exists($this, 'set' . ucfirst($key))) {
                 $this->{'set' . ucfirst($key)}($value);
@@ -339,5 +347,13 @@ abstract class Field implements FieldInterface, ValidationAwareInterface
             $this->label = ucfirst($this->name);
         }
         return $this->label;
+    }
+
+    /**
+     * @return string
+     */
+    public function getName()
+    {
+        return $this->name;
     }
 }
