@@ -136,7 +136,12 @@ class Locale
             foreach (glob(strtr($path, $params)) as $filePath) {
                 $raw = substr($filePath, strlen($modulesPath) + 1);
                 $moduleId = substr($raw, 0, strpos($raw, '/'));
-                $translator->addResource($prefix, $filePath, $language, 'modules.' . $moduleId);
+
+                $ext = pathinfo($filePath, PATHINFO_EXTENSION);
+                $basename = basename($filePath);
+                $name = substr($basename, 0, strpos($basename, $ext) - 1);
+
+                $translator->addResource($prefix, $filePath, $language, sprintf('modules.%s.%s', $moduleId, $name));
             }
         }
     }
