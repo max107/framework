@@ -21,6 +21,15 @@ class GetParamCollection extends ParamCollection
     }
 
     /**
+     * @param $name
+     * @return bool
+     */
+    public function has($name) : bool
+    {
+        return $this->request->getQueryParam($name, false) === false;
+    }
+
+    /**
      * @return array
      */
     public function all() : array

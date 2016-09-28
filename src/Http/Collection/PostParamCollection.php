@@ -21,6 +21,15 @@ class PostParamCollection extends ParamCollection
     }
 
     /**
+     * @param $name
+     * @return bool
+     */
+    public function has($name) : bool
+    {
+        return $this->request->getParsedBodyParam($name, false) === false;
+    }
+
+    /**
      * @return array
      */
     public function all() : array
