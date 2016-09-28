@@ -1,6 +1,7 @@
 <?php
 
 namespace Mindy\Controller\Action;
+use function Mindy\app;
 use ReflectionMethod;
 
 /**
