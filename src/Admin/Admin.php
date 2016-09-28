@@ -24,6 +24,7 @@ use Mindy\Orm\ModelInterface;
 use Mindy\Orm\TreeModel;
 use Mindy\Pagination\Pagination;
 use Mindy\QueryBuilder\Q\QOr;
+use function Mindy\trans;
 use PHPExcel;
 use PHPExcel_Cell;
 use PHPExcel_Cell_DataType;
@@ -49,7 +50,7 @@ abstract class Admin extends BaseAdmin
     /**
      * @var array
      */
-    public $defaultOrder = [];
+    public $defaultOrder = ['-pk'];
     /**
      * @var string name of the column
      */
@@ -405,7 +406,7 @@ abstract class Admin extends BaseAdmin
                     if ($request->post->get('popup')) {
                         echo $this->render($this->findTemplate('_popup_close.html'), [
                             'popup_id' => $request->post->get('popup_id'),
-                            'instance' => $form->getInstance()
+                            'instance' => $form->getModel()
                         ]);
                         Mindy::app()->end();
                     }
@@ -441,7 +442,7 @@ abstract class Admin extends BaseAdmin
      * @param $action
      * @return array
      */
-    public function getCustomBreadrumbs(Model $model, $action)
+    public function getCustomBreadrumbs(ModelInterface $model, $action)
     {
         if ($model instanceof TreeModel) {
             $pk = $this->getRequest()->get->get('pk');
@@ -459,7 +460,7 @@ abstract class Admin extends BaseAdmin
      * @param $action
      * @return array
      */
-    public function fetchBreadcrumbs(Model $model, $action)
+    public function fetchBreadcrumbs(ModelInterface $model, $action)
     {
         list($list, $create, $update) = $this->getAdminNames($model);
         $breadcrumbs = [
@@ -482,7 +483,7 @@ abstract class Admin extends BaseAdmin
                 break;
             case 'info':
                 $breadcrumbs[] = [
-                    'name' => AdminModule::t('Information about: {name}', ['{name}' => (string)$model]),
+                    'name' => trans('modules.Admin.main', 'Information about: %name%', ['%name%' => (string)$model]),
                     'url' => $this->getAdminUrl('list')
                 ];
                 break;
@@ -502,7 +503,6 @@ abstract class Admin extends BaseAdmin
         }
 
         $request = $this->getRequest();
-        $user = Mindy::app()->getUser();
 
         $form = Creator::createObject([
             'class' => $this->getCreateForm(),
@@ -817,7 +817,7 @@ abstract class Admin extends BaseAdmin
             'admin' => $this->classNameShort(),
         ];
 
-        $model = $form instanceof ModelForm ? $form->getInstance() : null;
+        $model = $form instanceof ModelForm ? $form->getModel() : null;
         if (array_key_exists('save_continue', $data)) {
             return $this->reverse('admin:action', array_merge($baseParams, [
                 'action' => 'update'

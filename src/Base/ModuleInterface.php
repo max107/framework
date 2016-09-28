@@ -8,7 +8,19 @@
 
 namespace Mindy\Base;
 
+/**
+ * Interface ModuleInterface
+ * @package Mindy\Base
+ */
 interface ModuleInterface
 {
+    /**
+     * @return string
+     */
+    public function getName();
 
+    /**
+     * @return array
+     */
+    public function getAdminMenu() : array;
 }
