@@ -15,6 +15,7 @@ use Countable;
 use IteratorAggregate;
 use LogicException;
 use Mindy\Creator\Creator;
+use Psr\Http\Message\ServerRequestInterface;
 use ReflectionClass;
 use ArrayAccess;
 use Traversable;
@@ -152,6 +153,21 @@ class BaseForm implements FormInterface, ArrayAccess, IteratorAggregate, Countab
     public function hasErrors() : bool
     {
         return empty($this->errors) === false;
+    }
+
+    /**
+     * @param ServerRequestInterface $request
+     * @return BaseForm
+     */
+    public function fillFromRequest(ServerRequestInterface $request)
+    {
+        if (in_array(strtoupper($request->getMethod()), ['HEAD', 'GET'])) {
+            $data = $request->getQueryParams();
+        } else {
+            $data = $request->getParsedBody();
+        }
+
+        return $this->populate($data, $request->getUploadedFiles());
     }
 
     /**
