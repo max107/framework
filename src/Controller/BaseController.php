@@ -82,12 +82,12 @@ class BaseController
     }
 
     /**
-     * @param $actionID
+     * @param string $actionID
      * @param array $params
      * @return null|\Psr\Http\Message\ResponseInterface|string|void
      * @throws HttpException
      */
-    public function run($actionID, $params = [])
+    public function run(string $actionID, $params = [])
     {
         $action = $this->createAction($actionID);
         if ($action) {
@@ -178,10 +178,8 @@ class BaseController
      * @param $action
      * @param $params
      */
-    public function forward($controllerClass, $action, array $params = [])
+    public function forward(string $controllerClass, string $action, array $params = [])
     {
-        /** @var \Mindy\Controller\BaseController $controller */
-        $controller = Creator::createObject($controllerClass);
-        $controller->run($action, $params);
+        Creator::createObject($controllerClass)->run($action, $params);
     }
 }

@@ -26,7 +26,7 @@ class PostParamCollection extends ParamCollection
      */
     public function has($name) : bool
     {
-        return $this->request->getParsedBodyParam($name, false) === false;
+        return array_key_exists($name, $this->all());
     }
 
     /**
