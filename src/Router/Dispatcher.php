@@ -73,7 +73,7 @@ class Dispatcher
      */
     public function dispatch($httpMethod, $uri)
     {
-        $data = $this->dispatchRoute($httpMethod, ltrim(strtok($uri, '?'), '/'));
+        $data = $this->dispatchRoute(strtoupper($httpMethod), ltrim(strtok($uri, '?'), '/'));
         if ($data === false) {
             return false;
         }
@@ -132,6 +132,7 @@ class Dispatcher
     {
         $additional = [self::ANY];
 
+        $httpMethod = strtoupper($httpMethod);
         if ($httpMethod === self::HEAD) {
             $additional[] = self::GET;
         }

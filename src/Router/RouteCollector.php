@@ -129,6 +129,8 @@ class RouteCollector
      */
     private function addStaticRoute($httpMethod, $routeData, $handler, array $params = [])
     {
+        $httpMethod = strtoupper($httpMethod);
+
         $routeStr = $routeData[0];
 
         if (isset($this->staticRoutes[$routeStr][$httpMethod])) {
@@ -152,6 +154,8 @@ class RouteCollector
      */
     private function addVariableRoute($httpMethod, $routeData, $handler, array $params = [])
     {
+        $httpMethod = strtoupper($httpMethod);
+        
         list($regex, $variables) = $routeData;
 
         if (isset($this->regexToRoutesMap[$regex][$httpMethod])) {
@@ -379,7 +383,7 @@ class RouteCollector
         } else {
             foreach ($callback as $nestedPrefix => $route) {
                 if (is_string($nestedPrefix) && is_array($route)) {
-                    $this->group($prefix . $nestedPrefix, $route['routes'], $route['namespace']);
+                    $this->group($prefix . $nestedPrefix, $route['routes'], $namespace . ':' . $route['namespace']);
                 } else {
                     $routePattern = '/' . ltrim($route['route'], '/');
                     if (isset($route['name'])) {

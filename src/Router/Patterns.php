@@ -80,13 +80,10 @@ class Patterns extends BasePatterns
             if ($params instanceof PatternsInterface) {
                 $params->parse($collector, $params->getPatterns(), trim($parentPrefix, '/') . $urlPrefix);
             } else {
-                if (!isset($params['route'])) {
-                    d($params);
-                }
                 $route = trim($parentPrefix, '/') . $params['route'];
 
-                $method = isset($params['method']) ? $params['method'] : Dispatcher::ANY;
-                if (in_array(strtoupper($method), $collector->getValidMethods()) === false) {
+                $method = isset($params['method']) ? strtoupper($params['method']) : Dispatcher::ANY;
+                if (in_array($method, $collector->getValidMethods()) === false) {
                     throw new Exception('Unknown route method');
                 }
 
@@ -110,7 +107,7 @@ class Patterns extends BasePatterns
                             $route = [$route, $name];
                         }
 
-                        $collector->addRoute($method, $route, $callback, isset($params['params']) ? $params['params'] : []);
+                        $collector->addRoute($method, $route, $callback, $params['params'] ?? $params['params']);
                     } else if (array_key_exists('restful', $params) === false) {
                         $collector->restful($urlPrefix, $params['restful']);
                     } else {

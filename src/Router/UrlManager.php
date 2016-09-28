@@ -54,23 +54,6 @@ class UrlManager extends Dispatcher
         $collector = new RouteCollector(new RouteParser);
         $this->parseRoutes($collector, $this->patterns);
         return $collector;
-        /*
-        if (class_exists('\Mindy\Base\Mindy') && \Mindy\Base\Mindy::app() && \Mindy\Base\Mindy::app()->hasComponent('cache')) {
-            $cacheKey = 'routes';
-
-            $cache = \Mindy\Base\Mindy::app()->cache;
-            $data = $cache->get($cacheKey);
-            if ($data === false) {
-                $patterns = new Patterns(empty($this->patterns) ? $this->urlsAlias : $this->patterns);
-                $data = $patterns->getRouteCollector();
-                $cache->set($cacheKey, $data, 3600);
-            }
-            return $data;
-        } else {
-            $patterns = new Patterns(empty($this->patterns) ? $this->urlsAlias : $this->patterns);
-            return $patterns->getRouteCollector();
-        }
-        */
     }
 
     public function init()
