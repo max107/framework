@@ -73,8 +73,11 @@ class HandlerResolver
             list($handler, $actionName) = $handler;
             $handlerInstance = new $handler;
 
-            $method = new ReflectionMethod($handlerInstance, $actionName);
-            return $method->invokeArgs($handlerInstance, $this->parseParams($method, $vars));
+            $method = new ReflectionMethod($handlerInstance, 'run');
+            return $method->invokeArgs($handlerInstance, [
+                $actionName,
+                $this->parseParams($method, $vars)
+            ]);
         }
 
         throw new Exception('Unknown handler type');
