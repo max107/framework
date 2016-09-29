@@ -188,9 +188,9 @@ abstract class BaseAdmin extends BaseController
 
         $id = $this->getModule()->getId();
         return [
-            app()->t('modules.' . $id, ucfirst($name . 's')),
-            app()->t('modules.' . $id, 'Create ' . $name),
-            app()->t('modules.' . $id, 'Update ' . $name . ': %name%', ['name' => (string)$instance]),
+            app()->t('modules.' . $id . '.main', ucfirst($name . 's')),
+            app()->t('modules.' . $id . '.main', 'Create ' . $name),
+            app()->t('modules.' . $id . '.main', 'Update ' . $name . ': %name%', ['name' => (string)$instance]),
         ];
     }
 

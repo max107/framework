@@ -17,7 +17,7 @@ use Mindy\Creator\Creator;
 class ModelForm extends Form
 {
     /**
-     * @var FormModelInterface
+     * @var \Mindy\Orm\ModelInterface|FormModelInterface
      */
     protected $model;
     /**
@@ -59,7 +59,7 @@ class ModelForm extends Form
                 }
 
                 if (($field instanceof FieldInterface) === false) {
-                    $field = Creator::createObject($field);
+                    $field = Creator::createObject(isset($fields[$name]) ? array_merge($field, $fields[$name]) : $field);
                 } else {
                     $field->configure(['name' => $name]);
                 }
@@ -112,9 +112,7 @@ class ModelForm extends Form
     public function save() : bool
     {
         $this->setModelAttributes($this->getAttributes());
-        $model = $this->getModel();
-        $this->model = $model;
-        return $model->save();
+        return $this->model->save();
     }
 
     /**
@@ -123,9 +121,7 @@ class ModelForm extends Form
      */
     public function setModelAttributes(array $attributes)
     {
-        $model = $this->getModel();
-        $model->setAttributes($attributes);
-        $this->model = $model;
+        $this->model->setAttributes($attributes);
         return $this;
     }
 }

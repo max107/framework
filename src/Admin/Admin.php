@@ -618,7 +618,6 @@ abstract class Admin extends BaseAdmin
         $model = Creator::createObject($this->getModelClass());
         $instance = $model->objects()->get(['pk' => $pk]);
         if ($instance === null) {
-            // todo
             $this->error(404);
         }
 
