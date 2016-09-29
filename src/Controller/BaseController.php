@@ -91,12 +91,12 @@ class BaseController
     {
         $action = $this->createAction($actionID);
         if ($action) {
-            $this->beforeAction(lcfirst($actionID), $params);
+            $this->beforeAction($actionID, $params);
             $out = $action->runInternal($params);
             if ($out === false) {
                 throw new HttpException(400, HttpError::errorMessage(400) . ': ' . $action->getId());
             }
-            $this->afterAction(lcfirst($actionID), $params, $out);
+            $this->afterAction($actionID, $params, $out);
             return $out;
         }
 
@@ -142,8 +142,8 @@ class BaseController
      */
     public function createAction($actionID)
     {
-        if ($this->hasInlineAction(ucfirst($actionID))) {
-            return new InlineAction($this, ucfirst($actionID));
+        if ($this->hasInlineAction($actionID)) {
+            return new InlineAction($this, $actionID);
         } else if ($this->hasExternalAction($actionID)) {
             $actions = $this->actions();
             if ($actions[$actionID] instanceof \Closure) {

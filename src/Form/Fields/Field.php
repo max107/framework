@@ -129,7 +129,17 @@ abstract class Field implements FieldInterface, ValidationAwareInterface
      */
     public function getValue()
     {
-        return $this->escape ? htmlspecialchars($this->value, ENT_QUOTES) : $this->value;
+        if ($this->escape) {
+            if (is_array($this->value)) {
+                return array_map(function ($value) {
+                    return htmlspecialchars($value, ENT_QUOTES);
+                }, $this->value);
+            } else {
+                return htmlspecialchars($this->value, ENT_QUOTES);
+            }
+        }
+
+        return $this->value;
     }
 
     /**
@@ -138,14 +148,17 @@ abstract class Field implements FieldInterface, ValidationAwareInterface
     public function getValidationConstraints() : array
     {
         $constraints = [];
+
         if ($this->required) {
             $constraints[] = new Assert\NotBlank();
         }
-        if (!empty($this->choices)) {
+
+        if ($this->required && !empty($this->choices)) {
             $constraints[] = new Assert\Choice([
-                'choices' => $this->choices instanceof Closure ? $this->choices->__invoke() : $this->choices
+                'choices' => array_keys($this->choices instanceof Closure ? $this->choices->__invoke() : $this->choices)
             ]);
         }
+
         return array_merge($constraints, $this->validators);
     }
 

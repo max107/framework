@@ -49,9 +49,8 @@ class ModelForm extends Form
     {
         if ($this->initialized === false) {
             $fields = $this->getFields();
-
-            foreach ($model->getAttributes() as $name => $value) {
-                /** @var FieldInterface $field */
+            $attributes = $model->getAttributes();
+            foreach ($model->getMeta()->getFields() as $name => $field) {
                 $modelField = $model->getField($name);
                 $field = $modelField->getFormField();
 
@@ -62,15 +61,18 @@ class ModelForm extends Form
                 if (($field instanceof FieldInterface) === false) {
                     $field = Creator::createObject($field);
                 } else {
-                    $field->configure([
-                        'name' => $name
-                    ]);
+                    $field->configure(['name' => $name]);
                 }
 
                 if (isset($fields[$name]) && is_array($fields[$name])) {
                     $field->configure($fields[$name]);
                 }
 
+                if (array_key_exists($name, $attributes)) {
+                    $field->setValue($attributes[$name]);
+                } else {
+                    $field->setValue($modelField->getValue()->valuesList(['pk'], true));
+                }
                 $this->fields[$name] = $field;
             }
 
@@ -79,12 +81,38 @@ class ModelForm extends Form
     }
 
     /**
+     * @param $name
+     * @return bool
+     */
+    public function hasField($name) : bool
+    {
+        // Foreign fields with auto generated form
+        if (array_key_exists($name . '_id', $this->fields)) {
+            return true;
+        }
+        return parent::hasField($name);
+    }
+
+    /**
+     * @param string $name
+     * @return FieldInterface
+     */
+    public function getField(string $name) : FieldInterface
+    {
+        // Foreign fields with auto generated form
+        if (array_key_exists($name . '_id', $this->fields)) {
+            $name .= '_id';
+        }
+        return parent::getField($name);
+    }
+
+    /**
      * @return bool
      */
     public function save() : bool
     {
+        $this->setModelAttributes($this->getAttributes());
         $model = $this->getModel();
-        $model->setAttributes($this->getAttributes());
         $this->model = $model;
         return $model->save();
     }

@@ -496,37 +496,33 @@ abstract class Admin extends BaseAdmin
 
     public function actionUpdate($pk)
     {
-        $model = Creator::createObject(['class' => $this->getModelClass()]);
+        $model = Creator::createObject($this->getModelClass());
         $instance = $model->objects()->get(['pk' => $pk]);
         if ($instance === null) {
             $this->error(404);
         }
 
-        $request = $this->getRequest();
+        $form = Creator::createObject(['class' => $this->getCreateForm(), 'model' => $instance]);
 
-        $form = Creator::createObject([
-            'class' => $this->getCreateForm(),
-            'model' => $model,
-            'instance' => $instance,
-            'enableCreateButton' => true
-        ]);
+        $http = app()->http;
+        if ($http->getIsPost()) {
+            $form->fillFromRequest($http->getRequest());
 
-        if ($request->getIsPost()) {
-            if ($form->populate($_POST, $_FILES)->isValid()) {
+            if ($form->isValid()) {
                 if ($form->save()) {
                     $this->afterUpdate($form);
-                    $request->flash->success('Данные успешно сохранены');
-                    $next = $this->getNextRoute($_POST, $form);
+                    $http->flash->success('Данные успешно сохранены');
+                    $next = $this->getNextRoute($http->post->all(), $form);
                     if ($next) {
-                        $request->redirect($next);
+                        $http->redirect($next);
                     } else {
-                        $request->refresh();
+                        $http->refresh();
                     }
                 } else {
-                    $request->flash->error('При сохранении данных произошла ошибка, пожалуйста попробуйте выполнить сохранение позже или обратитесь к разработчику проекта, или вашему системному администратору');
+                    $http->flash->error('При сохранении данных произошла ошибка, пожалуйста попробуйте выполнить сохранение позже или обратитесь к разработчику проекта, или вашему системному администратору');
                 }
             } else {
-                $request->flash->warning('Пожалуйста укажите корректные данные');
+                $http->flash->warning('Пожалуйста укажите корректные данные');
             }
         }
 

@@ -11,6 +11,7 @@ namespace Mindy\Form;
 /**
  * Interface FieldInterface
  * @package Mindy\Form
+ * @method \Mindy\Form\FieldInterface getFormField($fieldClass = '')
  */
 interface FieldInterface
 {

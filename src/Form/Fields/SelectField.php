@@ -9,6 +9,9 @@ namespace Mindy\Form\Fields;
 
 use Mindy\Form\FormInterface;
 
+/**
+ * @method \Mindy\Form\FieldInterface getFormField($fieldClass = '')
+ */
 class SelectField extends Field
 {
     /**
@@ -39,7 +42,7 @@ class SelectField extends Field
         return implode("\n", ["<input type='hidden' value='' name='{$name}' />", strtr($this->template, [
             '{id}' => $this->getHtmlId(),
             '{input}' => $this->getInputHtml(),
-            '{name}' => $this->multiple ? $this->getHtmlName() . '[]' : $this->getHtmlName(),
+            '{name}' => $this->html['multiple'] ? $this->getHtmlName() . '[]' : $this->getHtmlName(),
             '{html}' => $this->getHtmlAttributes()
         ])]);
     }
@@ -55,11 +58,7 @@ class SelectField extends Field
         }
 
         if (empty($choices)) {
-            return [];
-        }
-
-        if (!$this->required) {
-            $choices = ['' => $this->empty] + $choices;
+            return '';
         }
 
         $value = $this->getValue();
@@ -69,10 +68,6 @@ class SelectField extends Field
             } else {
                 $selected[] = $value;
             }
-        }
-
-        if ($this->multiple) {
-            $this->html['multiple'] = true;
         }
         return $this->generateOptions($choices, $selected, $this->disabled);
     }

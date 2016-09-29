@@ -13,6 +13,7 @@ use function Mindy\app;
 use Mindy\Creator\Creator;
 use Mindy\Middleware\MiddlewareManager;
 use Mindy\Router\Exception\HttpMethodNotAllowedException;
+use ReflectionClass;
 use ReflectionFunction;
 use ReflectionFunctionAbstract;
 use ReflectionMethod;
@@ -71,12 +72,13 @@ class HandlerResolver
 
         if (is_array($handler)) {
             list($handler, $actionName) = $handler;
-            $handlerInstance = new $handler;
 
-            $method = new ReflectionMethod($handlerInstance, 'run');
-            return $method->invokeArgs($handlerInstance, [
+            $reflect = new ReflectionClass($handler);
+            $instance = $reflect->newInstance();
+
+            return call_user_func_array([$instance, 'run'], [
                 $actionName,
-                $this->parseParams($method, $vars)
+                $this->parseParams(new ReflectionMethod($instance, $actionName), $vars)
             ]);
         }
 

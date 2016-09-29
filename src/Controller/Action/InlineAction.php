@@ -22,9 +22,9 @@ class InlineAction extends Action
         $methodName = $this->getId();
         $method = new ReflectionMethod($this->classObject, $methodName);
         if ($method->getNumberOfParameters() > 0) {
-            return $this->runWithParamsInternal($this->classObject, $method, $params);
+            return $method->invokeArgs($this->classObject, $params);
         } else {
-            return $this->classObject->$methodName();
+            return $method->invoke($this->classObject);
         }
     }
 
