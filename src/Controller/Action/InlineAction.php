@@ -33,6 +33,6 @@ class InlineAction extends Action
      */
     public function getId()
     {
-        return 'action' . ucfirst($this->id);
+        return $this->id;
     }
 }

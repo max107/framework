@@ -128,7 +128,7 @@ class BaseController
     protected function hasInlineAction($id)
     {
         // we have actions method
-        return method_exists($this, 'action' . $id) && strcasecmp($id, 's');
+        return method_exists($this, $id) && strcasecmp($id, 's');
     }
 
     /**
