@@ -96,10 +96,6 @@ class RouteCollector
             list($route, $name) = $route;
         }
 
-        if ($this->_prefix) {
-            $route = rtrim($this->_prefix, '/') . '/' . ltrim($route, '/');
-        }
-
         // Don't use trim function, because route must be like "//".
         if (strpos($route, '/') === 0) {
             $route = substr($route, 1);
@@ -376,8 +372,6 @@ class RouteCollector
      */
     public function group($prefix, $callback, $namespace = '')
     {
-        $this->setPrefix($prefix);
-
         if (is_callable($callback)) {
             $callback($this);
         } else {
@@ -385,7 +379,8 @@ class RouteCollector
                 if (is_string($nestedPrefix) && is_array($route)) {
                     $this->group($prefix . $nestedPrefix, $route['routes'], $namespace . ':' . $route['namespace']);
                 } else {
-                    $routePattern = '/' . ltrim($route['route'], '/');
+                    $routePattern = $prefix . '/' . ltrim($route['route'], '/');
+
                     if (isset($route['name'])) {
                         $config = [$routePattern, empty($namespace) ? $route['name'] : $namespace . ':' . $route['name']];
                     } else {
@@ -400,19 +395,6 @@ class RouteCollector
                 }
             }
         }
-
-        $this->setPrefix(null);
-        return $this;
-    }
-
-    /**
-     * Set prefix for group() method
-     * @param $prefix
-     * @return $this
-     */
-    private function setPrefix($prefix)
-    {
-        $this->_prefix = $prefix;
         return $this;
     }
 }

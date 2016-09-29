@@ -398,32 +398,34 @@ abstract class Admin extends BaseAdmin
         ]);
         $form->setAttributes($this->getInitialAttributes());
 
-        $request = $this->getRequest();
-        if ($request->getIsPost()) {
-            if ($form->populate($_POST, $_FILES)->isValid()) {
+        $http = app()->http;
+        if ($http->getIsPost()) {
+            $form->fillFromRequest($http->getRequest());
+
+            if ($form->isValid()) {
                 if ($form->save()) {
                     $this->afterCreate($form);
-                    if ($request->post->get('popup')) {
+                    if ($http->post->get('popup')) {
                         echo $this->render($this->findTemplate('_popup_close.html'), [
-                            'popup_id' => $request->post->get('popup_id'),
+                            'popup_id' => $http->post->get('popup_id'),
                             'instance' => $form->getModel()
                         ]);
-                        Mindy::app()->end();
+                        return;
                     }
 
-                    $request->flash->success('Данные успешно сохранены');
+                    $http->flash->success('Данные успешно сохранены');
 
-                    $next = $this->getNextRoute($_POST, $form);
+                    $next = $this->getNextRoute($http->post->all(), $form);
                     if ($next) {
-                        $request->redirect($next);
+                        $http->redirect($next);
                     } else {
-                        $request->refresh();
+                        $http->refresh();
                     }
                 } else {
-                    $request->flash->error('При сохранении данных произошла ошибка, пожалуйста попробуйте выполнить сохранение позже или обратитесь к разработчику проекта, или вашему системному администратору');
+                    $http->flash->error('При сохранении данных произошла ошибка, пожалуйста попробуйте выполнить сохранение позже или обратитесь к разработчику проекта, или вашему системному администратору');
                 }
             } else {
-                $request->flash->warning('Пожалуйста укажите корректные данные');
+                $http->flash->warning('Пожалуйста укажите корректные данные');
             }
         }
 
@@ -807,24 +809,13 @@ abstract class Admin extends BaseAdmin
      */
     public function getNextRoute(array $data, $form)
     {
-        $baseParams = [
-            'module' => $this->getModule()->getId(),
-            'admin' => $this->classNameShort(),
-        ];
-
         $model = $form instanceof ModelForm ? $form->getModel() : null;
         if (array_key_exists('save_continue', $data)) {
-            return $this->reverse('admin:action', array_merge($baseParams, [
-                'action' => 'update'
-            ])) . '?' . http_build_query(array_merge($this->fetchRedirectParams($form->getAttributes(), 'save_continue'), ['pk' => $model->pk]));
+            return $this->getAdminUrl('update', array_merge($this->fetchRedirectParams($form->getAttributes(), 'save_continue'), ['pk' => $model->pk]));
         } else if (array_key_exists('save_create', $data)) {
-            return $this->reverse('admin:action', array_merge($baseParams, [
-                'action' => 'create'
-            ])) . '?' . http_build_query($this->fetchRedirectParams($form->getAttributes(), 'save_create'));
+            return $this->getAdminUrl('create', $this->fetchRedirectParams($form->getAttributes(), 'save_create'));
         } else {
-            return $this->reverse('admin:action', array_merge($baseParams, [
-                'action' => 'list'
-            ])) . '?' . http_build_query($this->fetchRedirectParams($form->getAttributes(), 'save'));
+            return $this->getAdminUrl('list', $this->fetchRedirectParams($form->getAttributes(), 'save'));
         }
     }
 

@@ -9,6 +9,8 @@
 namespace Mindy\Form;
 
 use Mindy\Creator\Creator;
+use Mindy\Orm\Fields\HasManyField;
+use Mindy\Orm\Fields\ManyToManyField;
 
 /**
  * Class ModelForm
@@ -70,7 +72,7 @@ class ModelForm extends Form
 
                 if (array_key_exists($name, $attributes)) {
                     $field->setValue($attributes[$name]);
-                } else {
+                } else if ($modelField instanceof HasManyField || $modelField instanceof ManyToManyField) {
                     $field->setValue($modelField->getValue()->valuesList(['pk'], true));
                 }
                 $this->fields[$name] = $field;

@@ -2,6 +2,7 @@
 
 namespace Mindy\Form\Fields;
 
+use GuzzleHttp\Psr7\UploadedFile;
 use Mindy\Form\Widget\FileWidget;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -49,5 +50,14 @@ class FileField extends Field
                 'mimeTypes' => $this->types
             ])
         ]);
+    }
+
+    public function setValue($value)
+    {
+        if ($value instanceof UploadedFile && $value->getError() === UPLOAD_ERR_NO_FILE) {
+            $value = null;
+        }
+
+        parent::setValue($value);
     }
 }

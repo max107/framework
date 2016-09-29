@@ -40,9 +40,7 @@ use Symfony\Component\Console\Helper\HelperSet;
  * @property string $id The unique identifier for the application.
  * @property string $basePath The root directory of the application. Defaults to 'protected'.
  * @property string $runtimePath The directory that stores runtime files. Defaults to 'protected/runtime'.
- * @property string $extensionPath The directory that contains all extensions. Defaults to the 'extensions' directory under 'protected'.
- * @property string $timeZone The time zone used by this application.
- * @property \Mindy\Event\EventManager $signal The event system component.
+   * @property \Mindy\Event\EventManager $signal The event system component.
  * @property \Mindy\Security\Security $securityManager The security manager application component.
  * @property \Mindy\Http\Http $http The request component.
  * @property \Mindy\Auth\UserInterface $user The user component.
@@ -52,7 +50,7 @@ use Symfony\Component\Console\Helper\HelperSet;
  * @property \Mindy\Router\UrlManager $urlManager The URL manager component.
  * @property \Mindy\Translator\Locale $locale The locale component.
  * @property \Mindy\Storage\Storage $storage The storage component.
- * @property \Mindy\Controller\BaseController $controller The currently active controller. Null is returned in this base class.
+ * @property \Doctrine\Common\Cache\CacheProvider $cache The cache component. Default is a doctrine\cache.
  */
 class Application extends BaseApplication
 {

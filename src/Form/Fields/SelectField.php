@@ -20,10 +20,6 @@ class SelectField extends Field
      */
     public $template = "<span class='select-holder'><select id='{id}' name='{name}'{html}>{input}</select></span>";
     /**
-     * @var bool
-     */
-    public $multiple = false;
-    /**
      * @var string
      */
     public $empty = '';
@@ -42,7 +38,7 @@ class SelectField extends Field
         return implode("\n", ["<input type='hidden' value='' name='{$name}' />", strtr($this->template, [
             '{id}' => $this->getHtmlId(),
             '{input}' => $this->getInputHtml(),
-            '{name}' => $this->html['multiple'] ? $this->getHtmlName() . '[]' : $this->getHtmlName(),
+            '{name}' => (isset($this->html['multiple']) && $this->html['multiple']) ? $this->getHtmlName() . '[]' : $this->getHtmlName(),
             '{html}' => $this->getHtmlAttributes()
         ])]);
     }
@@ -82,12 +78,20 @@ class SelectField extends Field
     {
         $out = '';
         foreach ($data as $value => $name) {
-            $out .= strtr("<option value='{value}'{selected}{disabled}>{name}</option>", [
-                '{value}' => $value,
-                '{name}' => $name,
-                '{disabled}' => in_array($value, $disabled) ? " disabled" : "",
-                '{selected}' => in_array($value, $selected) ? " selected='selected'" : ""
-            ]);
+
+            if (is_array($name)) {
+                $out .= strtr('<optgroup label="{label}">{html}</optgroup>', [
+                    '{label}' => $value,
+                    '{html}' => $this->generateOptions($name, $selected, $disabled)
+                ]);
+            } else {
+                $out .= strtr("<option value='{value}'{selected}{disabled}>{name}</option>", [
+                    '{value}' => $value,
+                    '{name}' => $name,
+                    '{disabled}' => in_array($value, $disabled) ? " disabled" : "",
+                    '{selected}' => in_array($value, $selected) ? " selected='selected'" : ""
+                ]);
+            }
         };
         return $out;
     }

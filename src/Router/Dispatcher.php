@@ -114,7 +114,6 @@ class Dispatcher
     private function dispatchStaticRoute($httpMethod, $uri)
     {
         $routes = $this->staticRouteMap[$uri];
-
         if (!isset($routes[$httpMethod])) {
             $httpMethod = $this->checkFallbacks($routes, $httpMethod);
         }
