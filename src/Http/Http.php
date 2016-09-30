@@ -268,7 +268,7 @@ class Http
     /**
      * Send response with application/json headers
      * @param $data
-     * @return ResponseInterface
+     * @return ResponseInterface|Response
      */
     public function json($data, $status = 200) : ResponseInterface
     {
@@ -282,7 +282,7 @@ class Http
     /**
      * Shortcut for text/html response
      * @param $html
-     * @return Response
+     * @return ResponseInterface|Response
      */
     public function html($html, $status = 200) : Response
     {

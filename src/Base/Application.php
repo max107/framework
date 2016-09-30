@@ -73,6 +73,10 @@ class Application extends BaseApplication
     /**
      * @var string
      */
+    public $homeUrl = '/';
+    /**
+     * @var string
+     */
     public $webPath;
 
     /**
