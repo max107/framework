@@ -134,7 +134,7 @@ abstract class Field implements FieldInterface, ValidationAwareInterface
                 return array_map(function ($value) {
                     return htmlspecialchars($value, ENT_QUOTES);
                 }, $this->value);
-            } else {
+            } else if (is_string($this->value)) {
                 return htmlspecialchars($this->value, ENT_QUOTES);
             }
         }

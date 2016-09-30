@@ -10,5 +10,5 @@ namespace Mindy\Form\Widget;
 
 class ImageWidget extends FileWidget
 {
-    public $currentTemplate = '<p class="current-file-container">{label}:<br/><a class="current-file" href="{current}" target="_blank"><img src="{current}" alt="{current}" /></a></p>';
+    public $currentTemplate = '<p class="current-file-container"><a class="current-file" href="{current}" target="_blank"><img src="{current}" alt="{current}" /></a></p>';
 }

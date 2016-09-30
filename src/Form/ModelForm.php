@@ -114,7 +114,9 @@ class ModelForm extends Form
     public function save() : bool
     {
         $this->setModelAttributes($this->getAttributes());
-        return $this->model->save();
+        $state = $this->model->save();
+        $this->setAttributes($this->model->getAttributes());
+        return $state;
     }
 
     /**

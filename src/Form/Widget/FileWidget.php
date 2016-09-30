@@ -13,6 +13,7 @@ use Mindy\Form\FieldInterface;
 use Mindy\Form\FormInterface;
 use Mindy\Form\ModelForm;
 use Mindy\Form\Widget;
+use function Mindy\trans;
 
 class FileWidget extends Widget
 {
@@ -23,7 +24,7 @@ class FileWidget extends Widget
     /**
      * @var string
      */
-    public $currentTemplate = '<p class="current-file-container">{label}:<br/><a class="current-file" href="{current}" target="_blank">{current}</a></p>';
+    public $currentTemplate = '<p class="current-file-container"><a class="current-file" href="{current}" target="_blank">{current}</a></p>';
     /**
      * @var string
      */
@@ -36,22 +37,23 @@ class FileWidget extends Widget
      */
     public function render(FormInterface $form, FieldInterface $field) : string
     {
-        $html = $field->render($form);
+        $html = $field->renderInput($form);
         if ($form instanceof ModelForm && $value = $field->getValue()) {
             $currentLink = strtr($this->currentTemplate, [
                 '{current}' => $value,
-                '{label}' => app()->t('form', "Current file")
             ]);
+
             if ($field->isRequired()) {
                 $clean = '';
             } else {
-                $clean = strtr($this->cleanTemplate, [
+                $clean = strtr($this->cleanTemplate, array(
                     '{id}' => $field->getHtmlId(),
                     '{name}' => $field->getHtmlName(),
                     '{value}' => $this->cleanValue,
-                    '{label}' => app()->t('form', "Clean")
-                ]);
+                    '{label}' => trans('framework.form', "Clean")
+                ));
             }
+
             return $currentLink . $clean . $html;
         }
         return $html;

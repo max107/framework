@@ -33,11 +33,9 @@ class Form extends BaseForm
      */
     protected function renderInputs(array $fields)
     {
-        $inputs = '';
-        foreach ($fields as $name) {
-            $inputs .= $this->getField($name)->render($this);
-        }
-        return $inputs;
+        return implode('', array_map(function ($name) {
+            return sprintf('<div class="form-row">%s</div>', $this->getField($name)->render($this));
+        }, $fields));
     }
 
     /**
@@ -74,12 +72,11 @@ class Form extends BaseForm
                 '{errors}' => $this->renderErrors()
             ]);
         } else {
-            $html = '';
+            $html = $this->renderErrors();
             foreach ($fieldsets as $legend => $fields) {
-                $html .= strtr('<fieldset><legend>{legend}</legend>{errors}{inputs}</fieldset>', [
+                $html .= strtr('<fieldset><legend>{legend}</legend>{inputs}</fieldset>', [
                     '{legend}' => $legend,
                     '{inputs}' => $this->renderInputs($fields),
-                    '{errors}' => $this->renderErrors()
                 ]);
             }
             return $html;

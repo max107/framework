@@ -2,9 +2,9 @@
 
 namespace Mindy\Form\Fields;
 
-use GuzzleHttp\Psr7\UploadedFile;
 use Mindy\Form\Widget\FileWidget;
 use Symfony\Component\Validator\Constraints as Assert;
+use Mindy\Orm\Validation;
 
 /**
  * Class FileField
@@ -20,11 +20,11 @@ class FileField extends Field
      * List of allowed file types
      * @var array|null
      */
-    public $types = [];
+    public $mimeTypes = [];
     /**
      * @var null|int maximum file size or null for unlimited. Default value 2 mb.
      */
-    public $maxSize = 2097152;
+    public $maxSize = '5M';
     /**
      * @var array
      */
@@ -39,25 +39,29 @@ class FileField extends Field
     public function __construct(array $config = [])
     {
         parent::__construct($config);
-        $this->html['accept'] = implode('|', $this->types);
+        $this->html['accept'] = implode('|', $this->mimeTypes);
     }
 
+    /**
+     * @return array
+     */
     public function getValidationConstraints() : array
     {
         return array_merge(parent::getValidationConstraints(), [
-            new Assert\File([
+            $constraints[] = new Validation\File([
                 'maxSize' => $this->maxSize,
-                'mimeTypes' => $this->types
+                'mimeTypes' => $this->mimeTypes,
             ])
         ]);
     }
 
-    public function setValue($value)
-    {
-        if ($value instanceof UploadedFile && $value->getError() === UPLOAD_ERR_NO_FILE) {
-            $value = null;
-        }
-
-        parent::setValue($value);
-    }
+//    protected $file;
+//    public function setValue($value)
+//    {
+//        if ($value instanceof UploadedFile) {
+//            $this->file = $value;
+//            $value = null;
+//        }
+//        return parent::setValue($value);
+//    }
 }

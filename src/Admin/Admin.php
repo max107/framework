@@ -15,6 +15,7 @@ use Mindy\Form\Form;
 use Mindy\Form\ModelForm;
 use Mindy\Helper\Alias;
 use Mindy\Creator\Creator;
+use Mindy\Http\Response\RedirectResponse;
 use Mindy\Orm\Fields\BooleanField;
 use Mindy\Orm\Fields\HasManyField;
 use Mindy\Orm\Fields\ManyToManyField;
@@ -30,6 +31,7 @@ use PHPExcel_Cell;
 use PHPExcel_Cell_DataType;
 use PHPExcel_IOFactory;
 use PHPExcel_Style_Fill;
+use Psr\Http\Message\ResponseInterface;
 
 abstract class Admin extends BaseAdmin
 {
@@ -75,7 +77,7 @@ abstract class Admin extends BaseAdmin
     }
 
     /**
-     * @return \Mindy\Orm\Model
+     * @return \Mindy\Orm\Model|ModelInterface
      */
     public function getModel()
     {
@@ -248,21 +250,23 @@ abstract class Admin extends BaseAdmin
         $pager = new Pagination($qs, $this->pager);
         $columns = $this->getColumns();
 
-        echo $this->render($this->findTemplate('_table.html'), [
+        $html = $this->render($this->findTemplate('_table.html'), [
             'models' => $pager->paginate(),
             'pager' => $pager,
             'tree' => $tree,
             'sortingColumn' => $this->sortingColumn || $tree,
             'columns' => empty($columns) ? array_keys($model->getFields()) : $columns
         ]);
+
+        $this->sendResponse(app()->http->html($html));
     }
 
     /**
      * Prepare query set.
      * Apply sorting, search, etc...
      * @param Model $model
-     * @return $this|\Mindy\Orm\Manager|\Mindy\Orm\TreeManager
-     * @throws \Mindy\Exception\HttpException
+     * @param null $pk
+     * @return \Mindy\Orm\QuerySet|\Mindy\Orm\Manager|\Mindy\Orm\TreeManager
      */
     protected function prepareQuerySet(Model $model, $pk = null)
     {
@@ -325,8 +329,7 @@ abstract class Admin extends BaseAdmin
             'columns' => empty($columns) ? array_keys($model->getFields()) : $columns
         ]);
 
-        $response = $this->getRequest()->html($html)->withCachePrevention();
-        $this->getRequest()->send($response);
+        $this->sendResponse(app()->http->html($html));
     }
 
     /**
@@ -415,7 +418,7 @@ abstract class Admin extends BaseAdmin
 
                     $http->flash->success('Данные успешно сохранены');
 
-                    $next = $this->getNextRoute($http->post->all(), $form);
+                    $next = $this->getNextRoute($http->post->all(), $form->getModel());
                     if ($next) {
                         $http->redirect($next);
                     } else {
@@ -435,22 +438,24 @@ abstract class Admin extends BaseAdmin
             'breadcrumbs' => $this->fetchBreadcrumbs($model, 'create')
         ]);
 
-        $response = $this->getRequest()->html($html)->withCachePrevention();
-        $this->getRequest()->send($response);
+        $this->sendResponse(app()->http->html($html));
     }
 
     /**
-     * @param Model $model
+     * @param ModelInterface $model
      * @param $action
      * @return array
      */
-    public function getCustomBreadrumbs(ModelInterface $model, $action)
+    public function getCustomBreadrumbs(ModelInterface $model, string $action)
     {
         if ($model instanceof TreeModel) {
             $pk = $this->getRequest()->get->get('pk');
             if (!empty($pk)) {
+                /** @var null|TreeModel $instance */
                 $instance = $this->getModel()->objects()->get(['pk' => $pk]);
-                return $this->getParentBreadcrumbs($instance);
+                if ($instance) {
+                    return $this->getParentBreadcrumbs($instance);
+                }
             }
         }
 
@@ -504,7 +509,9 @@ abstract class Admin extends BaseAdmin
             $this->error(404);
         }
 
-        $form = Creator::createObject(['class' => $this->getCreateForm(), 'model' => $instance]);
+        /** @var \Mindy\Form\ModelForm $form */
+        $form = Creator::createObject(['class' => $this->getCreateForm()]);
+        $form->setModel($instance);
 
         $http = app()->http;
         if ($http->getIsPost()) {
@@ -514,7 +521,8 @@ abstract class Admin extends BaseAdmin
                 if ($form->save()) {
                     $this->afterUpdate($form);
                     $http->flash->success('Данные успешно сохранены');
-                    $next = $this->getNextRoute($http->post->all(), $form);
+
+                    $next = $this->getNextRoute($http->post->all(), $form->getModel());
                     if ($next) {
                         $http->redirect($next);
                     } else {
@@ -535,8 +543,15 @@ abstract class Admin extends BaseAdmin
             'breadcrumbs' => $this->fetchBreadcrumbs($instance, 'update')
         ]);
 
-        $response = $this->getRequest()->html($html)->withCachePrevention();
-        $this->getRequest()->send($response);
+        $this->sendResponse(app()->http->html($html));
+    }
+
+    /**
+     * @param ResponseInterface|\Mindy\Http\Response\Response $response
+     */
+    protected function sendResponse(ResponseInterface $response)
+    {
+        app()->http->send($response->withCachePrevention());
     }
 
     /**
@@ -581,10 +596,10 @@ abstract class Admin extends BaseAdmin
         $names = $this->getVerboseNames();
         if (isset($names[$column])) {
             return $names[$column];
+
         } else if ($model->hasField($column)) {
-            /** @var \Mindy\Orm\Fields\ModelFieldInterface $field */
-            $field = $model->getField($column);
-            return $field->getVerboseName($model);
+            return $model->getField($column)->getVerboseName();
+
         } else {
             return $column;
         }
@@ -596,7 +611,8 @@ abstract class Admin extends BaseAdmin
      */
     public function actionInfo($pk)
     {
-        echo $this->render($this->findTemplate('info.html'), $this->processInfo($pk));
+        $html = $this->render($this->findTemplate('info.html'), $this->processInfo($pk));
+        $this->sendResponse(app()->http->html($html));
     }
 
     /**
@@ -606,8 +622,7 @@ abstract class Admin extends BaseAdmin
     public function actionPrint($pk)
     {
         $html = $this->render($this->findTemplate('info_print.html'), $this->processInfo($pk));
-        $response = $this->getRequest()->html($html)->withCachePrevention();
-        $this->getRequest()->send($response);
+        $this->sendResponse(app()->http->html($html));
     }
 
     /**
@@ -655,7 +670,7 @@ abstract class Admin extends BaseAdmin
     public function getActions()
     {
         return $this->can('remove') ? [
-            'batchRemove' => app()->t('framework.admin', 'Remove'),
+            'batchRemove' => trans('framework.admin', 'Remove'),
         ] : [];
     }
 
@@ -664,10 +679,7 @@ abstract class Admin extends BaseAdmin
         $models = $this->getRequest()->post->get('models');
 
         if (!empty($models)) {
-            $this->getModel()
-                ->objects()
-                ->filter(['pk__in' => $models])
-                ->delete();
+            $this->getModel()->objects()->filter(['pk__in' => $models])->delete();
         }
     }
 
@@ -683,10 +695,7 @@ abstract class Admin extends BaseAdmin
             return null;
         }
 
-        if ($column == 'pk') {
-            $column = $model->getPkName();
-        }
-
+        $column = $model->convertToPrimaryKeyName($column);
         $booleanHtml = '<i class="icon check checkmark"/>';
         if ($model->hasField($column)) {
             $value = $model->__get($column);
@@ -739,29 +748,18 @@ abstract class Admin extends BaseAdmin
         /* @var $cls \Mindy\Orm\Model */
         $cls = $this->getModelClass();
         $instance = $cls::objects()->get(['pk' => $pk]);
-        $redirectUrl = $this->reverse('admin:action', [
-            'module' => $this->getModule()->getId(),
-            'admin' => $this->classNameShort(),
-            'action' => 'list'
-        ]);
+        $redirectUrl = $this->getAdminUrl('list');
 
         $request = $this->getRequest();
         $referer = $request->getRequest()->getHeaderLine('Referer');
 
         if ($instance) {
-            if ($instance->hasField($this->lockField)) {
-                $user = Mindy::app()->getUser();
-                if (!$instance->{$this->lockField} && !$user->is_superuser) {
-                    $this->error(403);
-                }
-            }
-
             $instance->delete();
-
             $this->afterRemove($instance);
         }
 
-        $this->getRequest()->redirect(empty($referer) ? $redirectUrl : $referer);
+        $response = new RedirectResponse(302, [], empty($referer) ? $redirectUrl : $referer);
+        $this->sendResponse($response);
     }
 
     /**
@@ -804,18 +802,17 @@ abstract class Admin extends BaseAdmin
 
     /**
      * @param array $data
-     * @param Form|ModelForm $form
+     * @param ModelInterface $model
      * @return string url for redirect
      */
-    public function getNextRoute(array $data, $form)
+    public function getNextRoute(array $data, ModelInterface $model)
     {
-        $model = $form instanceof ModelForm ? $form->getModel() : null;
         if (array_key_exists('save_continue', $data)) {
-            return $this->getAdminUrl('update', array_merge($this->fetchRedirectParams($form->getAttributes(), 'save_continue'), ['pk' => $model->pk]));
+            return $this->getAdminUrl('update', array_merge($this->fetchRedirectParams($model->getAttributes(), 'save_continue'), ['pk' => $model->pk]));
         } else if (array_key_exists('save_create', $data)) {
-            return $this->getAdminUrl('create', $this->fetchRedirectParams($form->getAttributes(), 'save_create'));
+            return $this->getAdminUrl('create', $this->fetchRedirectParams($model->getAttributes(), 'save_create'));
         } else {
-            return $this->getAdminUrl('list', $this->fetchRedirectParams($form->getAttributes(), 'save'));
+            return $this->getAdminUrl('list', $this->fetchRedirectParams($model->getAttributes(), 'save'));
         }
     }
 
@@ -835,11 +832,7 @@ abstract class Admin extends BaseAdmin
         $breadcrumbs = [];
         foreach ($parents as $parent) {
             $breadcrumbs[] = [
-                'url' => $this->reverse('admin:action', [
-                        'module' => $this->getModule()->getId(),
-                        'admin' => $this->classNameShort(),
-                        'action' => 'list'
-                    ]) . '?' . http_build_query(['pk' => $parent->pk]),
+                'url' => $this->getAdminUrl('list', ['pk' => $parent->pk]),
                 'name' => (string)$parent,
                 'items' => []
             ];

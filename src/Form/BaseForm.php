@@ -184,7 +184,17 @@ class BaseForm implements FormInterface, ArrayAccess, IteratorAggregate, Countab
         }
 
         if (isset($files[$name])) {
-            $this->setAttributes($files[$name]);
+            $validFiles = [];
+            foreach ($files[$name] as $name => $file) {
+                /** @var \Mindy\Orm\Files\UploadedFile $file */
+                if ($file->isValid()) {
+                    $validFiles[$name] = $file;
+                }
+            }
+
+            if (!empty($validFiles)) {
+                $this->setAttributes($validFiles);
+            }
         }
 
         return $this;
