@@ -38,10 +38,19 @@ class FileWidget extends Widget
     public function render(FormInterface $form, FieldInterface $field) : string
     {
         $html = $field->renderInput($form);
-        if ($form instanceof ModelForm && $value = $field->getValue()) {
-            $currentLink = strtr($this->currentTemplate, [
-                '{current}' => $value,
-            ]);
+        if ($form instanceof ModelForm && $value = $field->renderValue()) {
+
+            if (app()->storage->getFilesystem()->has($field->getValue())) {
+                $currentLink = app()->template->render('image_field.html', [
+                    'value' => $value,
+                    'url' => $this->getUrl($value)
+                ]);
+//                $currentLink = strtr($this->currentTemplate, [
+//                    '{current}' => $this->getUrl($value)
+//                ]);
+            } else {
+                $currentLink = $value;
+            }
 
             if ($field->isRequired()) {
                 $clean = '';
@@ -57,5 +66,10 @@ class FileWidget extends Widget
             return $currentLink . $clean . $html;
         }
         return $html;
+    }
+
+    public function getUrl($value)
+    {
+        return app()->storage->getFilesystem()->url($value);
     }
 }

@@ -3,6 +3,7 @@
 namespace Mindy\Form\Fields;
 
 use Mindy\Form\Widget\FileWidget;
+use Mindy\Orm\Files\UploadedFile;
 use Symfony\Component\Validator\Constraints as Assert;
 use Mindy\Orm\Validation;
 
@@ -42,26 +43,24 @@ class FileField extends Field
         $this->html['accept'] = implode('|', $this->mimeTypes);
     }
 
-    /**
-     * @return array
-     */
-    public function getValidationConstraints() : array
+    public function setValue($value)
     {
-        return array_merge(parent::getValidationConstraints(), [
-            $constraints[] = new Validation\File([
-                'maxSize' => $this->maxSize,
-                'mimeTypes' => $this->mimeTypes,
-            ])
-        ]);
+        if ($value === '1') {
+            // Clean file field hack
+            $value = null;
+        }
+        return parent::setValue($value);
     }
 
-//    protected $file;
-//    public function setValue($value)
-//    {
-//        if ($value instanceof UploadedFile) {
-//            $this->file = $value;
-//            $value = null;
-//        }
-//        return parent::setValue($value);
-//    }
+    public function renderValue() : string
+    {
+        if (is_object($this->value)) {
+            if ($this->value instanceof UploadedFile) {
+                return $this->value->getClientFilename();
+            }
+            
+            return '';
+        }
+        return parent::renderValue();
+    }
 }

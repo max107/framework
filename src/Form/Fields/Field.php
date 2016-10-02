@@ -28,7 +28,7 @@ abstract class Field implements FieldInterface, ValidationAwareInterface
     /**
      * @var string
      */
-    public $errorClass = 'form-input-errors';
+    public $errorClass = 'form-error-list-input';
     /**
      * @var string
      */
@@ -129,16 +129,6 @@ abstract class Field implements FieldInterface, ValidationAwareInterface
      */
     public function getValue()
     {
-        if ($this->escape) {
-            if (is_array($this->value)) {
-                return array_map(function ($value) {
-                    return htmlspecialchars($value, ENT_QUOTES);
-                }, $this->value);
-            } else if (is_string($this->value)) {
-                return htmlspecialchars($this->value, ENT_QUOTES);
-            }
-        }
-
         return $this->value;
     }
 
@@ -147,19 +137,7 @@ abstract class Field implements FieldInterface, ValidationAwareInterface
      */
     public function getValidationConstraints() : array
     {
-        $constraints = [];
-
-        if ($this->required) {
-            $constraints[] = new Assert\NotBlank();
-        }
-
-        if ($this->required && !empty($this->choices)) {
-            $constraints[] = new Assert\Choice([
-                'choices' => array_keys($this->choices instanceof Closure ? $this->choices->__invoke() : $this->choices)
-            ]);
-        }
-
-        return array_merge($constraints, $this->validators);
+        return $this->validators;
     }
 
     /**
@@ -283,7 +261,7 @@ abstract class Field implements FieldInterface, ValidationAwareInterface
             $input = strtr($this->template, [
                 '{id}' => $this->getHtmlId(),
                 '{name}' => $this->getHtmlName(),
-                '{value}' => $this->getValue(),
+                '{value}' => $this->renderValue(),
                 '{html}' => $this->getHtmlAttributes(),
             ]);
 
@@ -335,6 +313,21 @@ abstract class Field implements FieldInterface, ValidationAwareInterface
             '{errors}' => $this->renderErrors(),
             '{hint}' => $this->renderHint()
         ]);
+    }
+
+    public function renderValue() : string
+    {
+        if ($this->escape) {
+            if (is_array($this->value)) {
+                return array_map(function ($value) {
+                    return htmlspecialchars($value, ENT_QUOTES);
+                }, $this->value);
+            } else if (is_string($this->value)) {
+                return htmlspecialchars($this->value, ENT_QUOTES);
+            }
+        }
+
+        return (string)$this->value;
     }
 
     /**

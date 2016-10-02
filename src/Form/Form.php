@@ -34,7 +34,11 @@ class Form extends BaseForm
     protected function renderInputs(array $fields)
     {
         return implode('', array_map(function ($name) {
-            return sprintf('<div class="form-row">%s</div>', $this->getField($name)->render($this));
+            $field = $this->getField($name);
+            return strtr('<div class="{class}">{content}</div>', [
+                '{class}' => 'form-row' . ($field->getErrors() ? ' error' : ''),
+                '{content}' => $field->render($this)
+            ]);
         }, $fields));
     }
 
@@ -56,7 +60,7 @@ class Form extends BaseForm
                 ]);
             }
 
-            return '<ul>' . $errorsHtml . '</ul>';
+            return '<ul class="form-error-list">' . $errorsHtml . '</ul>';
         }
     }
 
