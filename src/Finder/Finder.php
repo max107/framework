@@ -31,24 +31,18 @@ class Finder
 
     /**
      * Finder constructor.
-     * @param array $config
+     * @param array $finders
      */
-    public function __construct(array $config)
+    public function __construct(array $finders = [])
     {
-        foreach ($config as $key => $value) {
-            if (method_exists($this, 'set' . ucfirst($key))) {
-                $this->{'set' . ucfirst($key)}($value);
-            } else {
-                $this->{$key} = $value;
-            }
-        }
+        $this->setFinders($finders);
     }
 
     /**
      * @param array $finders
      * @throws Exception
      */
-    protected function setFinders(array $finders = [])
+    public function setFinders(array $finders = [])
     {
         foreach ($finders as $config) {
             if (is_object($config)) {
@@ -93,5 +87,21 @@ class Finder
             }
         }
         return $this->_paths;
+    }
+
+    /**
+     * @param array $paths
+     * @param string $template
+     * @return mixed|null
+     */
+    public function findIn(array $paths)
+    {
+        foreach ($paths as $path) {
+            if ($this->find($path)) {
+                return $path;
+            }
+        }
+
+        return null;
     }
 }

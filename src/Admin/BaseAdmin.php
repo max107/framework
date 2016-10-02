@@ -97,6 +97,10 @@ abstract class BaseAdmin extends BaseController
         return isset($permissions[$code]) && $permissions[$code];
     }
 
+    /**
+     * @param $str
+     * @return string
+     */
     protected function normalizeString($str)
     {
         return trim(strtolower(preg_replace('/(?<![A-Z])[A-Z]/', '_\0', $str)), '_');

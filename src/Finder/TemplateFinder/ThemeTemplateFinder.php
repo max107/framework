@@ -17,10 +17,22 @@ use Closure;
  */
 class ThemeTemplateFinder extends TemplateFinder
 {
+    public $basePath;
     /**
      * @var string
      */
     public $theme = 'default';
+
+    /**
+     * ThemeTemplateFinder constructor.
+     * @param string $basePath
+     * @param $theme
+     */
+    public function __construct(string $basePath, $theme)
+    {
+        parent::__construct($basePath);
+        $this->theme = $theme instanceof Closure ? $theme->__invoke() : $theme;
+    }
 
     /**
      * @param $templatePath
@@ -28,8 +40,7 @@ class ThemeTemplateFinder extends TemplateFinder
      */
     public function find($templatePath)
     {
-        $theme = $this->theme instanceof Closure ? $this->theme->__invoke() : $this->theme;
-        $path = join(DIRECTORY_SEPARATOR, [$this->basePath, 'themes', $theme, $this->templatesDir, $templatePath]);
+        $path = join(DIRECTORY_SEPARATOR, [$this->basePath, 'themes', $this->theme, $this->templatesDir, $templatePath]);
         if (is_file($path)) {
             return $path;
         }

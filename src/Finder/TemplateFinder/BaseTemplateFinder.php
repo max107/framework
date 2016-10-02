@@ -16,18 +16,6 @@ namespace Mindy\Finder\TemplateFinder;
 abstract class BaseTemplateFinder implements TemplateFinderInterface
 {
     /**
-     * @var string
-     */
-    public $basePath;
-
-    public function __construct(array $config = [])
-    {
-        foreach ($config as $key => $value) {
-            $this->{$key} = $value;
-        }
-    }
-
-    /**
      * @param $templatePath
      * @return null|string absolute path of template if founded
      */

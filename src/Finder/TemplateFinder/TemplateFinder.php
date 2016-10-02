@@ -18,7 +18,20 @@ class TemplateFinder extends BaseTemplateFinder
     /**
      * @var string
      */
+    public $basePath;
+    /**
+     * @var string
+     */
     public $templatesDir = 'templates';
+
+    /**
+     * TemplateFinder constructor.
+     * @param string $basePath
+     */
+    public function __construct(string $basePath)
+    {
+        $this->basePath = $basePath;
+    }
 
     /**
      * @param $templatePath
